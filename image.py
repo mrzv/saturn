@@ -1,6 +1,5 @@
 import pixcat
 import PIL
-import numpy
 import matplotlib
 import matplotlib.pyplot as plt
 import io
