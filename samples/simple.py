@@ -23,6 +23,8 @@ a.shape
 
 #o# (10, 20)
 
+#chk#
+
 ## Is this the best demarkation of the evaluated expression?
 
 b = 5
