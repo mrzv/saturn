@@ -9,12 +9,15 @@ import os
 def enabled():
     return os.environ['TERM'] == 'xterm-kitty'      # TODO: find a better way
 
-def display(result):        # determine if we can display this type
+def is_mpl(result):        # determine if we can display this type
     return type(result) is matplotlib.image.AxesImage
 
-def show():
+def save_mpl_png():
     buf = io.BytesIO()
     plt.savefig(buf, format='png')
     buf.seek(0)
-    im = PIL.Image.open(buf)
+    return buf.read()
+
+def show_png(buf):
+    im = PIL.Image.open(io.BytesIO(buf))
     pixcat.Image(im).show()

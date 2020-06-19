@@ -22,6 +22,10 @@ def show_cell(cell, rule = False, verbose = False):
         output(Rule(cell.type_name() if verbose else ''))
     # output()
     output(cell)
+
+    if hasattr(cell, 'png') and cell.png:
+        image.show_png(cell.png)
+
     if not rule:
         output()
 
@@ -111,16 +115,17 @@ def run(infn, outfn, debug = False, dry_run = False):
             out_lines = out.readlines()
 
             lines = []
+            png   = None
             if out_lines:
                 lines += out_lines
             if result is not None:
                 lines.append(result.__repr__() + '\n')
 
-                if show_images and image.display(result):
-                    image.show()
+                if image.is_mpl(result):
+                    png = image.save_mpl_png()
 
-            if lines:
-                add_new_cell(c.OutputCell(lines))
+            if lines or png:
+                add_new_cell(c.OutputCell(lines, png))
         elif type(cell) is c.CheckpointCell:
             cell.dump(m.digest(), l)
 

@@ -80,11 +80,34 @@ class OutputCell(Cell):
     _prefix = '#o# '
     _name   = 'Output'
 
-    def __init__(self, lines = None):
+    def __init__(self, lines = None, png = None):
         if lines is None:
             self.lines = []
         else:
             self.lines = lines
+
+        self.png = png
+
+    def parse(self):
+        super().parse()
+
+        png_content = [line[3:] for line in self.lines if line.startswith('png')]
+        self.lines  = [line for line in self.lines if not line.startswith('png')]
+
+        if png_content:
+            png_content = ''.join(png_content)
+            self.png    = base64.b64decode(png_content)
+        else:
+            self.png = None
+
+    def save(self):
+        lines = super().save()
+
+        if self.png:
+            content = base64.b64encode(self.png).decode('ascii')
+            lines += [self._prefix + 'png' + line + '\n' for line in utils.chunkstring(content, 80)]
+
+        return lines
 
     def __rich__(self):
         return ''.join('--> ' + l for l in self.lines)
