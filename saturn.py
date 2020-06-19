@@ -64,7 +64,7 @@ def find_checkpoint(cells):
 
 @argh.arg('outfn', nargs='?')
 @argh.arg('-n', '--dry-run')
-def run(infn, outfn, debug = False, dry_run = False):
+def run(infn, outfn, clean: "run from scratch, ignoring checkpoints" = False, debug = False, dry_run = False):
     if not outfn:
         outfn = infn
 
@@ -84,11 +84,13 @@ def run(infn, outfn, debug = False, dry_run = False):
         if not debug and not cell.display(): return
         show_cell(cell, rule = debug, verbose = debug)
 
-    checkpoint = find_checkpoint(cells)
-    if checkpoint > 0:
-        l       = cells[checkpoint].load()
-        running = cells[checkpoint].expected_hash()
-        output(Rule(f"Skipping to checkpoint {checkpoint}", style='magenta'))
+    checkpoint = -1
+    if not clean:
+        checkpoint = find_checkpoint(cells)
+        if checkpoint > 0:
+            l       = cells[checkpoint].load()
+            running = cells[checkpoint].expected_hash()
+            output(Rule(f"Skipping to checkpoint {checkpoint}", style='magenta'))
 
     pairs = utils.pairwise(cells)
     for i, (cell, next_cell) in enumerate(pairs):
