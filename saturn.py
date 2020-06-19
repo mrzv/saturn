@@ -31,7 +31,7 @@ def show_cell(cell, rule = False, verbose = False):
 
 def show(fn, debug = False):
     with open(fn) as f:
-        cells = c.parse(f)
+        cells = c.parse(f, show_only = True)
 
     for i,cell in enumerate(cells):
         if not cell.display(): continue

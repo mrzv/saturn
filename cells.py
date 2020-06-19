@@ -26,7 +26,8 @@ class Cell:
     def parse(self):            # called after all the lines have been read
         self.trim()
 
-    def display(self):
+    @classmethod
+    def display(cls):
         return True
 
     def trim(self):
@@ -115,7 +116,8 @@ class OutputCell(Cell):
 class BreakCell(Cell):
     _prefix = '#-#'
 
-    def display(self):
+    @classmethod
+    def display(cls):
         return False
 
     def save(self):
@@ -134,7 +136,8 @@ class CheckpointCell(Cell):
         assert self._expected != None
         return self._expected
 
-    def display(self):
+    @classmethod
+    def display(cls):
         return False
 
     def parse(self):
@@ -174,11 +177,14 @@ def chunk(content, width, markers = False):
         chunking = chain(['{{{'], chunking, ['}}}'])
     return chunking
 
-def parse(f):
+def parse(f, show_only = False):
     cells = []
 
     for line in f:
         Type = identify(line)
+
+        if show_only and not Type.display(): continue     # skip check-point cells in show mode
+
         if len(cells) == 0 or type(cells[-1]) is not Type:
             if len(cells) > 0:
                 cells[-1].parse()
