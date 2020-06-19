@@ -68,8 +68,6 @@ def run(infn, outfn, clean: "run from scratch, ignoring checkpoints" = False, de
     if not outfn:
         outfn = infn
 
-    show_images = image.enabled()
-
     with open(infn) as f:
         cells = c.parse(f)
 
