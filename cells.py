@@ -1,7 +1,7 @@
 from rich.markdown import Markdown
 from rich.syntax   import Syntax
 
-import itertools
+from  itertools import chain
 import base64
 import io
 import dill
@@ -105,7 +105,7 @@ class OutputCell(Cell):
 
         if self.png:
             content = base64.b64encode(self.png).decode('ascii')
-            lines += [self._prefix + 'png' + line + '\n' for line in utils.chunkstring(content, 80)]
+            lines += [self._prefix + 'png' + line + '\n' for line in chunk(content, 80, markers = True)]
 
         return lines
 
@@ -159,14 +159,20 @@ class CheckpointCell(Cell):
         content.seek(0)
         content = content.read()
         content = base64.b64encode(content).decode('ascii')
-        self.lines = [line + '\n' for line in utils.chunkstring(content, 80)]
+        self.lines = [line + '\n' for line in chunk(content, 80, markers = True)]
 
 cell_types = [MarkdownCell, OutputCell, BreakCell, CheckpointCell]
 
 def identify(line):
-    for Type in itertools.chain(cell_types, [CodeCell]):        # CodeCell matches everything, so comes last
+    for Type in chain(cell_types, [CodeCell]):        # CodeCell matches everything, so comes last
         if Type.identify(line):
             return Type
+
+def chunk(content, width, markers = False):
+    chunking = utils.chunkstring(content, 80)
+    if markers:
+        chunking = chain(['{{{'], chunking, ['}}}'])
+    return chunking
 
 def parse(f):
     cells = []

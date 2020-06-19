@@ -1,3 +1,5 @@
+# vim: ft=python foldmethod=marker foldlevel=0
+
 #m# # Sample Saturn Notebook
 #m#
 #m# Some **test** *markup*:
