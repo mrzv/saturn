@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import  os
 import  argh
 from    rich.console import Console
 from    rich.rule    import Rule
@@ -11,6 +12,7 @@ from    icecream import ic
 
 import  evaluate, utils
 import  cells as c
+import  image
 
 console = Console()
 
@@ -57,9 +59,12 @@ def find_checkpoint(cells):
     return last
 
 @argh.arg('outfn', nargs='?')
-def run(infn, outfn, debug = False):
+@argh.arg('-n', '--dry-run')
+def run(infn, outfn, debug = False, dry_run = False):
     if not outfn:
         outfn = infn
+
+    show_images = image.enabled()
 
     with open(infn) as f:
         cells = c.parse(f)
@@ -111,13 +116,17 @@ def run(infn, outfn, debug = False):
             if result is not None:
                 lines.append(result.__repr__() + '\n')
 
+                if show_images and image.display(result):
+                    image.show()
+
             if lines:
                 add_new_cell(c.OutputCell(lines))
         elif type(cell) is c.CheckpointCell:
             cell.dump(m.digest(), l)
 
-    with atomic_write(outfn, mode='w', overwrite=True) as f:
-        save(f, new_cells)
+    if not dry_run:
+        with atomic_write(outfn, mode='w', overwrite=True) as f:
+            save(f, new_cells)
 
 def save(f, cells):
     for i,cell in enumerate(cells):

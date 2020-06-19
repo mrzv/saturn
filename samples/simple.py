@@ -34,3 +34,8 @@ b = 5
 print(b)
 
 #o# 5
+
+import matplotlib.pyplot as plt
+plt.matshow(a)
+
+#o# <matplotlib.image.AxesImage object at 0x113a35590>
