@@ -13,8 +13,8 @@ from pygments.formatters import HtmlFormatter
 
 import markdown
 
-import utils
-import image
+from . import utils
+from . import image
 
 from icecream import ic
 

@@ -10,9 +10,7 @@ import  hashlib
 
 from    icecream import ic
 
-import  evaluate, utils
-import  cells as c
-import  image
+from    lib import  evaluate, utils, cells as c, image
 
 console = Console()
 
