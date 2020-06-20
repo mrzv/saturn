@@ -6,43 +6,54 @@ import base64
 import io
 import dill
 
+import html
+from pygments import highlight
+from pygments.lexers import PythonLexer
+from pygments.formatters import HtmlFormatter
+
+import markdown
+
 import utils
+import image
 
 from icecream import ic
 
 class Cell:
     def __init__(self):
-        self.lines = []
+        self.lines_ = []
 
     def append(self, line):
         prefix = self.__class__._prefix
         line = line[len(prefix):]       # eat the prefix
-        self.lines.append(line)
+        self.lines_.append(line)
 
     def save(self):
         prefix = self.__class__._prefix
-        return [prefix + line for line in self.lines]
+        return [prefix + line for line in self.lines_]
 
     def parse(self):            # called after all the lines have been read
         self.trim()
+
+    def lines(self):
+        return ''.join(self.lines_)
 
     @classmethod
     def display(cls):
         return True
 
     def trim(self):
-        for bg, l in enumerate(self.lines):
+        for bg, l in enumerate(self.lines_):
             if l.strip():
                 break
         else:
             bg += 1
-        for end, l in enumerate(self.lines[::-1]):
+        for end, l in enumerate(self.lines_[::-1]):
             if l.strip():
                 break
         else:
             end += 1
-        end = len(self.lines) - end
-        self.lines = self.lines[bg:end]
+        end = len(self.lines_) - end
+        self.lines_ = self.lines_[bg:end]
 
     @classmethod
     def identify(cls, line):
@@ -55,45 +66,61 @@ class Cell:
             return self.__class__.__name__
 
     def __repr__(self):
-        return '== ' + self.__class__.__name__ + '\n' + ''.join(self.lines)
+        return '== ' + self.__class__.__name__ + '\n' + self.lines()
 
     def __rich__(self):
-        return '[yellow]== ' + self.__class__.__name__ + ' ==[/yellow]\n' + ''.join(self.lines)
+        return '[yellow]== ' + self.__class__.__name__ + ' ==[/yellow]\n' + self.lines()
+
+    def show_console(self, console):
+        console.print(self)
+
+    def show_html(self, f):
+        f.write(self._render_html())
+        f.write('\n')
+
+    def _render_html(self):
+        return f"<div><h2>{self.__class__.__name__}</h2> <pre>{html.escape(self.lines())}</pre></div>"
 
 class CodeCell(Cell):
     _prefix = ''
     _name   = 'Code'
 
     def __rich__(self):
-        return Syntax(''.join('>>> ' + l for l in self.lines if l), 'python')
+        return Syntax(''.join('>>> ' + l for l in self.lines_ if l), 'python')
 
     def code(self):
-        return ''.join(self.lines)
+        return self.lines()
+
+    def _render_html(self):
+        return f"<pre>{highlight(self.code(), PythonLexer(), HtmlFormatter())}</pre>"
 
 class MarkdownCell(Cell):
     _prefix = '#m#'
     _name   = 'Markdown'
 
     def __rich__(self):
-        return Markdown(''.join(self.lines))
+        return Markdown(self.lines())
+
+    def _render_html(self):
+        return "<div class='markdown'>" + markdown.markdown(''.join(line[1:] if line[0] == ' ' else line for line in self.lines_)) + "</div>"
 
 class OutputCell(Cell):
     _prefix = '#o# '
     _name   = 'Output'
 
-    def __init__(self, lines = None, png = None):
-        if lines is None:
-            self.lines = []
+    def __init__(self, lines_ = None, png = None):
+        if lines_ is None:
+            self.lines_ = []
         else:
-            self.lines = lines
+            self.lines_ = lines_
 
         self.png = png
 
     def parse(self):
         super().parse()
 
-        png_content = [line[3:] for line in self.lines if line.startswith('png')]
-        self.lines  = [line for line in self.lines if not line.startswith('png')]
+        png_content = [line[3:] for line in self.lines_ if line.startswith('png')]
+        self.lines_  = [line for line in self.lines_ if not line.startswith('png')]
 
         if png_content:
             png_content = ''.join(png_content)
@@ -102,16 +129,32 @@ class OutputCell(Cell):
             self.png = None
 
     def save(self):
-        lines = super().save()
+        lines_ = super().save()
 
         if self.png:
             content = base64.b64encode(self.png).decode('ascii')
-            lines += [self._prefix + 'png' + line + '\n' for line in chunk(content, 80, markers = True)]
+            lines_ += [self._prefix + 'png' + line + '\n' for line in chunk(content, 80, markers = True)]
 
-        return lines
+        return lines_
 
     def __rich__(self):
-        return ''.join('--> ' + l for l in self.lines)
+        return ''.join('--> ' + l for l in self.lines_)
+
+    def show_console(self, console):
+        super().show_console(console)
+
+        if self.png:
+            image.show_png(self.png)
+
+    def _render_html(self):
+        result =  f"<div class='output'><pre>{html.escape(self.lines())}</pre>"
+
+        if self.png:
+            result += f'<img src="data:image/png;base64,{base64.b64encode(self.png).decode("ascii")}"/>'
+
+        result += "</div>"
+
+        return result
 
 class BreakCell(Cell):
     _prefix = '#-#'
@@ -143,11 +186,11 @@ class CheckpointCell(Cell):
     def parse(self):
         super().parse()
 
-        if not self.lines:
+        if not self.lines_:
             self._expected = None
             return
 
-        content = ''.join(self.lines)
+        content = self.lines()
         content = base64.b64decode(content)
 
         self._expected, self._locals = dill.load(io.BytesIO(content))
@@ -162,7 +205,7 @@ class CheckpointCell(Cell):
         content.seek(0)
         content = content.read()
         content = base64.b64encode(content).decode('ascii')
-        self.lines = [line + '\n' for line in chunk(content, 80, markers = True)]
+        self.lines_ = [line + '\n' for line in chunk(content, 80, markers = True)]
 
 cell_types = [MarkdownCell, OutputCell, BreakCell, CheckpointCell]
 

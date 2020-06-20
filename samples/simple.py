@@ -1,8 +1,7 @@
-# vim: ft=python foldmethod=marker foldlevel=0
-
 #m# # Sample Saturn Notebook
 #m#
 #m# Some **test** *markup*:
+#m#
 #m#  - item 1
 #m#  - item 2
 #m#
@@ -41,3 +40,5 @@ import matplotlib.pyplot as plt
 plt.matshow(a)
 
 #o# <matplotlib.image.AxesImage object at 0x113a35590>
+
+# vim: ft=python foldmethod=marker foldlevel=0

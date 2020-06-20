@@ -16,26 +16,44 @@ import  image
 
 console = Console()
 
-def show_cell(cell, rule = False, verbose = False):
-    output = console.print
+def show_console(cell, rule = False, verbose = False):
     if rule:
-        output(Rule(cell.type_name() if verbose else ''))
-    # output()
-    output(cell)
+        console.print(Rule(cell.type_name() if verbose else ''))
 
-    if hasattr(cell, 'png') and cell.png:
-        image.show_png(cell.png)
+    cell.show_console(console)
 
     if not rule:
-        output()
+        console.print()
 
-def show(fn, debug = False):
+def show_html(cell, f):
+    cell.show_html(f)
+
+def show(fn, html = '', debug = False):
     with open(fn) as f:
         cells = c.parse(f, show_only = True)
 
+    output   = lambda cell: show_console(cell, rule = debug, verbose = debug)
+
+    if html:
+        f_html = open(html, 'w')
+        output = lambda cell: show_html(cell, f_html)
+
+        f_html.write('<html>\n')
+        f_html.write('<head>\n')
+        f_html.write('<style>\n')
+        f_html.write(c.HtmlFormatter().get_style_defs('.highlight'))
+        f_html.write('</style>\n')
+        f_html.write('</head>\n')
+        f_html.write('<body>\n')
+
+
     for i,cell in enumerate(cells):
         if not cell.display(): continue
-        show_cell(cell, rule = debug, verbose = debug)
+        output(cell)
+
+    if html:
+        f_html.write('</body>\n')
+        f_html.write('</html>\n')
 
 class Hasher:
     def __init__(self):
@@ -71,7 +89,7 @@ def run(infn, outfn, clean: "run from scratch, ignoring checkpoints" = False, de
     with open(infn) as f:
         cells = c.parse(f)
 
-    output = console.print
+    output = lambda cell: show_console(cell, rule = debug, verbose = debug)
 
     g = {}
     l = {}
@@ -80,7 +98,7 @@ def run(infn, outfn, clean: "run from scratch, ignoring checkpoints" = False, de
     def add_new_cell(cell):
         new_cells.append(cell)
         if not debug and not cell.display(): return
-        show_cell(cell, rule = debug, verbose = debug)
+        output(cell)
 
     checkpoint = -1
     if not clean:
@@ -88,7 +106,7 @@ def run(infn, outfn, clean: "run from scratch, ignoring checkpoints" = False, de
         if checkpoint > 0:
             l       = cells[checkpoint].load()
             running = cells[checkpoint].expected_hash()
-            output(Rule(f"Skipping to checkpoint {checkpoint}", style='magenta'))
+            console.print(Rule(f"Skipping to checkpoint {checkpoint}", style='magenta'))
 
     pairs = utils.pairwise(cells)
     for i, (cell, next_cell) in enumerate(pairs):
@@ -97,7 +115,7 @@ def run(infn, outfn, clean: "run from scratch, ignoring checkpoints" = False, de
             if type(cell) is c.CodeCell:
                 m.update(cell)
             if i == checkpoint:
-                output(Rule('Resuming', style="magenta"))
+                console.print(Rule('Resuming', style="magenta"))
             continue
 
         if type(cell) is c.CodeCell:
