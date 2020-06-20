@@ -92,7 +92,7 @@ class CodeCell(Cell):
         return self.lines()
 
     def _render_html(self):
-        return f"<pre>{highlight(self.code(), PythonLexer(), HtmlFormatter())}</pre>"
+        return f"<div class='code'>{highlight(self.code(), PythonLexer(), HtmlFormatter())}</div>"
 
 class MarkdownCell(Cell):
     _prefix = '#m#'
