@@ -4,13 +4,10 @@ import  os
 import  argh
 from    rich.console import Console
 from    rich.rule    import Rule
-from    atomicwrites import atomic_write
-
-import  hashlib
 
 from    icecream import ic
 
-from    lib import  evaluate, utils, cells as c, image
+from    lib import  cells as c, notebook
 
 console = Console()
 
@@ -53,31 +50,6 @@ def show(fn, html = '', debug = False):
         f_html.write('</body>\n')
         f_html.write('</html>\n')
 
-class Hasher:
-    def __init__(self):
-        self.m = hashlib.sha256()
-
-    def update(self, code):
-        if type(code) is c.CodeCell:
-            code = code.code()
-        self.m.update(bytes(code, 'utf-8'))
-
-    def digest(self):
-        return self.m.digest()
-
-def find_checkpoint(cells):
-    m = Hasher()
-    last = -1
-    for i,cell in enumerate(cells):
-        if type(cell) is c.CodeCell:
-            m.update(cell)
-        elif type(cell) is c.CheckpointCell:
-            if cell.expected(m.digest()):
-                last = i
-            else:
-                break
-    return last
-
 @argh.arg('outfn', nargs='?')
 @argh.arg('-n', '--dry-run')
 def run(infn, outfn, clean: "run from scratch, ignoring checkpoints" = False, debug = False, dry_run = False):
@@ -89,72 +61,20 @@ def run(infn, outfn, clean: "run from scratch, ignoring checkpoints" = False, de
 
     output = lambda cell: show_console(cell, rule = debug, verbose = debug)
 
-    g = {}
-    l = {}
-    m = Hasher()
-    new_cells = []
-    def add_new_cell(cell):
-        new_cells.append(cell)
-        if not debug and not cell.display(): return
-        output(cell)
+    nb = notebook.Notebook()
+    nb.add(cells)
 
-    checkpoint = -1
     if not clean:
-        checkpoint = find_checkpoint(cells)
-        if checkpoint > 0:
-            l       = cells[checkpoint].load()
-            running = cells[checkpoint].expected_hash()
+        checkpoint = nb.find_checkpoint()
+        if checkpoint is not None:
             console.print(Rule(f"Skipping to checkpoint {checkpoint}", style='magenta'))
+            nb.skip(checkpoint, output)
+            console.print(Rule('Resuming', style="magenta"))
 
-    pairs = utils.pairwise(cells)
-    for i, (cell, next_cell) in enumerate(pairs):
-        add_new_cell(cell)
-        if i <= checkpoint:
-            if type(cell) is c.CodeCell:
-                m.update(cell)
-            if i == checkpoint:
-                console.print(Rule('Resuming', style="magenta"))
-            continue
-
-        if type(cell) is c.CodeCell:
-            with utils.stdIO() as out:
-                code = cell.code()
-                result = evaluate.exec_eval(code, g, l)
-
-            m.update(code)
-
-            # skip the next output cell
-            if type(next_cell) is c.OutputCell:
-                next(pairs)
-
-            out.seek(0)
-            out_lines = out.readlines()
-
-            lines = []
-            png   = None
-            if out_lines:
-                lines += out_lines
-            if result is not None:
-                lines.append(result.__repr__() + '\n')
-
-                if image.is_mpl(result):
-                    png = image.save_mpl_png()
-
-            if lines or png:
-                add_new_cell(c.OutputCell(lines, png))
-        elif type(cell) is c.CheckpointCell:
-            cell.dump(m.digest(), l)
+    nb.process(output)
 
     if not dry_run:
-        with atomic_write(outfn, mode='w', overwrite=True) as f:
-            save(f, new_cells)
-
-def save(f, cells):
-    for i,cell in enumerate(cells):
-        for line in cell.save():
-            f.write(line)
-        if i < len(cells) - 1:      # no newline at the end
-            f.write('\n')
+        nb.save(outfn)
 
 if __name__ == '__main__':
     argh.dispatch_commands([show, run])

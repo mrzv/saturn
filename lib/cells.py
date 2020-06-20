@@ -42,6 +42,7 @@ class Cell:
         return True
 
     def trim(self):
+        if not self.lines_: return
         for bg, l in enumerate(self.lines_):
             if l.strip():
                 break
