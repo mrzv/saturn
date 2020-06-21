@@ -77,7 +77,10 @@ class Notebook:
                 if out_lines:
                     lines += out_lines
                 if result is not None:
-                    lines.append(result.__repr__() + '\n')
+                    result_lines = io.StringIO(result.__repr__()).readlines()
+                    if not result_lines[-1].endswith('\n'):
+                        result_lines[-1] += '\n'
+                    lines += result_lines
 
                     if image.is_mpl(result):
                         png = image.save_mpl_png()
