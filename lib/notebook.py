@@ -26,7 +26,7 @@ class Notebook:
         self.cells = []
 
         self.g = {}
-        self.l = {}
+        self.l = self.g
         self.m = Hasher()
 
     def add(self, cells):
