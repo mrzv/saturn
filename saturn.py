@@ -7,15 +7,10 @@ from    rich.rule    import Rule
 
 import  io
 
-from    prompt_toolkit import PromptSession
-from    pygments.lexers.python import PythonLexer
-from    prompt_toolkit.lexers import PygmentsLexer
-from    prompt_toolkit.key_binding import KeyBindings
-from    prompt_toolkit.shortcuts import message_dialog
-
 from    icecream import ic
 
-from    lib import  cells as c, notebook
+from    lib         import cells as c, notebook
+from    lib.repl    import PythonReplWithExecute
 
 console = Console()
 
@@ -90,41 +85,28 @@ def run(infn, outfn, clean: "run from scratch, ignoring checkpoints" = False, de
     if not dry_run:
         nb.save(outfn)
 
+
 def run_repl(nb, output, outfn = '', dry_run = True):
-    session = PromptSession()
+    def execute_line(line):
+        cells = c.parse(io.StringIO(line))
+        nb.add(cells)
+        nb.process(output)
 
-    # Swap enter and meta+enter #
-    kb = KeyBindings()
+    repl = PythonReplWithExecute(
+        execute = execute_line,
+        get_globals=lambda: nb.g,
+        get_locals=lambda: nb.l,
+        vi_mode=False,
+        history_filename=None,
+        startup_paths=None,
+    )
 
-    @kb.add('escape', 'enter')
-    def _(event):
-        event.current_buffer.insert_text('\n')
+    # @repl.add_key_binding('c-s')
+    # def _(event):
+    #     if not dry_run:
+    #         nb.save(outfn)
 
-    @kb.add('enter')
-    def _(event):
-        event.current_buffer.validate_and_handle()
-
-    @kb.add('c-s')
-    def _(event):
-        if not dry_run:
-            nb.save(outfn)
-    #############################
-
-    while True:
-        try:
-            code = session.prompt('>>> ',
-                                  lexer = PygmentsLexer(PythonLexer),
-                                  key_bindings = kb,
-                                  multiline = True,
-                                  bottom_toolbar = None if not dry_run else 'Dry-run mode')
-        except KeyboardInterrupt:
-            continue
-        except EOFError:
-            break
-        else:
-            cells = c.parse(io.StringIO(code))
-            nb.add(cells)
-            nb.process(output)
+    repl.run()
 
 if __name__ == '__main__':
     argh.dispatch_commands([show, run])
