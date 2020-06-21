@@ -1,5 +1,6 @@
 from rich.markdown import Markdown
 from rich.syntax   import Syntax
+from rich.text     import Text
 
 from  itertools import chain
 import base64
@@ -139,7 +140,7 @@ class OutputCell(Cell):
         return lines_
 
     def __rich__(self):
-        return ''.join('--> ' + l for l in self.lines_)
+        return Text(''.join('--> ' + l for l in self.lines_))
 
     def show_console(self, console):
         super().show_console(console)
