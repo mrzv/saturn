@@ -174,13 +174,14 @@ class CheckpointCell(Cell):
     _prefix = '#chk>'
 
     def expected(self, h):
-        if self._expected == None:
+        if self.expected_hash() == None:
             return False
         else:
-            return self._expected == h
+            return self.expected_hash() == h
 
     def expected_hash(self):
-        assert self._expected != None
+        if not hasattr(self, '_expected'):
+            self._expected = dill.load(self._content)
         return self._expected
 
     @classmethod
@@ -196,16 +197,19 @@ class CheckpointCell(Cell):
 
         content = self.lines()
         content = base64.b64decode(content)
-
-        self._expected, self._locals = dill.load(io.BytesIO(content))
+        self._content = io.BytesIO(content)
 
     def load(self):
-        assert self._expected != None
+        h = self.expected_hash()    # just to make sure it's been parsed
+        assert h != None
+        if not hasattr(self, '_locals'):
+            self._locals = dill.load(self._content)
         return self._locals
 
     def dump(self, running, locals_):
         content = io.BytesIO()
-        dill.dump((running, locals_), content)
+        dill.dump(running, content)
+        dill.dump(locals_, content)
         content.seek(0)
         content = content.read()
         content = base64.b64encode(content).decode('ascii')
