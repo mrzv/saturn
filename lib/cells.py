@@ -88,7 +88,9 @@ class CodeCell(Cell):
     _name   = 'Code'
 
     def __rich__(self):
-        return Syntax(''.join('>>> ' + l for l in self.lines_ if l), 'python')
+        if not self.lines_:
+            return
+        return Syntax('>>> ' + '... '.join(self.lines_), 'python')
 
     def code(self):
         return self.lines()
