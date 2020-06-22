@@ -99,7 +99,7 @@ class CodeCell(Cell):
         return f"<div class='code'>{highlight(self.code(), PythonLexer(), HtmlFormatter())}</div>"
 
 class MarkdownCell(Cell):
-    _prefix = '#m#'
+    _prefix = '#m>'
     _name   = 'Markdown'
 
     def __rich__(self):
@@ -109,7 +109,7 @@ class MarkdownCell(Cell):
         return "<div class='markdown'>" + markdown.markdown(''.join(line[1:] if line[0] == ' ' else line for line in self.lines_)) + "</div>"
 
 class OutputCell(Cell):
-    _prefix = '#o# '
+    _prefix = '#o> '
     _name   = 'Output'
 
     def __init__(self, lines_ = None, png = None):
@@ -142,7 +142,7 @@ class OutputCell(Cell):
         return lines_
 
     def __rich__(self):
-        return Text(''.join('--> ' + l for l in self.lines_))
+        return Text(''.join(self.lines_))
 
     def show_console(self, console):
         super().show_console(console)
@@ -161,7 +161,7 @@ class OutputCell(Cell):
         return result
 
 class BreakCell(Cell):
-    _prefix = '#-#'
+    _prefix = '#---#'
 
     @classmethod
     def display(cls):
@@ -171,7 +171,7 @@ class BreakCell(Cell):
         return self._prefix + '\n'
 
 class CheckpointCell(Cell):
-    _prefix = '#chk#'
+    _prefix = '#chk>'
 
     def expected(self, h):
         if self._expected == None:
