@@ -42,7 +42,8 @@ class Notebook:
 
         cell = self.incoming[self.current]
         assert type(cell) is c.CheckpointCell
-        self.l = cell.load()
+        self.g = cell.load()
+        self.l = self.g
         self.append(cell, output)
         self.current += 1
 
