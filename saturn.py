@@ -126,8 +126,11 @@ def clean(infn, outfn):
                         of.write('#chk>\n')
                         while pf and pf.peek().startswith('#chk>'):
                             next(pf)
-                            continue
                         continue
+                    if line.startswith('#var>'):
+                        # Keep the first line, but skip all subsequent lines
+                        while pf and pf.peek().startswith('#var>'):
+                            next(pf)
                     of.write(line)
 
 
