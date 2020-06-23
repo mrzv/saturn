@@ -6,6 +6,8 @@ from    rich.console import Console
 from    rich.rule    import Rule
 
 import  io
+from    atomicwrites import atomic_write
+from    more_itertools import peekable
 
 from    icecream import ic
 
@@ -108,5 +110,26 @@ def run_repl(nb, output, outfn = '', dry_run = True):
 
     repl.run()
 
+@argh.arg('outfn', nargs='?')
+def clean(infn, outfn):
+    """Remove all binary data from the notebook."""
+    if not outfn:
+        outfn = infn
+
+    if os.path.exists(infn):
+        with atomic_write(outfn, mode='w', overwrite=True) as of:
+            with open(infn) as f:
+                pf = peekable(f)
+                for line in pf:
+                    if line.startswith('#o> png'): continue
+                    if line.startswith('#chk>') and line.strip() != '#chk>':
+                        of.write('#chk>\n')
+                        while pf and pf.peek().startswith('#chk>'):
+                            next(pf)
+                            continue
+                        continue
+                    of.write(line)
+
+
 if __name__ == '__main__':
-    argh.dispatch_commands([show, run])
+    argh.dispatch_commands([show, run, clean])

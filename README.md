@@ -32,6 +32,11 @@
     be added to the notebook.
   * `-n, --dry-run`: don't save the result.
 
+* `saturn clean notebook.py [output.py]`
+
+  Remove all binary data from the notebook. Useful for getting rid of large
+  checkpoints.
+
 ## Cell types
 
 * Markdown cells, prefix `#m>`
