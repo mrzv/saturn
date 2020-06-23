@@ -66,6 +66,15 @@ class Notebook:
 
                 self.m.update(code)
 
+                # skip blanks, if any
+                while type(next_cell) is c.Blanks:
+                    self.append(next_cell)
+                    self.current += 1
+                    if self.current < len(self.incoming):
+                        next_cell = self.incoming[self.current]
+                    else:
+                        next_cell = None
+
                 # skip the next output cell
                 if type(next_cell) is c.OutputCell:
                     self.current += 1
@@ -101,8 +110,6 @@ class Notebook:
             for i,cell in enumerate(self.cells):
                 for line in cell.save():
                     f.write(line)
-                if i < len(self.cells) - 1:      # no newline at the end
-                    f.write('\n')
 
     def find_checkpoint(self):
         m = Hasher()

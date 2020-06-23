@@ -13,8 +13,7 @@ def is_mpl(result):        # determine if we can display this type
 def save_mpl_png():
     buf = io.BytesIO()
     plt.savefig(buf, format='png')
-    buf.seek(0)
-    return buf.read()
+    return buf.getvalue()
 
 def show_png(buf):
     if enabled:

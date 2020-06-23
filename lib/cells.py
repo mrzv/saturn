@@ -6,6 +6,7 @@ from  itertools import chain
 import base64
 import io
 import dill
+from  more_itertools    import peekable
 
 import html
 from pygments import highlight
@@ -16,8 +17,6 @@ import markdown
 
 from . import utils
 from . import image
-
-from icecream import ic
 
 class Cell:
     def __init__(self):
@@ -33,7 +32,7 @@ class Cell:
         return [prefix + line for line in self.lines_]
 
     def parse(self):            # called after all the lines have been read
-        self.trim()
+        pass
 
     def lines(self):
         return ''.join(self.lines_)
@@ -41,21 +40,6 @@ class Cell:
     @classmethod
     def display(cls):
         return True
-
-    def trim(self):
-        if not self.lines_: return
-        for bg, l in enumerate(self.lines_):
-            if l.strip():
-                break
-        else:
-            bg += 1
-        for end, l in enumerate(self.lines_[::-1]):
-            if l.strip():
-                break
-        else:
-            end += 1
-        end = len(self.lines_) - end
-        self.lines_ = self.lines_[bg:end]
 
     @classmethod
     def identify(cls, line):
@@ -189,7 +173,8 @@ class CheckpointCell(Cell):
         return False
 
     def parse(self):
-        super().parse()
+        if all(l.strip() == '' for l in self.lines_):
+            self.lines_ = []
 
         if not self.lines_:
             self._expected = None
@@ -210,10 +195,22 @@ class CheckpointCell(Cell):
         content = io.BytesIO()
         dill.dump(running, content)
         dill.dump(locals_, content)
-        content.seek(0)
-        content = content.read()
-        content = base64.b64encode(content).decode('ascii')
+        content = base64.b64encode(content.getvalue()).decode('ascii')
         self.lines_ = [line + '\n' for line in chunk(content, 80, markers = True)]
+
+# Captures blank lines between cells
+class Blanks(Cell):
+    _prefix = ''
+
+    def show_console(self, console):
+        pass
+
+    def show_html(self, f):
+        pass
+
+    @classmethod
+    def display(cls):
+        return False
 
 cell_types = [MarkdownCell, OutputCell, BreakCell, CheckpointCell]
 
@@ -230,17 +227,34 @@ def chunk(content, width, markers = False):
 
 def parse(f, show_only = False):
     cells = []
+    def cells_append(cell):
+        if len(cells) > 0:
+            cells[-1].parse()
+        cells.append(cell)
 
-    for line in f:
+    p = peekable(f)
+    for line in p:
+        # agglomerate empty lines into Blanks and either store as such or return to the CodeCell, if in the middle of one
+        if not line.strip():
+            blank = Blanks()
+            blank.append(line)
+            while p and not p.peek().strip():
+                blank.append(next(p))
+
+            if p and len(cells) > 0 and type(cells[-1]) is CodeCell and identify(p.peek()) is CodeCell:
+                for line in blank.lines_:
+                    cells[-1].append(line)
+            else:
+                cells_append(blank)
+
+            continue
+
         Type = identify(line)
 
         if show_only and not Type.display(): continue     # skip check-point cells in show mode
 
         if len(cells) == 0 or type(cells[-1]) is not Type:
-            if len(cells) > 0:
-                cells[-1].parse()
-            cell = Type()
-            cells.append(cell)
+            cells_append(Type())
         cells[-1].append(line)
 
     if len(cells) > 0:
