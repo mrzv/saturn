@@ -71,10 +71,19 @@ class CodeCell(Cell):
     _prefix = ''
     _name   = 'Code'
 
+    def __init__(self):
+        super().__init__()
+        self.skippable = True
+
     def __rich__(self):
         if not self.lines_:
             return
         return Syntax('>>> ' + '... '.join(self.lines_), 'python')
+
+    def append(self, line):
+        super().append(line)
+        if line.startswith('#no-skip#'):
+            self.skippable = False
 
     def code(self):
         return self.lines()

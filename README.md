@@ -94,6 +94,13 @@
   All contiguous lines, not marked as one of the above, are grouped together
   into code cells.
 
+* Non-skippable code cells `#no-skip#`
+
+  Adding this line anywhere within the code cell will indicate that it
+  shouldn't be skipped, even if we are restarting from a checkpoint. This is
+  useful, for example, if a cell is modifying `sys.path`, which won't be
+  captured in a checkpoint.
+
 ## Vim support
 
 All the binary (non-human-readable) cell content is wrapped in `{{{`, `}}}`
