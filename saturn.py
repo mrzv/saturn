@@ -79,7 +79,7 @@ def run(infn, outfn, clean: "run from scratch, ignoring checkpoints" = False, de
             nb.skip(checkpoint, output)
             console.print(Rule('Resuming', style="magenta"))
 
-    nb.process(output)
+    nb.process(output, lambda *args: console.print(Rule(*args)))
 
     if repl:
         run_repl(nb, output, outfn, dry_run)

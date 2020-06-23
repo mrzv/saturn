@@ -22,3 +22,6 @@ def exec_eval(script, globals=None, locals=None):
     else:
         # otherwise we just execute the entire code
         return exec(script, globals, locals)
+
+def eval_expression(expr, locals_):
+    return eval(expr, locals_, locals_)

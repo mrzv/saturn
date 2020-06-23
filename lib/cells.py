@@ -17,6 +17,7 @@ import markdown
 
 from . import utils
 from . import image
+from . import evaluate
 
 class Cell:
     def __init__(self):
@@ -207,6 +208,32 @@ class CheckpointCell(Cell):
         content = base64.b64encode(content.getvalue()).decode('ascii')
         self.lines_ = [line + '\n' for line in chunk(content, 80, markers = True)]
 
+class VariableCell(CheckpointCell):
+    _prefix = '#var>'
+
+    def parse(self):
+        self.variables = self.lines_[0]
+        self.lines_ = self.lines_[1:]
+
+        super().parse()
+
+    def load(self, locals_):
+        locals_['_var_cell_load'] = dill.load(self._content)
+        evaluate.exec_eval(self.variables.strip() + ' = _var_cell_load', locals_, locals_)
+        del locals_['_var_cell_load']
+
+    def dump(self, running, locals_):
+        content = io.BytesIO()
+        dill.dump(running, content)
+        dill.dump(evaluate.eval_expression(self.variables, locals_), content)
+        content = base64.b64encode(content.getvalue()).decode('ascii')
+        self.lines_ = [line + '\n' for line in chunk(content, 80, markers = True)]
+
+    def save(self):
+        lines_ = super().save()
+        return [self.__class__._prefix + self.variables] + lines_
+
+
 # Captures blank lines between cells
 class Blanks(Cell):
     _prefix = ''
@@ -221,7 +248,7 @@ class Blanks(Cell):
     def display(cls):
         return False
 
-cell_types = [MarkdownCell, OutputCell, BreakCell, CheckpointCell]
+cell_types = [MarkdownCell, OutputCell, BreakCell, CheckpointCell, VariableCell]
 
 def identify(line):
     for Type in chain(cell_types, [CodeCell]):        # CodeCell matches everything, so comes last

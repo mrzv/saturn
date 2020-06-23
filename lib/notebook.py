@@ -56,17 +56,30 @@ class Notebook:
         else:
             return None
 
-    def execute(self, cell, output):
-        with utils.stdIO() as out:
-            code = cell.code()
-            result = evaluate.exec_eval(code, self.g, self.l)
-
-        self.m.update(code)
-
+    def execute(self, cell, output, info = lambda *args: None):
         # skip blanks, if any
         while type(self.next_cell()) is c.Blanks:
             self.append(self.next_cell())
             self.current += 1
+
+        code = cell.code()
+        self.m.update(code)
+
+        if type(self.next_cell()) is c.VariableCell:
+            if self.next_cell().expected(self.m.digest()):
+                info(f"Previous code cell not evaluated, loading [yellow]{self.next_cell().variables.strip()}[/yellow] instead")
+                self.next_cell().load(self.l)
+                self.append(self.next_cell(), output)
+                self.current += 1
+                return
+
+        with utils.stdIO() as out:
+            result = evaluate.exec_eval(code, self.g, self.l)
+
+        if type(self.next_cell()) is c.VariableCell:
+              self.next_cell().dump(self.m.digest(), self.l)
+              self.append(self.next_cell(), output)
+              self.current += 1
 
         # skip the next output cell
         if type(self.next_cell()) is c.OutputCell:
@@ -91,7 +104,7 @@ class Notebook:
         if lines or png:
             self.append(c.OutputCell(lines, png), output)
 
-    def process(self, output):
+    def process(self, output, info = lambda *args: None):
         while self.current < len(self.incoming):
             cell = self.incoming[self.current]
             self.current += 1
@@ -99,7 +112,9 @@ class Notebook:
             self.append(cell, output)
 
             if type(cell) is c.CodeCell:
-                self.execute(cell, output)
+                self.execute(cell, output, info)
+            elif type(cell) is c.VariableCell:
+                cell.dump(self.m.digest(), self.l)
             elif type(cell) is c.CheckpointCell:
                 cell.dump(self.m.digest(), self.l)
 

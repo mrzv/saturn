@@ -89,6 +89,13 @@
   +-- 36 lines: chk>----------------------------------------------------
   ```
 
+* Variable cells `#var> x,y,z`
+
+  These cells save only the value of the specified variables (which is useful
+  if the full checkpoint is too big). If all the previous code cells haven't
+  changed, the cell's saved content is loaded into the specified variables and
+  the previous code cell is not evaluated.
+
 * Break cells `#---#`
 
   These are used to break code cells that don't have any other type of a cell
