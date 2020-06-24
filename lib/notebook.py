@@ -1,6 +1,7 @@
 import  hashlib
 import  io
 from    atomicwrites import atomic_write
+from    wurlitzer    import pipes, STDOUT
 
 from    . import cells as c, utils, evaluate, image
 
@@ -73,7 +74,8 @@ class Notebook:
                 self.current += 1
                 return
 
-        with utils.stdIO() as out:
+        out = io.StringIO()
+        with pipes(stdout = out, stderr = STDOUT):
             result = evaluate.exec_eval(code, self.g, self.l)
 
         if type(self.next_cell()) is c.VariableCell:
