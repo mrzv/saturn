@@ -8,6 +8,11 @@ class CompositeIO:
     def __init__(self):
         self.outer = [io.StringIO()]
 
+    def empty(self):
+        if len(self.outer) > 1: return False
+        if self.outer[0].getvalue(): return False
+        return True
+
     def __iter__(self):
         return iter(self.outer)
 

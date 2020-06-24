@@ -42,6 +42,9 @@ class Cell:
     def display(cls):
         return True
 
+    def empty(self):
+        return not self.__class__.display()
+
     @classmethod
     def identify(cls, line):
         return line.startswith(cls._prefix)
@@ -138,10 +141,14 @@ class OutputCell(Cell):
                 lines_ += [self._prefix + 'png' + line + '\n' for line in chunk(content, 80, markers = True)]
         return lines_
 
+    def empty(self):
+        return self.composite_.empty()
+
     def show_console(self, console):
         for x in self.composite_:
             if type(x) is io.StringIO:
-                console.print(Text(x.getvalue()))
+                if x.getvalue():
+                    console.print(Text(x.getvalue()))
             else:
                 image.show_png(x)
 

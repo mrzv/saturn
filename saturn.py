@@ -20,7 +20,7 @@ def show_console(cell, rule = False, verbose = False):
 
     cell.show_console(console)
 
-    if not rule:
+    if not cell.empty() and not rule:
         console.print()
 
 def show_html(cell, f):
