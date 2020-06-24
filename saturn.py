@@ -9,8 +9,6 @@ import  io
 from    atomicwrites import atomic_write
 from    more_itertools import peekable
 
-from    icecream import ic
-
 from    lib         import cells as c, notebook
 from    lib.repl    import PythonReplWithExecute
 

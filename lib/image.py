@@ -1,6 +1,9 @@
 import pixcat
 import PIL
+
 import matplotlib
+matplotlib.use("module://lib.mpl")
+
 import matplotlib.pyplot as plt
 import io
 import os

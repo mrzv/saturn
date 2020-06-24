@@ -3,7 +3,7 @@ import  io
 from    atomicwrites import atomic_write
 from    wurlitzer    import pipes, STDOUT
 
-from    . import cells as c, utils, evaluate, image
+from    . import cells as c, utils, evaluate, image, mpl
 
 class Hasher:
     def __init__(self):
@@ -74,9 +74,14 @@ class Notebook:
                 self.current += 1
                 return
 
-        out = io.StringIO()
+        out = utils.CompositeIO()
+        mpl.figures = out
         with pipes(stdout = out, stderr = STDOUT):
             result = evaluate.exec_eval(code, self.g, self.l)
+            if result is not None:
+                out.write(result.__repr__() + '\n')
+                if image.is_mpl(result):
+                    out.append_png(image.save_mpl_png())
 
         if type(self.next_cell()) is c.VariableCell:
               self.next_cell().dump(self.m.digest(), self.l)
@@ -87,24 +92,7 @@ class Notebook:
         if type(self.next_cell()) is c.OutputCell:
             self.current += 1
 
-        out.seek(0)
-        out_lines = out.readlines()
-
-        lines = []
-        png   = None
-        if out_lines:
-            lines += out_lines
-        if result is not None:
-            result_lines = io.StringIO(result.__repr__()).readlines()
-            if not result_lines[-1].endswith('\n'):
-                result_lines[-1] += '\n'
-            lines += result_lines
-
-            if image.is_mpl(result):
-                png = image.save_mpl_png()
-
-        if lines or png:
-            self.append(c.OutputCell(lines, png), output)
+        self.append(c.OutputCell(out), output)
 
     def process(self, output, info = lambda *args: None):
         while self.current < len(self.incoming):

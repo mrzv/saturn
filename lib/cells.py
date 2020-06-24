@@ -106,52 +106,53 @@ class OutputCell(Cell):
     _prefix = '#o> '
     _name   = 'Output'
 
-    def __init__(self, lines_ = None, png = None):
-        if lines_ is None:
-            self.lines_ = []
+    def __init__(self, composite_ = None):
+        super().__init__()
+        if composite_ is None:
+            self.composite_ = utils.CompositeIO()
         else:
-            self.lines_ = lines_
-
-        self.png = png
+            self.composite_ = composite_
 
     def parse(self):
         super().parse()
-
-        png_content = [line[3:] for line in self.lines_ if line.startswith('png')]
-        self.lines_  = [line for line in self.lines_ if not line.startswith('png')]
-
-        if png_content:
-            png_content = ''.join(png_content)
-            self.png    = base64.b64decode(png_content)
-        else:
-            self.png = None
+        pl = peekable(self.lines_)
+        for line in pl:
+            if not line.startswith('png'):
+                self.composite_.write(line)
+            else:
+                png_content = [line[3:]]
+                while pl and pl.peek().startswith('png'):
+                    png_content.append(next(pl)[3:])
+                png_content = ''.join(png_content)
+                self.composite_.append_png(base64.b64decode(png_content))
+        self.lines_.clear()
 
     def save(self):
-        lines_ = super().save()
-
-        if self.png:
-            content = base64.b64encode(self.png).decode('ascii')
-            lines_ += [self._prefix + 'png' + line + '\n' for line in chunk(content, 80, markers = True)]
-
+        lines_ = []
+        for x in self.composite_:
+            if type(x) is io.StringIO:
+                x.seek(0)
+                lines_ += [self._prefix + line for line in x.readlines()]
+            else:
+                content = base64.b64encode(x).decode('ascii')
+                lines_ += [self._prefix + 'png' + line + '\n' for line in chunk(content, 80, markers = True)]
         return lines_
 
-    def __rich__(self):
-        return Text(''.join(self.lines_))
-
     def show_console(self, console):
-        super().show_console(console)
-
-        if self.png:
-            image.show_png(self.png)
+        for x in self.composite_:
+            if type(x) is io.StringIO:
+                console.print(Text(x.getvalue()))
+            else:
+                image.show_png(x)
 
     def _render_html(self):
-        result =  f"<div class='output'><pre>{html.escape(self.lines())}</pre>"
-
-        if self.png:
-            result += f'<img src="data:image/png;base64,{base64.b64encode(self.png).decode("ascii")}"/>'
-
+        result = ""
+        for x in self.composite_:
+            if type(x) is io.StringIO:
+                result += f"<div class='output'><pre>{html.escape(x.getvalue())}</pre>\n"
+            else:
+                result += f'<img src="data:image/png;base64,{base64.b64encode(x).decode("ascii")}"/>\n'
         result += "</div>"
-
         return result
 
 class BreakCell(Cell):
