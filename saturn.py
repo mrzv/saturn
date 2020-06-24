@@ -88,7 +88,9 @@ def run(infn, outfn, clean: "run from scratch, ignoring checkpoints" = False, de
 
 def run_repl(nb, output, outfn = '', dry_run = True):
     def execute_line(line):
-        cells = c.parse(io.StringIO(line))
+        blank = c.Blanks()
+        blank.append('\n')
+        cells = [blank] + c.parse(io.StringIO(line))
         nb.add(cells)
         nb.process(output)
 
