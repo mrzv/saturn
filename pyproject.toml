@@ -15,6 +15,7 @@ matplotlib = "^3.2.2"
 markdown = "^3.2.2"
 pygments = "^2.6.1"
 ptpython = "^3.0.2"
+more_itertools = "^8.4.0"
 
 [tool.poetry.dev-dependencies]
 icecream = "^2.0.0"
