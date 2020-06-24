@@ -170,7 +170,7 @@ class BreakCell(Cell):
         return False
 
     def save(self):
-        return self._prefix + '\n'
+        return [self._prefix + '\n']
 
 class CheckpointCell(Cell):
     _prefix = '#chk>'
