@@ -10,7 +10,8 @@ class CompositeIO:
 
     def empty(self):
         if len(self.outer) > 1: return False
-        if self.outer[0].getvalue(): return False
+        self.outer[0].seek(0, io.SEEK_END)
+        if self.outer[0].tell() > 0: return False
         return True
 
     def __iter__(self):
