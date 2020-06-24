@@ -118,6 +118,8 @@ class Notebook:
             for i,cell in enumerate(self.cells):
                 for line in cell.save():
                     f.write(line)
+                if i != len(self.cells) - 1 and not line.endswith('\n'):
+                    f.write('\n')
 
     def find_checkpoint(self):
         m = Hasher()
