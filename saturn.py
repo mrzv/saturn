@@ -110,9 +110,8 @@ def run_repl(nb, output, outfn = '', dry_run = True):
 
     # Add the code cells to history
     for cell in nb.cells:
-        if type(cell) is c.CodeCell:
-            for line in cell.lines_:
-                repl.history.append_string(line)
+        for line in cell.repl_history():
+            repl.history.append_string(line)
 
     @repl.add_key_binding('c-o')
     def _(event):

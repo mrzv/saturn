@@ -38,6 +38,9 @@ class Cell:
     def lines(self):
         return ''.join(self.lines_)
 
+    def repl_history(self):
+        return self.save()
+
     @classmethod
     def display(cls):
         return True
@@ -116,6 +119,9 @@ class OutputCell(Cell):
         else:
             self.composite_ = composite_
 
+    def repl_history(self):
+        return []
+
     def parse(self):
         super().parse()
         pl = peekable(self.lines_)
@@ -190,6 +196,9 @@ class CheckpointCell(Cell):
     def display(cls):
         return False
 
+    def repl_history(self):
+        return []
+
     def parse(self):
         if all(l.strip() == '' for l in self.lines_):
             self.lines_ = []
@@ -237,10 +246,15 @@ class VariableCell(CheckpointCell):
         content = base64.b64encode(content.getvalue()).decode('ascii')
         self.lines_ = [line + '\n' for line in chunk(content, 80, markers = True)]
 
+    def header(self):
+        return self.__class__._prefix + self.variables
+
     def save(self):
         lines_ = super().save()
-        return [self.__class__._prefix + self.variables] + lines_
+        return [self.header()] + lines_
 
+    def repl_history(self):
+        return [self.header()]
 
 # Captures blank lines between cells
 class Blanks(Cell):
