@@ -5,20 +5,20 @@
 * Plain-text format. Notebooks are regular Python files. Different types of
   cells are comments with special formatting.
 
-* Checkpoints. Special checkpoint cells allow to save the state of the session.
+* Checkpoints. Special checkpoint cells allow to save the state of the session
+  or individual variables.
 
 * Terminal graphics support. When using
   [kitty](https://sw.kovidgoyal.net/kitty/) terminal (or in principle anything
   that supports its [graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol.html))
   matplotlib figures are rendered inline in the terminal.
 
-## Commands-line options
+## Commands and options
 
 * `saturn show notebook.py`
 
   Display the notebook in the terminal. No computation is performed. Optional
-  `--html OUTPUT.html` flag will tell saturn to output the notebook as an HTML
-  file.
+  `--html OUTPUT.html` flag will produce HTML output.
 
 * `saturn run notebook.py [output.py]`
 
