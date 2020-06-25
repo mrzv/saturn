@@ -18,7 +18,8 @@ class Hasher:
         return self.m.digest()
 
 class Notebook:
-    def __init__(self, debug = False):
+    def __init__(self, auto_capture = False, debug = False):
+        self.auto_capture = auto_capture
         self.debug = debug
 
         self.incoming = []
@@ -80,7 +81,7 @@ class Notebook:
             result = evaluate.exec_eval(code, self.g, self.l)
             if result is not None:
                 out.write(result.__repr__() + '\n')
-                if image.is_mpl(result):
+                if self.auto_capture and image.is_new_mpl_available():
                     out.append_png(image.save_mpl_png())
 
         if type(self.next_cell()) is c.VariableCell:

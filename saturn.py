@@ -55,7 +55,12 @@ def show(fn, html = '', debug = False):
 
 @argh.arg('outfn', nargs='?')
 @argh.arg('-n', '--dry-run')
-def run(infn, outfn, clean: "run from scratch, ignoring checkpoints" = False, debug = False, dry_run = False, repl = False):
+def run(infn, outfn,
+        clean: "run from scratch, ignoring checkpoints" = False,
+        auto_capture: "automatically capture images" = False,
+        debug = False,
+        dry_run = False,
+        repl = False):
     if not outfn:
         outfn = infn
 
@@ -67,7 +72,7 @@ def run(infn, outfn, clean: "run from scratch, ignoring checkpoints" = False, de
 
     output = lambda cell: show_console(cell, rule = debug, verbose = debug)
 
-    nb = notebook.Notebook()
+    nb = notebook.Notebook(auto_capture = auto_capture)
     nb.add(cells)
 
     if not clean:
