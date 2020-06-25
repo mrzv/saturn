@@ -1,12 +1,10 @@
-import pixcat
-import PIL
-
 import matplotlib
 matplotlib.use("module://lib.mpl")
 
 import matplotlib.pyplot as plt
 import io
 import os
+from subprocess import run
 
 enabled = os.environ['TERM'] == 'xterm-kitty'      # TODO: find a better way
 
@@ -20,5 +18,4 @@ def save_mpl_png():
 
 def show_png(buf):
     if enabled:
-        im = PIL.Image.open(io.BytesIO(buf))
-        pixcat.Image(im).show()
+        run(['kitty', '+kitten', 'icat'], input = buf)
