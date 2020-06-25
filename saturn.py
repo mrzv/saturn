@@ -103,10 +103,16 @@ def run_repl(nb, output, outfn = '', dry_run = True):
         startup_paths=None,
     )
 
-    # @repl.add_key_binding('c-s')
-    # def _(event):
-    #     if not dry_run:
-    #         nb.save(outfn)
+    # Add the code cells to history
+    for cell in nb.cells:
+        if type(cell) is c.CodeCell:
+            for line in cell.lines_:
+                repl.history.append_string(line)
+
+    @repl.add_key_binding('c-o')
+    def _(event):
+        if not dry_run:
+            nb.save(outfn)
 
     repl.run()
 

@@ -5,6 +5,9 @@ class PythonReplWithExecute(PythonRepl):
         self.execute__ = execute
         super().__init__(*args, **kw)
 
+        self.show_meta_enter_message = False
+        self.title = "Saturn "
+
         # Swap enter and meta+enter #
         @self.add_key_binding('escape', 'enter')
         def _(event):
