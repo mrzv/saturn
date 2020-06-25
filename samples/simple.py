@@ -38,6 +38,7 @@ print(b)
 
 import matplotlib.pyplot as plt
 plt.matshow(a)
+plt.show()
 
 #o> <matplotlib.image.AxesImage object at 0x113a35590>
 
