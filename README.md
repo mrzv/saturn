@@ -26,6 +26,7 @@
   into a new notebook `output.py`.
 
   * `-c, --clean`: run from scratch, ignoring the checkpoints.
+  * `-a, --auto-capture`: automatically capture matplotlib figures, without `show()`.
   * `-r, --repl`:
     drop into REPL (using [ptpython](https://github.com/prompt-toolkit/ptpython))
     after all the cells are processed; the results of the REPL interaction will
