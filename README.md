@@ -1,5 +1,7 @@
 # Saturn
 
+[Screenshots](#screenshots)
+
 ## Features
 
 * Plain-text format. Notebooks are regular Python files. Different types of
@@ -123,3 +125,19 @@ with all the binary content folded away.
 ```
 # vim: foldmethod=marker foldlevel=0
 ```
+
+## Screenshots
+
+Running [samples/simple.py](https://github.com/mrzv/saturn/blob/master/samples/simple.py):
+
+* First run performs full computation and saves the checkpoint, as well as the figure output.
+
+![First run](https://github.com/mrzv/saturn/raw/master/resources/screenshots/simple-first-run.png)
+
+* Second run resumes from the checkpoint, since no code before it has changed.
+
+![Second run](https://github.com/mrzv/saturn/raw/master/resources/screenshots/simple-second-run.png)
+
+* Vim folds the binary content.
+
+![Vim folding](https://github.com/mrzv/saturn/raw/master/resources/screenshots/simple-vim.png)
