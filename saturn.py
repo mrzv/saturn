@@ -12,7 +12,19 @@ from    more_itertools import peekable
 from    lib         import cells as c, notebook
 from    lib.repl    import PythonReplWithExecute
 
-console = Console()
+try:
+    from mpi4py import MPI
+    root = MPI.COMM_WORLD.Get_rank() == 0
+    using_mpi = MPI.COMM_WORLD.Get_size() > 1
+except ImportError:
+    root = True
+    using_mpi = False
+
+# workaround for a bug in OpenMPI (or anything else that screws up the terminal size);
+# see https://github.com/willmcgugan/rich/issues/127
+import  shutil
+width = None if shutil.get_terminal_size().columns != 0 else 80
+console = Console(width = width)
 
 def show_console(cell, rule = False, verbose = False):
     if rule:
@@ -60,6 +72,7 @@ def run(infn, outfn,
         auto_capture: "automatically capture images" = False,
         debug = False,
         dry_run = False,
+        only_root_output = False,
         repl = False):
     if not outfn:
         outfn = infn
@@ -70,7 +83,13 @@ def run(infn, outfn,
     else:
         cells = []
 
-    output = lambda cell: show_console(cell, rule = debug, verbose = debug)
+    def output(cell):
+        if root or (not only_root_output and type(cell) is c.OutputCell):
+            show_console(cell, rule = debug, verbose = debug)
+
+    def info(*args, **kw):
+        if root:
+            console.print(Rule(*args, **kw))
 
     nb = notebook.Notebook(auto_capture = auto_capture)
     nb.add(cells)
@@ -78,26 +97,37 @@ def run(infn, outfn,
     if not clean:
         checkpoint = nb.find_checkpoint()
         if checkpoint is not None:
-            console.print(Rule(f"Skipping to checkpoint {checkpoint}", style='magenta'))
+            info(f"Skipping to checkpoint {checkpoint}", style='magenta')
             nb.skip(checkpoint, output)
-            console.print(Rule('Resuming', style="magenta"))
+            info('Resuming', style="magenta")
 
-    nb.process(output, lambda *args: console.print(Rule(*args)))
+    nb.process(output, info)
 
     if repl:
         run_repl(nb, output, outfn, dry_run)
 
-    if not dry_run:
+    if not dry_run and root:
         nb.save(outfn)
 
 
 def run_repl(nb, output, outfn = '', dry_run = True):
+    if using_mpi:
+        comm = MPI.COMM_WORLD
+
     def execute_line(line):
+        if using_mpi and root:
+            line = comm.bcast(line, root = 0)
         blank = c.Blanks()
         blank.append('\n')
         cells = [blank] + c.parse(io.StringIO(line))
         nb.add(cells)
         nb.process(output)
+
+    if not root:
+        while True:
+            line = comm.bcast('', root = 0)
+            if not line: return
+            execute_line(line)
 
     repl = PythonReplWithExecute(
         execute = execute_line,
@@ -115,10 +145,12 @@ def run_repl(nb, output, outfn = '', dry_run = True):
 
     @repl.add_key_binding('c-o')
     def _(event):
-        if not dry_run:
+        if not dry_run and root:
             nb.save(outfn)
 
     repl.run()
+
+    comm.bcast('', root = 0)
 
 @argh.arg('outfn', nargs='?')
 def clean(infn, outfn):

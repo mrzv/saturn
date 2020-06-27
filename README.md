@@ -15,6 +15,10 @@
   that supports its [graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol.html))
   matplotlib figures are rendered inline in the terminal.
 
+* MPI awareness. When running under MPI, only rank 0 will write out the
+  modified notebook. The REPL will take input on rank 0 and broadcast to other
+  ranks. It's also possible to suppress output from all ranks other than 0.
+
 ## Commands and options
 
 * `saturn show notebook.py`
@@ -34,6 +38,7 @@
     after all the cells are processed; the results of the REPL interaction will
     be added to the notebook.
   * `-n, --dry-run`: don't save the result.
+  * `--only-root-output`: under MPI, suppress output from all ranks other than 0.
 
 * `saturn clean notebook.py [output.py]`
 
