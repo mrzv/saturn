@@ -219,11 +219,15 @@ class CheckpointCell(Cell):
         return self._locals
 
     def dump(self, running, locals_):
-        content = io.BytesIO()
-        dill.dump(running, content)
-        dill.dump(locals_, content)
-        content = base64.b64encode(content.getvalue()).decode('ascii')
-        self.lines_ = [line + '\n' for line in chunk(content, 80, markers = True)]
+        try:
+            content = io.BytesIO()
+            dill.dump(running, content)
+            dill.dump(locals_, content)
+            content = base64.b64encode(content.getvalue()).decode('ascii')
+            self.lines_ = [line + '\n' for line in chunk(content, 80, markers = True)]
+        except:
+            self.lines_ = ['']      # to keep the blank checkpoint cell
+            raise
 
 class VariableCell(CheckpointCell):
     _prefix = '#var>'

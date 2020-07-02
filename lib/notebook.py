@@ -69,7 +69,7 @@ class Notebook:
 
         if type(self.next_cell()) is c.VariableCell:
             if self.next_cell().expected(self.m.digest()):
-                info(f"Previous code cell not evaluated, loading [yellow]{self.next_cell().variables.strip()}[/yellow] instead")
+                info(f"Previous code cell not evaluated, [green]loading[/green] [yellow]{self.next_cell().variables.strip()}[/yellow] instead")
                 self.next_cell().load(self.l)
                 self.append(self.next_cell(), output)
                 self.current += 1
@@ -85,9 +85,12 @@ class Notebook:
                     out.append_png(image.save_mpl_png())
 
         if type(self.next_cell()) is c.VariableCell:
-              self.next_cell().dump(self.m.digest(), self.l)
-              self.append(self.next_cell(), output)
-              self.current += 1
+            try:
+                self.next_cell().dump(self.m.digest(), self.l)
+            except:
+                info(f"[red]Failed[/red] to save varialbes [yellow]{self.next_cell().variables.strip()}[/yellow], [green]skipping[/green]")
+            self.append(self.next_cell(), output)
+            self.current += 1
 
         # skip the next output cell
         if type(self.next_cell()) is c.OutputCell:
@@ -106,9 +109,16 @@ class Notebook:
             if type(cell) is c.CodeCell:
                 self.execute(cell, output, info)
             elif type(cell) is c.VariableCell:
-                cell.dump(self.m.digest(), self.l)
+                info(f"[yellow]Warning:[/yellow] isolated variable cell [yellow]{cell.variables.strip()}[/yellow]; result will never be used")
+                try:
+                    cell.dump(self.m.digest(), self.l)
+                except:
+                    info(f"[red]Failed[/red] to save variables [yellow]{cell.variables.strip()}[/yellow], [green]skipping[/green]")
             elif type(cell) is c.CheckpointCell:
-                cell.dump(self.m.digest(), self.l)
+                try:
+                    cell.dump(self.m.digest(), self.l)
+                except:
+                    info(f"[red]Failed[/red] to save state in checkpoint cell, [green]skipping[/green]")
 
     def append(self, cell, output = lambda x: None):
         self.cells.append(cell)
