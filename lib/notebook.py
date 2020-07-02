@@ -69,7 +69,7 @@ class Notebook:
 
         if type(self.next_cell()) is c.VariableCell:
             if self.next_cell().expected(self.m.digest()):
-                info(f"Previous code cell not evaluated, [green]loading[/green] [yellow]{self.next_cell().variables.strip()}[/yellow] instead")
+                info(f"Previous code cell not evaluated, [affirm]loading[/affirm] [variables]{self.next_cell().variables.strip()}[/variables] instead")
                 self.next_cell().load(self.l)
                 self.append(self.next_cell(), output)
                 self.current += 1
@@ -88,7 +88,7 @@ class Notebook:
             try:
                 self.next_cell().dump(self.m.digest(), self.l)
             except:
-                info(f"[red]Failed[/red] to save varialbes [yellow]{self.next_cell().variables.strip()}[/yellow], [green]skipping[/green]")
+                info(f"[error]Failed[/error] to save varialbes [variables]{self.next_cell().variables.strip()}[/variables], [affirm]skipping[/affirm]")
             self.append(self.next_cell(), output)
             self.current += 1
 
@@ -109,16 +109,16 @@ class Notebook:
             if type(cell) is c.CodeCell:
                 self.execute(cell, output, info)
             elif type(cell) is c.VariableCell:
-                info(f"[yellow]Warning:[/yellow] isolated variable cell [yellow]{cell.variables.strip()}[/yellow]; result will never be used")
+                info(f"[warn]Warning:[/warn] isolated variable cell [variables]{cell.variables.strip()}[/variables]; result will never be used")
                 try:
                     cell.dump(self.m.digest(), self.l)
                 except:
-                    info(f"[red]Failed[/red] to save variables [yellow]{cell.variables.strip()}[/yellow], [green]skipping[/green]")
+                    info(f"[error]Failed[/error] to save variables [variables]{cell.variables.strip()}[/variables], [affirm]skipping[/affirm]")
             elif type(cell) is c.CheckpointCell:
                 try:
                     cell.dump(self.m.digest(), self.l)
                 except:
-                    info(f"[red]Failed[/red] to save state in checkpoint cell, [green]skipping[/green]")
+                    info(f"[error]Failed[/error] to save state in checkpoint cell, [affirm]skipping[/affirm]")
 
     def append(self, cell, output = lambda x: None):
         self.cells.append(cell)

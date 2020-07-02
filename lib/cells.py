@@ -62,7 +62,7 @@ class Cell:
         return '== ' + self.__class__.__name__ + '\n' + self.lines()
 
     def __rich__(self):
-        return '[yellow]== ' + self.__class__.__name__ + ' ==[/yellow]\n' + self.lines()
+        return '[cell-name]== ' + self.__class__.__name__ + ' ==[/cell-name]\n' + self.lines()
 
     def show_console(self, console):
         console.print(self)

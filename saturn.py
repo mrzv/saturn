@@ -4,6 +4,8 @@ import  os
 import  argh
 from    rich.console import Console
 from    rich.rule    import Rule
+from    rich.theme   import Theme
+from    rich.style   import Style
 
 import  io
 from    atomicwrites import atomic_write
@@ -24,7 +26,16 @@ except ImportError:
 # see https://github.com/willmcgugan/rich/issues/127
 import  shutil
 width = None if shutil.get_terminal_size().columns != 0 else 80
-console = Console(width = width)
+
+theme = Theme({
+    "variables":    Style.parse("yellow"),
+    "warn":         Style.parse("yellow"),
+    "affirm":       Style.parse("green"),
+    "error":        Style.parse("red"),
+    "cell-name":    Style.parse("yellow"),
+})
+
+console = Console(width = width, theme = theme)
 
 def show_console(cell, rule = False, verbose = False, no_show = False):
     if rule:
