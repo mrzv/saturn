@@ -26,11 +26,12 @@ import  shutil
 width = None if shutil.get_terminal_size().columns != 0 else 80
 console = Console(width = width)
 
-def show_console(cell, rule = False, verbose = False):
+def show_console(cell, rule = False, verbose = False, no_show = False):
     if rule:
         console.print(Rule(cell.type_name() if verbose else ''))
 
-    cell.show_console(console)
+    if not no_show:
+        cell.show_console(console)
 
     if not cell.empty() and not rule:
         console.print()

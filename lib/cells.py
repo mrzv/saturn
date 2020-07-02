@@ -141,7 +141,7 @@ class OutputCell(Cell):
         for x in self.composite_:
             if type(x) is io.StringIO:
                 x.seek(0)
-                lines_ += [self._prefix + line for line in x.readlines()]
+                lines_ += [self._prefix + line for line in utils.collapse_carriage_return(x)]
             else:
                 content = base64.b64encode(x).decode('ascii')
                 lines_ += [self._prefix + 'png' + line + '\n' for line in chunk(content, 80, markers = True)]

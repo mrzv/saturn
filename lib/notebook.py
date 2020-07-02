@@ -75,9 +75,9 @@ class Notebook:
                 self.current += 1
                 return
 
-        out = utils.CompositeIO()
-        mpl.figures = out
-        with pipes(stdout = out, stderr = STDOUT):
+        with utils.captured_passthrough() as out:
+            mpl.figures = out
+
             result = evaluate.exec_eval(code, self.g, self.l)
             if result is not None:
                 out.write(result.__repr__() + '\n')
@@ -93,7 +93,8 @@ class Notebook:
         if type(self.next_cell()) is c.OutputCell:
             self.current += 1
 
-        self.append(c.OutputCell(out), output)
+        self.append(c.OutputCell(out), lambda cell: None)
+        print()
 
     def process(self, output, info = lambda *args: None):
         while self.current < len(self.incoming):
