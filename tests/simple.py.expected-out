@@ -1,0 +1,52 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                            Sample Saturn Notebook                            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Some test markup:                                                               
+
+ • item 1                                                                       
+ • item 2                                                                       
+
+First, we import some necessary boilerplate.                                    
+
+>>> import sys, os                                                              
+... import numpy as np                                                          
+
+
+Fix seed for testing                                                            
+
+>>> np.random.seed(42)                                                          
+
+
+Set up the matrix a on which we operate.                                        
+
+>>> a = np.random.random((10,20))                                               
+
+
+We can examine a's shape:                                                       
+
+>>> print(a.shape)                                                              
+
+(10, 20)
+
+>>> a.shape                                                                     
+
+(10, 20)
+
+>>> ## Is this the best demarkation of the evaluated expression?                
+...                                                                             
+... b = 5                                                                       
+
+
+>>> print(b)                                                                    
+
+5
+
+>>> import matplotlib.pyplot as plt                                             
+... plt.matshow(a)                                                              
+... plt.show()                                                                  
+
+
+>>> # vim: ft=python foldmethod=marker foldlevel=0                              
+
+

@@ -1,0 +1,20 @@
+────────────────────────── Skipping to checkpoint 12 ───────────────────────────
+>>> import time                                                                 
+
+>>> print("Evaluating")                                                         
+... a = 5                                                                       
+... time.sleep(5)                                                               
+... print("Got a=",a)                                                           
+
+Evaluating
+Got a= 5
+
+>>> print(a)                                                                    
+
+5
+
+─────────────────────────────────── Resuming ───────────────────────────────────
+>>> print(a + 5)                                                                
+
+10
+
