@@ -187,6 +187,13 @@ def clean(infn, outfn):
                             next(pf)
                     of.write(line)
 
+def version():
+    from importlib_metadata import version as ver
+    print(f"Saturn 0.1.0")
+    for dep in ['wurlitzer', 'rich', 'ptpython',
+                'dill', 'markdown', 'atomicwrites',
+                'pygments', 'more_itertools', 'matplotlib']:
+        print(f"   {dep} {ver(dep)}")
 
 if __name__ == '__main__':
-    argh.dispatch_commands([show, run, clean])
+    argh.dispatch_commands([show, run, clean, version])

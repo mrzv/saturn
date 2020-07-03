@@ -45,6 +45,11 @@
   Remove all binary data from the notebook. Useful for getting rid of large
   checkpoints.
 
+* `saturn version`
+
+  Show version of saturn and its dependencies.
+
+
 ## Cell types
 
 * Markdown cells, prefix `#m>`
