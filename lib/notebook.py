@@ -37,13 +37,13 @@ class Notebook:
     def skip(self, location, output = lambda x: None):
         while self.current < location:
             cell = self.incoming[self.current]
+            self.append(cell, output)
+            self.current += 1
             if type(cell) is c.CodeCell:
                 if cell.skippable:
                     self.m.update(cell)
                 else:
                     self.execute(cell, output)
-            self.append(cell, output)
-            self.current += 1
 
         cell = self.incoming[self.current]
         assert type(cell) is c.CheckpointCell
