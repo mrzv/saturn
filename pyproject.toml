@@ -1,15 +1,14 @@
 [tool.poetry]
-name = "saturn"
+name = "saturn-notebook"
 version = "0.1.0"
 description = "Plain-text Python notebooks with checkpointing"
 authors = ["Dmitriy Morozov <dmitriy@mrzv.org>"]
-
 packages = [
-    { include = "saturn" },
+    { include = "saturn_notebook" },
 ]
 
 [tool.poetry.scripts]
-saturn = 'saturn:main'
+saturn = 'saturn_notebook:main'
 
 [tool.poetry.dependencies]
 python = "^3.7"

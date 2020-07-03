@@ -187,7 +187,7 @@ def clean(infn, outfn):
 
 def version():
     from importlib_metadata import version as ver
-    print(f"Saturn {ver('saturn')}")
+    print(f"Saturn {ver('saturn_notebook')}")
     for dep in ['wurlitzer', 'rich', 'ptpython',
                 'dill', 'markdown', 'atomicwrites',
                 'pygments', 'more_itertools', 'matplotlib']:

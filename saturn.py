@@ -1,4 +1,4 @@
 #!/usr/bin/env python3
 
-import saturn
-saturn.main()
+import saturn_notebook
+saturn_notebook.main()
