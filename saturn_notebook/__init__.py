@@ -11,6 +11,7 @@ from    more_itertools import peekable
 
 from    .           import cells as c, notebook
 from    .repl       import PythonReplWithExecute
+from    .image      import show_png
 
 try:
     from mpi4py import MPI
@@ -185,6 +186,32 @@ def clean(infn, outfn):
                             next(pf)
                     of.write(line)
 
+@argh.arg('i',   nargs='?', type=int)
+@argh.arg('out', nargs='?')
+def image(infn: "input notebook", i: "image index", out: "output PNG filename"):
+    if i is not None and not out:
+        console.print("Must specify output filename, if image is specified")
+        return
+
+    with open(infn) as f:
+        cells = c.parse(f, show_only = True)
+
+    count = 0
+    for cell in cells:
+        if type(cell) is not c.OutputCell: continue
+
+        for x in cell.composite_:
+            if type(x) is io.StringIO: continue
+
+            if i is None:
+                print(f"{count}:")
+                show_png(x)
+            elif i == count:
+                with open(out, 'wb') as f:
+                    f.write(x)
+
+            count += 1
+
 def version():
     from importlib_metadata import version as ver
     print(f"Saturn {ver('saturn_notebook')}")
@@ -194,7 +221,7 @@ def version():
         print(f"   {dep} {ver(dep)}")
 
 def main():
-    argh.dispatch_commands([show, run, clean, version])
+    argh.dispatch_commands([show, run, clean, image, version])
 
 if __name__ == '__main__':
     main()

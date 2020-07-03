@@ -45,6 +45,12 @@
   Remove all binary data from the notebook. Useful for getting rid of large
   checkpoints.
 
+* `saturn image notebook.py [i out.png]`
+
+  Save `i`-th image from `notebook.py` into `out.png`. If the last two
+  arguments are omitted, show all the images in the notebook together with
+  their indices.
+
 * `saturn version`
 
   Show version of saturn and its dependencies.
