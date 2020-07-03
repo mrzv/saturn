@@ -4,9 +4,10 @@ matplotlib.use("module://lib.mpl")
 import matplotlib.pyplot as plt
 import io
 import os
+import sys
 from subprocess import run
 
-enabled = os.environ['TERM'] == 'xterm-kitty'      # TODO: find a better way
+enabled = os.environ['TERM'] == 'xterm-kitty' and sys.stdout.isatty()      # TODO: find a better way
 seen = []
 
 def is_new_mpl_available():
