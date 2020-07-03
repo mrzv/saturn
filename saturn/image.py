@@ -1,5 +1,5 @@
 import matplotlib
-matplotlib.use("module://lib.mpl")
+matplotlib.use("module://saturn.mpl")
 
 import matplotlib.pyplot as plt
 import io

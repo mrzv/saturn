@@ -4,6 +4,13 @@ version = "0.1.0"
 description = "Plain-text Python notebooks with checkpointing"
 authors = ["Dmitriy Morozov <dmitriy@mrzv.org>"]
 
+packages = [
+    { include = "saturn" },
+]
+
+[tool.poetry.scripts]
+saturn = 'saturn:main'
+
 [tool.poetry.dependencies]
 python = "^3.7"
 argh = "^0.26.2"
@@ -16,6 +23,7 @@ pygments = "^2.6.1"
 ptpython = "^3.0.2"
 more_itertools = "^8.4.0"
 wurlitzer = "^2.0.0"
+importlib_metadata = "^1.7.0"
 
 [tool.poetry.dev-dependencies]
 icecream = "^2.0.0"
