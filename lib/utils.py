@@ -31,7 +31,8 @@ class CompositeIO:
     def append_png(self, buf):
         self.outer.append(buf)
         self.outer.append(io.StringIO())
-        image.show_png(buf)
+        if self.outfd is not None:
+            image.show_png(buf)
 
 @contextlib.contextmanager
 def captured_passthrough():

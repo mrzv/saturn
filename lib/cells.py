@@ -130,7 +130,7 @@ class OutputCell(Cell):
                 self.composite_.write(line)
             else:
                 png_content = [line[3:]]
-                while pl and pl.peek().startswith('png'):
+                while pl and pl.peek().startswith('png') and not pl.peek().startswith('png{{{'):
                     png_content.append(next(pl)[3:])
                 png_content = ''.join(png_content)
                 self.composite_.append_png(base64.b64decode(png_content))
