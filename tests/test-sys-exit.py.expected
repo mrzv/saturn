@@ -1,0 +1,14 @@
+import sys
+
+#---#
+
+print("Hello")
+
+#o> Hello
+#---#
+
+sys.exit(0)
+
+#---#
+
+print("Past the end")

@@ -1,0 +1,10 @@
+>>> import sys                                                                  
+
+
+>>> print("Hello")                                                              
+
+Hello
+
+>>> sys.exit(0)                                                                 
+
+────────────────────────────── Caught SystemExit ───────────────────────────────

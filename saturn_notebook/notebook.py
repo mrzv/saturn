@@ -52,6 +52,12 @@ class Notebook:
         self.append(cell, output)
         self.current += 1
 
+    def move_all_incoming(self):
+        while self.current < len(self.incoming):
+            cell = self.incoming[self.current]
+            self.cells.append(cell)
+            self.current += 1
+
     def next_cell(self):
         if self.current < len(self.incoming):
             return self.incoming[self.current]

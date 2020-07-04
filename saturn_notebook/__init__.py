@@ -112,10 +112,14 @@ def run(infn, outfn,
             nb.skip(checkpoint, output)
             info('Resuming', style="magenta")
 
-    nb.process(output, info)
+    try:
+        nb.process(output, info)
 
-    if repl:
-        run_repl(nb, output, outfn, dry_run)
+        if repl:
+            run_repl(nb, output, outfn, dry_run)
+    except SystemExit:
+        info("Caught SystemExit")
+        nb.move_all_incoming()
 
     if not dry_run and root:
         nb.save(outfn)
