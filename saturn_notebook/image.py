@@ -27,11 +27,11 @@ def save_mpl_png():
     plt.savefig(buf, format='png')
     return buf.getvalue()
 
-def show_png(buf):
+def show_png(buf, fd = None):
     if enabled:
-        icat(buf)
+        icat(buf, fd)
 
-def icat(buf):
+def icat(buf, fd = None):
     def serialize_gr_command(cmd, payload=None):
        cmd = ','.join('{}={}'.format(k, v) for k, v in cmd.items())
        ans = io.BytesIO()
@@ -43,11 +43,15 @@ def icat(buf):
        w(b'\033\\')
        return ans.getbuffer()
 
+    if fd is None:
+        write = sys.stdout.buffer.write
+    else:
+        write = lambda x: os.write(fd, x)
+
     pchunk = peekable(utils.chunkstring(standard_b64encode(buf), 4096))
     cmd = { 'a': 'T', 'f': 100 }
     for chunk in pchunk:
         cmd['m'] = 1 if pchunk else 0
-        sys.stdout.buffer.write(serialize_gr_command(cmd, chunk))
+        write(serialize_gr_command(cmd, chunk))
         cmd.clear()
-    sys.stdout.write('\n')
-    sys.stdout.flush()
+    write(b'\n')
