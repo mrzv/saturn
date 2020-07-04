@@ -1,6 +1,18 @@
 from tqdm import tqdm
 import time
 
-for i in tqdm(range(20), bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}'):
+fmt = '{l_bar}{bar}| {n_fmt}/{total_fmt}'       # to avoid diff errors
+
+#---#
+
+for i in tqdm(range(20), bar_format=fmt):
     time.sleep(.1)
+
 #o> 100%|██████████| 20/20
+#---#
+
+
+for i in tqdm(range(10), bar_format=fmt):
+    for j in tqdm(range(30), bar_format=fmt, leave = False):
+        time.sleep(.05)
+#o> 100%|██████████| 10/10

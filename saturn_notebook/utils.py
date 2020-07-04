@@ -43,7 +43,20 @@ def captured_passthrough():
         yield out
 
 def collapse_carriage_return(lines):
+    result = []
     for line in lines:
-        last_cr = line.rfind('\r')
-        yield line[last_cr+1:]
+        while True:
+            up = line.find('\x1b[A')
+            cr = line.find('\r')
+
+            if up != -1:
+                result.pop()
+                line = line[up+1:]
+            elif cr != -1:
+                line = line[cr+1:]
+            else:
+                result.append(line)
+                break
+
+    return result
 
