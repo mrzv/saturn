@@ -8,7 +8,7 @@ packages = [
 ]
 
 [tool.poetry.scripts]
-saturn = 'saturn_notebook:main'
+saturn = 'saturn_notebook.__main__:main'
 
 [tool.poetry.dependencies]
 python = "^3.7"
