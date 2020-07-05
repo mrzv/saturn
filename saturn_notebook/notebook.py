@@ -18,7 +18,8 @@ class Hasher:
         return self.m.digest()
 
 class Notebook:
-    def __init__(self, auto_capture = False, debug = False):
+    def __init__(self, name = '', auto_capture = False, debug = False):
+        self.name = name
         self.auto_capture = auto_capture
         self.debug = debug
 
@@ -83,7 +84,7 @@ class Notebook:
         with utils.captured_passthrough() as out:
             mpl.figures = out
 
-            result = evaluate.exec_eval(cell.code(), self.g, self.l)
+            result = evaluate.exec_eval(cell.code(), self.g, self.l, name = self.name)
             if result is not None:
                 out.write(result.__repr__() + '\n')
                 if self.auto_capture and image.is_new_mpl_available():

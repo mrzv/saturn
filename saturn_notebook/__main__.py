@@ -102,7 +102,7 @@ def run(infn, outfn,
         if root:
             console.print(Rule(*args, **kw))
 
-    nb = notebook.Notebook(auto_capture = auto_capture)
+    nb = notebook.Notebook(name = infn, auto_capture = auto_capture)
     nb.add(cells)
 
     if not clean:

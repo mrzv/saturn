@@ -3,7 +3,7 @@ import sys
 
 # From: https://stackoverflow.com/questions/33908794/get-value-of-last-expression-in-exec-call
 # exec, but return the value of the last expression
-def exec_eval(script, globals=None, locals=None):
+def exec_eval(script, globals=None, locals=None, name=''):
     '''Execute a script and return the value of the last expression'''
     stmts = list(ast.iter_child_nodes(ast.parse(script)))
     if not stmts:
@@ -16,12 +16,12 @@ def exec_eval(script, globals=None, locals=None):
                 mod = ast.Module(stmts[:-1], [])
             else:
                 mod = ast.Module(stmts[:-1])
-            exec(compile(mod, filename="<ast>", mode="exec"), globals, locals)
+            exec(compile(mod, filename=name, mode="exec"), globals, locals)
         # then we eval the last one
-        return eval(compile(ast.Expression(body=stmts[-1].value), filename="<ast>", mode="eval"), globals, locals)
+        return eval(compile(ast.Expression(body=stmts[-1].value), filename=name, mode="eval"), globals, locals)
     else:
         # otherwise we just execute the entire code
-        return exec(script, globals, locals)
+        return exec(compile(script, filename=name, mode="exec"), globals, locals)
 
 def eval_expression(expr, locals_):
     return eval(expr, locals_, locals_)
