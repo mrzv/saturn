@@ -120,6 +120,17 @@ def run(infn, outfn,
     except SystemExit:
         info("Caught SystemExit")
         nb.move_all_incoming()
+    except:
+        info("Caught exception, aborting")
+        from rich.traceback import Traceback
+        tb = Traceback(width = console.width)
+        # skip past exec_eval
+        for i,stack in enumerate(tb.trace.stacks):
+            eval_location = next((j for j,x in enumerate(stack.frames) if x.name == 'exec_eval'), None)
+            if eval_location is not None:
+                tb.trace.stacks[i].frames = stack.frames[eval_location+1:]
+        console.print(tb)
+        return
 
     if not dry_run and root:
         nb.save(outfn)
