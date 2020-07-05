@@ -225,8 +225,22 @@ def version():
                 'pygments', 'more_itertools', 'matplotlib']:
         print(f"   {dep} {ver(dep)}")
 
+@argh.arg('outfn', nargs='?')
+def rehash(infn, outfn):
+    if not outfn:
+        outfn = infn
+
+    with open(infn) as f:
+        cells = c.parse(f)
+
+    nb = notebook.Notebook(name = infn)
+    nb.add(cells)
+    nb.rehash()
+
+    nb.save(outfn)
+
 def main():
-    argh.dispatch_commands([show, run, clean, image, version])
+    argh.dispatch_commands([show, run, clean, image, version, rehash])
 
 if __name__ == '__main__':
     main()

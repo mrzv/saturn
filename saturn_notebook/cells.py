@@ -232,6 +232,14 @@ class CheckpointCell(Cell):
             self.lines_ = ['']      # to keep the blank checkpoint cell
             raise
 
+    def replace_hash(self, running):
+        if self.expected_hash() == None: return
+        content = io.BytesIO()
+        dill.dump(running, content)
+        content.write(self._content.read())
+        content = base64.b64encode(content.getvalue()).decode('ascii')
+        self.lines_ = [line + '\n' for line in chunk(content, 80, markers = True)]
+
 class VariableCell(CheckpointCell):
     _prefix = '#var>'
 

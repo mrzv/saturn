@@ -131,6 +131,18 @@ class Notebook:
         if not self.debug and not cell.display(): return
         output(cell)
 
+    def rehash(self):
+        while self.current < len(self.incoming):
+            cell = self.incoming[self.current]
+            self.current += 1
+
+            if type(cell) is c.CodeCell:
+                self.m.update(cell)
+            elif type(cell) is c.VariableCell or type(cell) is c.CheckpointCell:
+                cell.replace_hash(self.m.digest())
+
+            self.append(cell)
+
     def save(self, fn):
         with atomic_write(fn, mode='w', overwrite=True) as f:
             for i,cell in enumerate(self.cells):
