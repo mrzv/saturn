@@ -9,9 +9,9 @@ class Hasher:
     def __init__(self):
         self.m = hashlib.sha256()
 
-    def update(self, code):
-        if type(code) is c.CodeCell:
-            code = code.code()
+    def update(self, cell):
+        if not cell.hashable: return
+        code = cell.code()
         self.m.update(bytes(code, 'utf-8'))
 
     def digest(self):
@@ -70,8 +70,7 @@ class Notebook:
             self.append(self.next_cell())
             self.current += 1
 
-        code = cell.code()
-        self.m.update(code)
+        self.m.update(cell)
 
         if type(self.next_cell()) is c.VariableCell:
             if self.next_cell().expected(self.m.digest()):
@@ -84,7 +83,7 @@ class Notebook:
         with utils.captured_passthrough() as out:
             mpl.figures = out
 
-            result = evaluate.exec_eval(code, self.g, self.l)
+            result = evaluate.exec_eval(cell.code(), self.g, self.l)
             if result is not None:
                 out.write(result.__repr__() + '\n')
                 if self.auto_capture and image.is_new_mpl_available():

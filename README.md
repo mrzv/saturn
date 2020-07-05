@@ -132,6 +132,14 @@
   useful, for example, if a cell is modifying `sys.path`, which won't be
   captured in a checkpoint.
 
+* Non-hashable code cells `#no-hash#`
+
+  Adding this line anywhere within the code cell will indicate that it
+  shouldn't be hashed, meaning that changing this cell (or removing it
+  entirely) won't invalidate the checkpoints below. This should be used only
+  with cells that don't change any variables, e.g., purely output or plotting
+  cells.
+
 ## Vim support
 
 All the binary (non-human-readable) cell content is wrapped in `{{{`, `}}}`

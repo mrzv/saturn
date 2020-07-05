@@ -81,6 +81,7 @@ class CodeCell(Cell):
     def __init__(self):
         super().__init__()
         self.skippable = True
+        self.hashable  = True
 
     def __rich__(self):
         if not self.lines_:
@@ -91,6 +92,8 @@ class CodeCell(Cell):
         super().append(line)
         if line.startswith('#no-skip#'):
             self.skippable = False
+        if line.startswith('#no-hash#'):
+            self.hashable = False
 
     def code(self):
         return self.lines()
