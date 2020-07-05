@@ -165,7 +165,8 @@ def run_repl(nb, output, outfn = '', dry_run = True):
 
     repl.run()
 
-    comm.bcast('', root = 0)
+    if using_mpi:
+        comm.bcast('', root = 0)
 
 @argh.arg('outfn', nargs='?')
 def clean(infn, outfn):
