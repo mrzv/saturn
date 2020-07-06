@@ -7,6 +7,7 @@ class PythonReplWithExecute(PythonRepl):
 
         self.show_meta_enter_message = False
         self.title = "Saturn "
+        self.use_code_colorscheme('vim')
 
         # Swap enter and meta+enter #
         @self.add_key_binding('escape', 'enter')
