@@ -39,6 +39,10 @@ pip install saturn-notebook
 
   `saturn show notebook.py --html notebook.html -k`
 
+* `saturn view notebook.py`
+
+  Display the notebook in a GUI (using [pywebview](https://pywebview.flowrl.com/)).
+
 * `saturn run [notebook.py [output.py]]`
 
   Execute a Python notebook, either modifying it in place, or saving the result

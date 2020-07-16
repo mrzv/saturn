@@ -96,7 +96,10 @@ def _show(cells, html, katex, debug):
     output   = lambda cell: show_console(cell, rule = debug, verbose = debug)
 
     if html:
-        f_html = open(html, 'w')
+        if type(html) is str:
+            f_html = open(html, 'w')
+        else:
+            f_html = html
         output = lambda cell: show_html(cell, f_html)
 
         f_html.write('<!DOCTYPE html>\n')
@@ -120,6 +123,15 @@ def _show(cells, html, katex, debug):
     if html:
         f_html.write('</body>\n')
         f_html.write('</html>\n')
+
+def view(fn, debug = False):
+    import webview
+
+    html = io.StringIO()
+    show(fn, html, debug)
+
+    window = webview.create_window('Saturn', html=html.getvalue())
+    webview.start()
 
 @argh.arg('infn', nargs='?')
 @argh.arg('outfn', nargs='?')
@@ -492,7 +504,7 @@ def main():
         idx = sys.argv.index('--')
         argv = sys.argv[idx+1:]
         sys.argv = sys.argv[:idx]
-    parser.add_commands([show, run, clean, image, version, convert, rehash, extract, embed])
+    parser.add_commands([show, run, view, clean, image, version, convert, rehash, extract, embed])
     parser.dispatch()
 
 if __name__ == '__main__':
