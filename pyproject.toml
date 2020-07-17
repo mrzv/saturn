@@ -28,6 +28,11 @@ wurlitzer = "^3.0.2"
 importlib-metadata = "^4.11.3"
 nbformat = "^5.7.0"
 dill = {git = "https://github.com/uqfoundation/dill/"}
+appdirs = { version = "^1.4.4", optional = true }
+pywebview = { version = "^3.3.1", optional = true }
+
+[tool.poetry.extras]
+viewer = ["pywebview", "appdirs"]
 
 [tool.poetry.dev-dependencies]
 icecream = "^2.1.2"
