@@ -19,6 +19,12 @@ using_mpi = False
 
 skip_repl = False
 
+try:
+    from . import viewer
+    has_viewer = True
+except:
+    has_viewer = False
+
 # workaround for a bug in OpenMPI (or anything else that screws up the terminal size);
 # see https://github.com/willmcgugan/rich/issues/127
 import  shutil
@@ -125,13 +131,10 @@ def _show(cells, html, katex, debug):
         f_html.write('</html>\n')
 
 def view(fn, debug = False):
-    import webview
-
     html = io.StringIO()
     show(fn, html, debug)
 
-    window = webview.create_window('Saturn', html=html.getvalue())
-    webview.start()
+    viewer.view(html.getvalue())
 
 @argh.arg('infn', nargs='?')
 @argh.arg('outfn', nargs='?')
@@ -363,11 +366,13 @@ def version():
     console.print(f"Saturn [version]{ver('saturn_notebook')}[/version] (Python {sys.version})")
     for dep in ['wurlitzer', 'rich', 'ptpython',
                 'dill', 'markdown', 'atomicwrites',
-                'pygments', 'more_itertools', 'matplotlib', 'nbformat']:
+                'pygments', 'more_itertools', 'matplotlib', 'nbformat', 'pywebview']:
         try:
             console.print(f"   {dep} [version]{ver(dep)}[/version]")
         except:
             console.print(f"   {dep} [error]not found[/error]")
+    if has_viewer:
+        console.print(f"Config path: [path]{viewer.config_path}[/path]")
 
 @argh.arg('outfn', nargs='?')
 def convert(infn: "Jupyter notebook",
@@ -504,7 +509,10 @@ def main():
         idx = sys.argv.index('--')
         argv = sys.argv[idx+1:]
         sys.argv = sys.argv[:idx]
-    parser.add_commands([show, run, view, clean, image, version, convert, rehash, extract, embed])
+    commands = [show, run, clean, image, version, convert, rehash, extract, embed]
+    if has_viewer:
+        commands.append(view)
+    parser.add_commands(commands)
     parser.dispatch()
 
 if __name__ == '__main__':
