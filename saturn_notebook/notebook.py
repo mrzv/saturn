@@ -66,6 +66,8 @@ class Notebook:
             return None
 
     def execute(self, cell, output, info = lambda *args: None):
+        cell_id = len(self.cells) - 1
+
         # skip blanks, if any
         while type(self.next_cell()) is c.Blanks:
             self.append(self.next_cell())
@@ -84,7 +86,7 @@ class Notebook:
         with utils.captured_passthrough() as out:
             mpl.figures = out
 
-            result = evaluate.exec_eval(cell.code(), self.g, self.l, name = self.name)
+            result = evaluate.exec_eval(cell.code(), self.g, self.l, name = f"{self.name}:{cell_id}")
             if result is not None:
                 out.write(result.__repr__() + '\n')
                 if self.auto_capture and image.is_new_mpl_available():

@@ -122,13 +122,8 @@ def run(infn, outfn,
         nb.move_all_incoming()
     except:
         info("Caught exception, aborting")
-        from rich.traceback import Traceback
-        tb = Traceback(width = console.width)
-        # skip past exec_eval
-        for i,stack in enumerate(tb.trace.stacks):
-            eval_location = next((j for j,x in enumerate(stack.frames) if x.name == 'exec_eval'), None)
-            if eval_location is not None:
-                tb.trace.stacks[i].frames = stack.frames[eval_location+1:]
+        from .traceback import Traceback
+        tb = Traceback(nb, debug = debug, width = console.width)
         console.print(tb)
         return
 
