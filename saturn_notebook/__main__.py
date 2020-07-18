@@ -124,8 +124,13 @@ def run(infn, outfn,
         info("Caught exception, aborting")
         from .traceback import Traceback
         tb = Traceback(nb, debug = debug, width = console.width)
-        console.print(tb)
-        return
+
+        console_tb = Console(record = True, width = 80, theme = theme)
+        console_tb.print(tb)
+
+        nb.append(c.OutputCell.from_string(console_tb.export_text()))
+        nb.skip_next_output()
+        nb.move_all_incoming()
 
     if not dry_run and root:
         nb.save(outfn)

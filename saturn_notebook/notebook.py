@@ -101,11 +101,14 @@ class Notebook:
             self.current += 1
 
         # skip the next output cell
-        if type(self.next_cell()) is c.OutputCell:
-            self.current += 1
+        self.skip_next_output()
 
         self.append(c.OutputCell(out), lambda cell: None)
         print()
+
+    def skip_next_output(self):
+        if type(self.next_cell()) is c.OutputCell:
+            self.current += 1
 
     def process(self, output, info = lambda *args: None):
         while self.current < len(self.incoming):

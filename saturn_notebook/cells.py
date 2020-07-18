@@ -125,6 +125,12 @@ class OutputCell(Cell):
     def repl_history(self):
         return []
 
+    @staticmethod
+    def from_string(s):
+        cell = OutputCell()
+        cell.composite_.write(s)
+        return cell
+
     def parse(self):
         super().parse()
         pl = peekable(self.lines_)
