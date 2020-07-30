@@ -17,14 +17,6 @@ class SaturnBackend(_Backend):
     FigureCanvas  = FigureCanvasAgg
     FigureManager = SaturnFigureManager
 
-    def _draw():
-        manager = Gcf.get_active()
-        if manager:
-            manager.show()
-        Gcf.destroy_all()
-
-    def draw_if_interactive(*args, **kwargs):
-        __class__._draw()
-
     def show(*args, **kwargs):
-        __class__._draw()
+        _Backend.show(*args, **kwargs)
+        Gcf.destroy_all()
