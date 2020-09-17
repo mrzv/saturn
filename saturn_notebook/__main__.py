@@ -128,8 +128,8 @@ def run(infn, outfn,
         console_tb = Console(record = True, width = 80, theme = theme)
         console_tb.print(tb)
 
-        nb.append(c.OutputCell.from_string(console_tb.export_text()))
         nb.skip_next_output()
+        nb.append(c.OutputCell.from_string(console_tb.export_text()))
         nb.move_all_incoming()
 
     if not dry_run and root:

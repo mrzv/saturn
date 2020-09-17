@@ -107,6 +107,9 @@ class Notebook:
         print()
 
     def skip_next_output(self):
+        if type(self.next_cell()) is c.VariableCell:
+            self.append(self.next_cell())
+            self.current += 1
         if type(self.next_cell()) is c.OutputCell:
             self.current += 1
 
