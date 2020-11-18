@@ -180,7 +180,7 @@ def run_repl(nb, output, outfn = '', dry_run = True):
         comm.bcast('', root = 0)
 
 @argh.arg('outfn', nargs='?')
-def clean(infn, outfn):
+def clean(infn, outfn, strip_output = False):
     """Remove all binary data from the notebook."""
     if not outfn:
         outfn = infn
@@ -190,6 +190,7 @@ def clean(infn, outfn):
             with open(infn) as f:
                 pf = peekable(f)
                 for line in pf:
+                    if strip_output and line.startswith('#o>'): continue
                     if line.startswith('#o> png'): continue
                     if line.startswith('#chk>') and line.strip() != '#chk>':
                         of.write('#chk>\n')
