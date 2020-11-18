@@ -49,7 +49,10 @@ def show_console(cell, rule = False, verbose = False, no_show = False):
 def show_html(cell, f):
     cell.show_html(f)
 
-def show(fn, html = '', debug = False):
+def show(fn: "input notebook",
+         html: "save HTML to a file" = '',
+         debug: "show debugging information" = False):
+    """Show the contents of the notebook, without evaluating."""
     with open(fn) as f:
         cells = c.parse(f, show_only = True)
 
@@ -78,13 +81,15 @@ def show(fn, html = '', debug = False):
 
 @argh.arg('outfn', nargs='?')
 @argh.arg('-n', '--dry-run')
-def run(infn, outfn,
+def run(infn: "input notebook",
+        outfn: "output notebook (if empty, input modified in place)",
         clean: "run from scratch, ignoring checkpoints" = False,
         auto_capture: "automatically capture images" = False,
-        debug = False,
-        dry_run = False,
-        only_root_output = False,
-        repl = False):
+        debug: "show debugging information" = False,
+        dry_run: "don't save the processed notebook" = False,
+        only_root_output: "suppress output everywhere but rank 0 (for MPI)" = False,
+        repl: "run REPL after the notebook is processed" = False):
+    """Run the notebook."""
     if not outfn:
         outfn = infn
 
@@ -180,7 +185,9 @@ def run_repl(nb, output, outfn = '', dry_run = True):
         comm.bcast('', root = 0)
 
 @argh.arg('outfn', nargs='?')
-def clean(infn, outfn, strip_output = False):
+def clean(infn: "input notebook",
+          outfn: "output notebook (if empty, input modified in place)",
+          strip_output: "also strip all output" = False):
     """Remove all binary data from the notebook."""
     if not outfn:
         outfn = infn
@@ -206,6 +213,7 @@ def clean(infn, outfn, strip_output = False):
 @argh.arg('i',   nargs='?', type=int)
 @argh.arg('out', nargs='?')
 def image(infn: "input notebook", i: "image index", out: "output PNG filename"):
+    """Extract an image from the notebook."""
     if i is not None and not out:
         console.print("Must specify output filename, if image is specified")
         return
@@ -230,6 +238,7 @@ def image(infn: "input notebook", i: "image index", out: "output PNG filename"):
             count += 1
 
 def version():
+    """Show version of Saturn and its dependencies."""
     from importlib_metadata import version as ver
     print(f"Saturn {ver('saturn_notebook')}")
     for dep in ['wurlitzer', 'rich', 'ptpython',
@@ -238,7 +247,9 @@ def version():
         print(f"   {dep} {ver(dep)}")
 
 @argh.arg('outfn', nargs='?')
-def rehash(infn, outfn):
+def rehash(infn: "input notebook",
+           outfn: "output notebook (if empty, input modified in place)"):
+    """Rehash all the code cells, updating the hashes stored with checkpoints and variable cells. (advanced)"""
     if not outfn:
         outfn = infn
 
