@@ -5,6 +5,8 @@ from    wurlitzer    import pipes, STDOUT
 
 from    . import cells as c, utils, evaluate, image, mpl
 
+from    .traceback import Traceback
+
 class Hasher:
     def __init__(self):
         self.m = hashlib.sha256()
@@ -97,6 +99,9 @@ class Notebook:
                 self.next_cell().dump(self.m.digest(), self.l)
             except:
                 info(f"[error]Failed[/error] to save varialbes [variables]{self.next_cell().variables.strip()}[/variables], [affirm]skipping[/affirm]")
+                tb = Traceback(self, self.debug)
+                info(tb, block = True)
+                info(f"[affirm]continuing[/affirm]")
             self.append(self.next_cell(), output)
             self.current += 1
 
@@ -128,11 +133,17 @@ class Notebook:
                     cell.dump(self.m.digest(), self.l)
                 except:
                     info(f"[error]Failed[/error] to save variables [variables]{cell.variables.strip()}[/variables], [affirm]skipping[/affirm]")
+                    tb = Traceback(self, self.debug)
+                    info(tb, block = True)
+                    info(f"[affirm]continuing[/affirm]")
             elif type(cell) is c.CheckpointCell:
                 try:
                     cell.dump(self.m.digest(), self.l)
                 except:
                     info(f"[error]Failed[/error] to save state in checkpoint cell, [affirm]skipping[/affirm]")
+                    tb = Traceback(self, self.debug)
+                    info(tb, block = True)
+                    info(f"[affirm]continuing[/affirm]")
 
     def append(self, cell, output = lambda x: None):
         self.cells.append(cell)

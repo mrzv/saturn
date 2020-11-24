@@ -103,9 +103,12 @@ def run(infn: "input notebook",
         if root or (not only_root_output and type(cell) is c.OutputCell):
             show_console(cell, rule = debug, verbose = debug)
 
-    def info(*args, **kw):
+    def info(*args, block = False, **kw):
         if root:
-            console.print(Rule(*args, **kw))
+            if not block:
+                console.print(Rule(*args, **kw))
+            else:
+                console.print(*args, **kw)
 
     nb = notebook.Notebook(name = infn, auto_capture = auto_capture)
     nb.add(cells)
@@ -128,7 +131,7 @@ def run(infn: "input notebook",
     except:
         info("Caught exception, aborting")
         from .traceback import Traceback
-        tb = Traceback(nb, debug = debug, width = console.width)
+        tb = Traceback(nb, debug = debug, width = 80)
 
         console_tb = Console(record = True, width = 80, theme = theme)
         console_tb.print(tb)
