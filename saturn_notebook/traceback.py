@@ -1,7 +1,7 @@
 from rich.traceback import Traceback as RichTraceback, Stack, PathHighlighter, WINDOWS, _SyntaxError
 from rich.highlighter   import ReprHighlighter
 from rich.padding   import Padding
-from rich.console   import RenderResult, render_group
+from rich.console   import RenderResult, group as render_group
 from rich.text      import Text
 from rich.syntax    import Syntax
 
