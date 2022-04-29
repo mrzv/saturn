@@ -26,6 +26,8 @@
   Display the notebook in the terminal. No computation is performed. Optional
   `--html OUTPUT.html` flag will produce HTML output.
 
+  `saturn show notebook.py --html notebook.html`
+
 * `saturn run notebook.py [output.py]`
 
   Execute a Python notebook, either modifying it in place, or saving the result
