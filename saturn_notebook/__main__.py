@@ -81,6 +81,7 @@ def show(fn: "input notebook",
 
 @argh.arg('outfn', nargs='?')
 @argh.arg('-n', '--dry-run')
+@argh.arg('-i', '--interactive')
 def run(infn: "input notebook",
         outfn: "output notebook (if empty, input modified in place)",
         clean: "run from scratch, ignoring checkpoints" = False,
@@ -88,7 +89,7 @@ def run(infn: "input notebook",
         debug: "show debugging information" = False,
         dry_run: "don't save the processed notebook" = False,
         only_root_output: "suppress output everywhere but rank 0 (for MPI)" = False,
-        repl: "run REPL after the notebook is processed" = False):
+        interactive: "run REPL after the notebook is processed" = False):
     """Run the notebook."""
     if not outfn:
         outfn = infn
@@ -123,7 +124,7 @@ def run(infn: "input notebook",
     try:
         nb.process(output, info)
 
-        if repl:
+        if interactive:
             run_repl(nb, output, outfn, dry_run)
     except SystemExit:
         info("Caught SystemExit")
