@@ -12,6 +12,11 @@ DIR="$(dirname $0)"
 
 res=0
 
+Color_Off='\033[0m'       # Text Reset
+Red='\033[0;31m'          # Red
+Green='\033[0;32m'        # Green
+IRed='\033[0;91m'         # Red
+
 function run_test
 {
     fn=$1
@@ -19,25 +24,27 @@ function run_test
 
     if $DIR/../saturn.py run $fn $fn.tmp > $fn.tmp-out; then
         if diff $fn.tmp $fn.expected > /dev/null; then
-            echo "   Expected transformation"
+            echo $Green "   Expected transformation" $Color_Off
             rm $fn.tmp
         else
-            echo "   Failed transformation"
+            echo $Red "   Failed transformation" $Color_Off
             res=1
         fi
 
         if diff $fn.tmp-out $fn.expected-out > /dev/null; then
-            echo "   Expected output"
+            echo $Green "   Expected output" $Color_Off
             rm $fn.tmp-out
         else
-            echo "   Failed output"
+            echo $Red "   Failed output" $Color_Off
             res=1
         fi
     else
-        echo "   Failed execution!"
+        echo $IRed "   Failed execution!" $Color_Off
         res=1
     fi
 }
+
+trap "echo; exit" INT
 
 case $1 in
     clean)
