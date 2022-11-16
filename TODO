@@ -13,6 +13,8 @@
     - [Fixed: locals = globals] Possibly related: debug usage with joblib.Parallel
 - Stream cells (via a generator) to produce output faster
 - Better, explicit Vim support
+- Add padding logic to better preserve blank lines around cells.
+- Add ability to save assets in an external zip file.
 
 Done:
 
