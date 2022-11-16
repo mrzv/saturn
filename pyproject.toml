@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "saturn-notebook"
-version = "1.0.5"
+version = "1.0.6"
 description = "Plain-text Python notebooks with checkpointing"
 authors = ["Dmitriy Morozov <dmitriy@mrzv.org>"]
 license = "BSD-3-Clause-LBNL"
@@ -27,6 +27,7 @@ ptpython = "^3.0.20"
 more-itertools = "^8.12.0"
 wurlitzer = "^3.0.2"
 importlib-metadata = "^4.11.3"
+nbformat = "^5.7.0"
 
 [tool.poetry.dev-dependencies]
 icecream = "^2.1.2"

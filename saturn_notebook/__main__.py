@@ -36,6 +36,13 @@ theme = Theme({
 
 console = Console(width = width, theme = theme)
 
+def info(*args, block = False, **kw):
+    if root:
+        if not block:
+            console.print(Rule(*args, **kw))
+        else:
+            console.print(*args, **kw)
+
 def show_console(cell, rule = False, verbose = False, no_show = False):
     if rule:
         console.print(Rule(cell.type_name() if verbose else ''))
@@ -103,13 +110,6 @@ def run(infn: "input notebook",
     def output(cell):
         if root or (not only_root_output and type(cell) is c.OutputCell):
             show_console(cell, rule = debug, verbose = debug)
-
-    def info(*args, block = False, **kw):
-        if root:
-            if not block:
-                console.print(Rule(*args, **kw))
-            else:
-                console.print(*args, **kw)
 
     nb = notebook.Notebook(name = infn, auto_capture = auto_capture)
     nb.add(cells)
@@ -251,6 +251,61 @@ def version():
         print(f"   {dep} {ver(dep)}")
 
 @argh.arg('outfn', nargs='?')
+def convert(infn: "Jupyter notebook",
+            outfn: "output notebook (if empty, show the cells instead)",
+            version: "notebook version" = 4,
+            debug: "show debugging information" = False):
+    """Convert a Jupyter notebook into a Saturn notebook."""
+    import nbformat
+    jnb = nbformat.read(infn, as_version=version)
+
+    header = c.CodeCell()
+    header.lines_ = ['# vim: ft=python foldmethod=marker foldlevel=0\n']
+    cells = [header]
+
+    last_code = False
+    for jcell in jnb.cells:
+        if jcell['cell_type'] == 'markdown':
+            cell = c.MarkdownCell()
+            cell.lines_ = [' ' + line + '\n' if len(line) else '\n' for line in jcell['source'].split('\n')]
+            cells.append(cell)
+            last_code = False
+        elif jcell['cell_type'] == 'code':
+            if last_code:
+                cells.append(c.BreakCell())
+            cell = c.CodeCell()
+            cell.lines_ = [line + '\n' for line in jcell['source'].split('\n')]
+            cells.append(cell)
+            last_code = True
+
+            for out in jcell['outputs']:
+                last_code = False
+                if out['output_type'] == 'stream':
+                    cell = c.OutputCell.from_string(out['text'])
+                    cells.append(cell)
+                elif out['output_type'] == 'display_data' and 'image/png' in out['data']:
+                    cell = c.OutputCell()
+                    png_content = out['data']['image/png']
+                    cell.composite_.append_png(c.base64.b64decode(png_content))
+                    cells.append(cell)
+                else:
+                    info('Unrecognized output type', style="magenta")
+        else:
+            info('Unrecognized cell type', style="magenta")
+
+    if not outfn:
+        output   = lambda cell: show_console(cell, rule = debug, verbose = debug)
+        for i,cell in enumerate(cells):
+            if not cell.display(): continue
+            output(cell)
+    else:
+        nb = notebook.Notebook(name = outfn)
+        nb.add(cells)
+        nb.move_all_incoming()
+        nb.save(outfn)
+
+
+@argh.arg('outfn', nargs='?')
 def rehash(infn: "input notebook",
            outfn: "output notebook (if empty, input modified in place)"):
     """Rehash all the code cells, updating the hashes stored with checkpoints and variable cells. (advanced)"""
@@ -267,7 +322,7 @@ def rehash(infn: "input notebook",
     nb.save(outfn)
 
 def main():
-    argh.dispatch_commands([show, run, clean, image, version, rehash])
+    argh.dispatch_commands([show, run, clean, image, version, convert, rehash])
 
 if __name__ == '__main__':
     main()
