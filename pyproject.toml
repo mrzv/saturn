@@ -15,7 +15,7 @@ readme = "README.md"
 saturn = 'saturn_notebook.__main__:main'
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.8"
 argh = "^0.26.2"
 rich = "^12.3.0"
 atomicwrites = "^1.4.0"
