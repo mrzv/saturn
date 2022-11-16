@@ -20,6 +20,7 @@
 
 Done:
 
+- Add --html option to convert.
 - Add convert command for converting and showing Jupyter notebooks.
 - Maybe change formatting of the cell prefixes (#m>, #o>, #chk>)
 - Investigate checkpoint size.

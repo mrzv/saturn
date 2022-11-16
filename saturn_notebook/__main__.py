@@ -86,7 +86,9 @@ def show(fn: "input notebook",
     """Show the contents of the notebook, without evaluating."""
     with open(fn) as f:
         cells = c.parse(f, show_only = True)
+    _show(cells, html, katex, debug)
 
+def _show(cells, html, katex, debug):
     output   = lambda cell: show_console(cell, rule = debug, verbose = debug)
 
     if html:
@@ -282,6 +284,8 @@ def version():
 def convert(infn: "Jupyter notebook",
             outfn: "output notebook (if empty, show the cells instead)",
             version: "notebook version" = 4,
+            html: "save HTML to a file" = '',
+            katex: "include KaTeX in HTML output" = False,
             debug: "show debugging information" = False):
     """Convert a Jupyter notebook into a Saturn notebook."""
     import nbformat
@@ -322,10 +326,7 @@ def convert(infn: "Jupyter notebook",
             info('Unrecognized cell type', style="magenta")
 
     if not outfn:
-        output   = lambda cell: show_console(cell, rule = debug, verbose = debug)
-        for i,cell in enumerate(cells):
-            if not cell.display(): continue
-            output(cell)
+        _show(cells, html, katex, debug)
     else:
         nb = notebook.Notebook(name = outfn)
         nb.add(cells)
