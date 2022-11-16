@@ -1,0 +1,50 @@
+- Clean up evaluation:
+    - Get rid of eval_expression (exec_eval already does the job)
+    - Capture errors correctly
+        - Save traceback in REPL
+        - This is mostly needed in REPL. In normal run, we should abort on error.
+        - [Done] Preserve checkpoints, if we catch an exception. In general,
+          reconcile whether the notebook (the processed part) should be written
+          out, if an exception occurs.
+        - [Done] Exceptions thrown during checkpointing shouldn't crash the
+          system, just report that checkpointing failed. (E.g., if an object is
+          not pickleable.)
+    - [No reason] Lift more logic from ptpython
+    - [Fixed: locals = globals] Possibly related: debug usage with joblib.Parallel
+- Stream cells (via a generator) to produce output faster
+- Better, explicit Vim support
+
+Done:
+
+- Add convert command for converting and showing Jupyter notebooks.
+- Maybe change formatting of the cell prefixes (#m>, #o>, #chk>)
+- Investigate checkpoint size.
+    - Nothing wrong here. Perhaps, it's worth compressing checkpoints.
+- Write README
+- Clean up parser
+- Add more cell types:
+    - [Done] variable memoizing code cells (specify which variables this cell produces,
+      caching them and skipping computation on subsequent evaluation)
+    - [Done] non-skippable cells (i.e., even if resuming from a checkpoint, these cells
+      will execute, before the checkpoint is loaded)
+- Capture matplotlib better (e.g., multiple figures in a loop)
+- ptpython
+    - history in terms of the code cells
+    - clean up various warnings (e.g., the message about meta+enter)
+- MPI support: if running under MPI only rank 0 should show output and save the
+  notebook
+- Clean up output:
+    - [Done] flush lines as they are being output (test with progress bars and such)
+    - [Done] check that output from C extensions is captured
+    - [Done] capture and properly output stderr
+    - [Fixed: rich-text parsing] debug the list output problem
+- Add tests
+- Add our own icat implementation
+- icat output is being captured, but not if redirected to a file
+- Add images command to extract PNGs out of the notebook
+- Better support for ANSI codes (e.g., to handle two-line tqdm)
+- Handle sys.exit
+- Clean up traceback (line numbers are broken across cells)
+- [Done: not a bug] fig.clear() and/or ax.clear() with Matplotlib (many cheatsheets are failing)
+    - the problem was with using plt.show(), rather than fig.show()
+
