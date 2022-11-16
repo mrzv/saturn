@@ -299,13 +299,15 @@ def convert(infn: "Jupyter notebook",
         if jcell['cell_type'] == 'markdown':
             cell = c.MarkdownCell()
             cell.lines_ = [' ' + line + '\n' if len(line) else '\n' for line in jcell['source'].split('\n')]
-            cell.padding_ = (0 if type(cells[-1]) is c.MarkdownCell else 1,1)
+            if type(cells[-1]) is not c.Blanks:
+                cells.append(c.Blanks.create(1))
             cells.append(cell)
+            cells.append(c.Blanks.create(1))
         elif jcell['cell_type'] == 'code':
             if type(cells[-1]) is c.CodeCell:
-                cell = c.BreakCell()
-                cell.padding_ = (1,1)
-                cells.append(cell)
+                cells.append(c.Blanks.create(1))
+                cells.append(c.BreakCell())
+                cells.append(c.Blanks.create(1))
             cell = c.CodeCell()
             cell.lines_ = [line + '\n' for line in jcell['source'].split('\n')]
             cells.append(cell)

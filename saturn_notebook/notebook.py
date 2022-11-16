@@ -165,12 +165,10 @@ class Notebook:
     def save(self, fn):
         with atomic_write(fn, mode='w', overwrite=True) as f:
             for i,cell in enumerate(self.cells):
-                f.write(cell.pad_top())
                 for line in cell.save():
                     f.write(line)
                 if i != len(self.cells) - 1 and not line.endswith('\n'):
                     f.write('\n')
-                f.write(cell.pad_bottom())
 
     def find_checkpoint(self):
         m = Hasher()

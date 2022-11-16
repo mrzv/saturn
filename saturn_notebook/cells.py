@@ -22,7 +22,6 @@ from . import evaluate
 class Cell:
     def __init__(self):
         self.lines_ = []
-        self.padding_ = (0,0)       # number of blank lines to add at the top and bottom
 
     def append(self, line):
         prefix = self.__class__._prefix
@@ -32,12 +31,6 @@ class Cell:
     def save(self):
         prefix = self.__class__._prefix
         return [prefix + line for line in self.lines_]
-
-    def pad_top(self):
-        return '\n'*self.padding_[0]
-
-    def pad_bottom(self):
-        return '\n'*self.padding_[1]
 
     def parse(self):            # called after all the lines have been read
         pass
@@ -297,6 +290,12 @@ class Blanks(Cell):
     @classmethod
     def display(cls):
         return False
+
+    @staticmethod
+    def create(n):
+        cell = Blanks()
+        cell.lines_ = ['\n']*n
+        return cell
 
 cell_types = [MarkdownCell, OutputCell, BreakCell, CheckpointCell, VariableCell]
 
