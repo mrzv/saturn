@@ -96,6 +96,7 @@ def show(fn: "input notebook",
         f_html.write('<!DOCTYPE html>\n')
         f_html.write('<html>\n')
         f_html.write('<head>\n')
+        f_html.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">\n')
         if katex:
             f_html.write(katex_preamble)
         f_html.write('<style>\n')
@@ -274,7 +275,7 @@ def version():
     print(f"Saturn {ver('saturn_notebook')}")
     for dep in ['wurlitzer', 'rich', 'ptpython',
                 'dill', 'markdown', 'atomicwrites',
-                'pygments', 'more_itertools', 'matplotlib']:
+                'pygments', 'more_itertools', 'matplotlib', 'nbformat']:
         print(f"   {dep} {ver(dep)}")
 
 @argh.arg('outfn', nargs='?')
