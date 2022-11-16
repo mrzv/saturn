@@ -30,7 +30,7 @@ class Notebook:
 
         self.cells = []
 
-        self.g = {}
+        self.g = {'__name__' : '__main__'}
         self.l = self.g
         self.m = Hasher()
 
