@@ -70,8 +70,22 @@ class Notebook:
     def execute(self, cell, output, info = lambda *args: None):
         cell_id = len(self.cells) - 1
 
+        # figure out the range of cells that belong to the current cell
+        begin = self.current
+        while type(self.next_cell()) in [c.Blanks, c.VariableCell, c.OutputCell]:
+            self.current += 1
+        # leave the last Blanks to MarkdownCell or BreakCell
+        if type(self.next_cell()) in [c.MarkdownCell, c.BreakCell] and type(self.incoming[self.current-1]) is c.Blanks:
+            self.current -= 1
+
+        # reset back
+        end = self.current
+        self.current = begin
+
         # skip blanks, if any
         while type(self.next_cell()) is c.Blanks:
+            if self.current >= end:
+                break
             self.append(self.next_cell())
             self.current += 1
 
