@@ -24,9 +24,10 @@
 * `saturn show notebook.py`
 
   Display the notebook in the terminal. No computation is performed. Optional
-  `--html OUTPUT.html` flag will produce HTML output.
+  `--html OUTPUT.html` flag will produce HTML output. Use `-k, --katex` flag to
+  embed [KaTeX](https://katex.org/) header into the HTML.
 
-  `saturn show notebook.py --html notebook.html`
+  `saturn show notebook.py --html notebook.html -k`
 
 * `saturn run notebook.py [output.py]`
 
@@ -60,7 +61,8 @@
 * `saturn convert notebook.ipynb [notebook.py]`
 
   Convert a Jupyter notebook into a Saturn notebook. If the output name
-  `notebook.py` is missing, only show the Jupyter notebook.
+  `notebook.py` is missing, only show the Jupyter notebook. Optional
+  `--html OUTPUT.html` flag will produce HTML output.
 
 
 ## Cell types
