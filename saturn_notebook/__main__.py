@@ -295,23 +295,22 @@ def convert(infn: "Jupyter notebook",
     header.lines_ = ['# vim: ft=python foldmethod=marker foldlevel=0\n']
     cells = [header]
 
-    last_code = False
     for jcell in jnb.cells:
         if jcell['cell_type'] == 'markdown':
             cell = c.MarkdownCell()
             cell.lines_ = [' ' + line + '\n' if len(line) else '\n' for line in jcell['source'].split('\n')]
+            cell.padding_ = (0 if type(cells[-1]) is c.MarkdownCell else 1,1)
             cells.append(cell)
-            last_code = False
         elif jcell['cell_type'] == 'code':
-            if last_code:
-                cells.append(c.BreakCell())
+            if type(cells[-1]) is c.CodeCell:
+                cell = c.BreakCell()
+                cell.padding_ = (1,1)
+                cells.append(cell)
             cell = c.CodeCell()
             cell.lines_ = [line + '\n' for line in jcell['source'].split('\n')]
             cells.append(cell)
-            last_code = True
 
             for out in jcell['outputs']:
-                last_code = False
                 if out['output_type'] == 'stream':
                     cell = c.OutputCell.from_string(out['text'])
                     cells.append(cell)
