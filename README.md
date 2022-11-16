@@ -57,6 +57,11 @@
 
   Show version of saturn and its dependencies.
 
+* `saturn convert notebook.ipynb [notebook.py]`
+
+  Convert a Jupyter notebook into a Saturn notebook. If the output name
+  `notebook.py` is missing, only show the Jupyter notebook.
+
 
 ## Cell types
 
