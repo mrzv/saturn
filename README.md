@@ -19,6 +19,9 @@
   modified notebook. The REPL will take input on rank 0 and broadcast to other
   ranks. It's also possible to suppress output from all ranks other than 0.
 
+* Ability to convert from Jupyter to Saturn notebooks. This also allows to view
+  Jupyter notebooks in the terminal.
+
 ## Commands and options
 
 * `saturn show notebook.py`
