@@ -17,6 +17,9 @@ Red='\033[0;31m'          # Red
 Green='\033[0;32m'        # Green
 IRed='\033[0;91m'         # Red
 
+# fix the output width
+export COLUMNS=80
+
 function run_test
 {
     fn=$1
