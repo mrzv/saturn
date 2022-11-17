@@ -18,7 +18,7 @@ class PythonReplWithExecute(PythonRepl):
         def _(event):
             event.current_buffer.validate_and_handle()
 
-    def _execute(self, line: str) -> None:
+    def eval(self, line: str) -> None:
         self.execute__(line)
 
 

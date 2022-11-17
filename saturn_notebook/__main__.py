@@ -208,7 +208,7 @@ def run_repl(nb, output, outfn = '', dry_run = True):
         for line in cell.repl_history():
             repl.history.append_string(line)
 
-    @repl.add_key_binding('c-o')
+    @repl.add_key_binding('c-w')
     def _(event):
         if not dry_run and root:
             nb.save(outfn)
