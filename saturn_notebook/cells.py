@@ -86,7 +86,7 @@ class CodeCell(Cell):
     def __rich__(self):
         if not self.lines_:
             return
-        return Syntax('>>> ' + '... '.join(self.lines_), 'python')
+        return Syntax('>>> ' + '... '.join(self.lines_).strip(), 'python')
 
     def append(self, line):
         super().append(line)
