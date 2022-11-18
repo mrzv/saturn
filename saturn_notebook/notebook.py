@@ -104,7 +104,7 @@ class Notebook:
 
             result = evaluate.exec_eval(cell.code(), self.g, self.l, name = f"{self.name}:{cell_id}")
             if result is not None:
-                out.write(result.__repr__() + '\n')
+                out.write(repr(result) + '\n')
                 if self.auto_capture and image.is_new_mpl_available():
                     out.append_png(image.save_mpl_png())
 
