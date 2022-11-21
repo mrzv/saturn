@@ -128,14 +128,17 @@ def run(infn: "input notebook",
         only_root_output: "suppress output everywhere but rank 0 (for MPI)" = False,
         interactive: "run REPL after the notebook is processed" = False):
     """Run the notebook."""
-    if not outfn:
-        outfn = infn
-
     if os.path.exists(infn):
         with open(infn) as f:
             cells = c.parse(f)
     else:
         cells = []
+        if outfn and not dry_run:
+            console.print(f"Input file [warn]{infn}[/warn] doesn't exist, but given an output file [warn]{outfn}[/warn]; forcing [affirm]dry_run[/affirm]")
+            dry_run = True
+
+    if not outfn:
+        outfn = infn
 
     def output(cell):
         if root or (not only_root_output and type(cell) is c.OutputCell):
