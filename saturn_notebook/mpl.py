@@ -1,5 +1,5 @@
 from matplotlib._pylab_helpers import Gcf
-from matplotlib.backend_bases import (_Backend, FigureCanvasBase, FigureManagerBase)
+from matplotlib.backend_bases import (FigureCanvasBase, FigureManagerBase)
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 import io
@@ -12,11 +12,13 @@ class SaturnFigureManager(FigureManagerBase):
             self.canvas.figure.savefig(buf, format='png')
             figures.append_png(buf.getvalue())
 
-@_Backend.export
-class SaturnBackend(_Backend):
-    FigureCanvas  = FigureCanvasAgg
-    FigureManager = SaturnFigureManager
+class SaturnCanvas(FigureCanvasAgg):
+    manager_class = SaturnFigureManager
 
-    def show(*args, **kwargs):
-        _Backend.show(*args, **kwargs)
-        Gcf.destroy_all()
+FigureCanvas  = SaturnCanvas
+FigureManager = SaturnFigureManager
+
+def show(*, block=None):
+    for manager in Gcf.get_all_fig_managers():
+        manager.show()
+    Gcf.destroy_all()
