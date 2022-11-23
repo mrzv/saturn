@@ -1,4 +1,4 @@
-import  os
+import  os, sys
 import  argh
 from    rich.console import Console
 from    rich.rule    import Rule
@@ -35,6 +35,8 @@ theme = Theme({
 })
 
 console = Console(width = width, theme = theme)
+
+argv = []
 
 def info(*args, block = False, **kw):
     if root:
@@ -139,6 +141,8 @@ def run(infn: "input notebook",
 
     if not outfn:
         outfn = infn
+
+    sys.argv = [infn] + argv
 
     def output(cell):
         if root or (not only_root_output and type(cell) is c.OutputCell):
@@ -355,6 +359,11 @@ def rehash(infn: "input notebook",
     nb.save(outfn)
 
 def main():
+    global argv
+    if '--' in sys.argv:
+        idx = sys.argv.index('--')
+        argv = sys.argv[idx+1:]
+        sys.argv = sys.argv[:idx]
     argh.dispatch_commands([show, run, clean, image, version, convert, rehash])
 
 if __name__ == '__main__':

@@ -46,6 +46,10 @@
   * `-n, --dry-run`: don't save the result.
   * `--only-root-output`: under MPI, suppress output from all ranks other than 0.
 
+  Any arguments passed after `--` will be passed as `sys.argv` to the notebook.
+
+  `saturn run notebook.py -- arguments --to notebook`
+
 * `saturn clean notebook.py [output.py]`
 
   Remove all binary data from the notebook. Useful for getting rid of large
