@@ -166,6 +166,14 @@ with all the binary content folded away.
 # vim: foldmethod=marker foldlevel=0
 ```
 
+It's also helpful to have Vim recognize the `#m>` prefix to correctly re-format
+markdown cells with the `gq` command. This can be done, for example, by adding
+the following to `~/.vim/after/ftplugin/python.vim`:
+
+```
+setlocal comments=b:#,fb:-,b:#m>
+```
+
 ## Screenshots
 
 Running [samples/simple.py](https://github.com/mrzv/saturn/blob/master/samples/simple.py):
