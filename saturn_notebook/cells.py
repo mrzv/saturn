@@ -1,6 +1,8 @@
 from rich.markdown import Markdown
 from rich.syntax   import Syntax
 from rich.text     import Text
+from rich.rule     import Rule
+from rich.abc      import RichRenderable
 
 from  itertools import chain
 import base64
@@ -28,11 +30,11 @@ class Cell:
         line = line[len(prefix):]       # eat the prefix
         self.lines_.append(line)
 
-    def save(self):
+    def save(self, external):
         prefix = self.__class__._prefix
         return [prefix + line for line in self.lines_]
 
-    def parse(self):            # called after all the lines have been read
+    def parse(self, external, info):            # called after all the lines have been read
         pass
 
     def lines(self):
@@ -131,29 +133,44 @@ class OutputCell(Cell):
         cell.composite_.write(s)
         return cell
 
-    def parse(self):
-        super().parse()
+    def parse(self, external, info):
+        super().parse(external, info)
         pl = peekable(self.lines_)
         for line in pl:
             if not line.startswith('png'):
                 self.composite_.write(line)
             else:
-                png_content = [line[3:]]
-                while pl and pl.peek().startswith('png') and not pl.peek().startswith('png{{{'):
-                    png_content.append(next(pl)[3:])
-                png_content = ''.join(png_content)
-                self.composite_.append_png(base64.b64decode(png_content))
+                if 'hash=' in line:
+                    # take everything from hash= to the end (-1 to not include \n)
+                    fn = line[line.index('hash=') + len('hash='):-1]
+                    if external:
+                        png_content = external.read(fn)
+                        self.composite_.append_png(png_content)
+                    else:
+                        self.composite_.append_rich(Rule(f"[warn]image hash found, but no external file given ([cyan]{fn}[/cyan])[/warn]"))
+                else:
+                    png_content = [line[3:]]
+                    while pl and pl.peek().startswith('png') and not pl.peek().startswith('png{{{'):
+                        png_content.append(next(pl)[3:])
+                    png_content = ''.join(png_content)
+                    self.composite_.append_png(base64.b64decode(png_content))
         self.lines_.clear()
 
-    def save(self):
+    def save(self, external):
         lines_ = []
         for x in self.composite_:
             if type(x) is io.StringIO:
                 x.seek(0)
                 lines_ += [self._prefix + line for line in utils.collapse_carriage_return(x)]
             else:
-                content = base64.b64encode(x).decode('ascii')
-                lines_ += [self._prefix + 'png' + line + '\n' for line in chunk(content, 80, markers = True)]
+                if external:
+                    fn = f"{hash(x) % 2**64:0x}.png"
+                    with external.open(fn, 'w') as f:
+                        f.write(x)
+                    lines_ += [self._prefix + f'png hash={fn}\n']
+                else:   # inline
+                    content = base64.b64encode(x).decode('ascii')
+                    lines_ += [self._prefix + 'png' + line + '\n' for line in chunk(content, 80, markers = True)]
         return lines_
 
     def empty(self):
@@ -164,8 +181,12 @@ class OutputCell(Cell):
             if type(x) is io.StringIO:
                 if x.getvalue():
                     console.print(Text(x.getvalue()))
-            else:
+            elif type(x) is bytes:
                 image.show_png(x)
+            elif isinstance(x,RichRenderable):
+                console.print(x)
+            else:
+                console.print(Rule("[error]didn't recognize cell type[/error]"))
 
     def _render_html(self):
         result = ""
@@ -184,7 +205,7 @@ class BreakCell(Cell):
     def display(cls):
         return False
 
-    def save(self):
+    def save(self, external):
         return [self._prefix + '\n']
 
 class CheckpointCell(Cell):
@@ -208,7 +229,7 @@ class CheckpointCell(Cell):
     def repl_history(self):
         return []
 
-    def parse(self):
+    def parse(self, external, info):
         if all(l.strip() == '' for l in self.lines_):
             self.lines_ = []
 
@@ -249,11 +270,11 @@ class CheckpointCell(Cell):
 class VariableCell(CheckpointCell):
     _prefix = '#var>'
 
-    def parse(self):
+    def parse(self, external, info):
         self.variables = self.lines_[0]
         self.lines_ = self.lines_[1:]
 
-        super().parse()
+        super().parse(external, info)
 
     def load(self, locals_):
         locals_['_var_cell_load'] = dill.load(self._content)
@@ -270,8 +291,8 @@ class VariableCell(CheckpointCell):
     def header(self):
         return self.__class__._prefix + self.variables
 
-    def save(self):
-        lines_ = super().save()
+    def save(self, external):
+        lines_ = super().save(external)
         return [self.header()] + lines_
 
     def repl_history(self):
@@ -310,11 +331,11 @@ def chunk(content, width, markers = False):
         chunking = chain(['{{{'], chunking, ['}}}'])
     return chunking
 
-def parse(f, show_only = False):
+def parse(f, external, show_only = False, *, info = lambda *args: None):
     cells = []
     def cells_append(cell):
         if len(cells) > 0:
-            cells[-1].parse()
+            cells[-1].parse(external, info)
         cells.append(cell)
 
     p = peekable(f)
@@ -343,6 +364,6 @@ def parse(f, show_only = False):
         cells[-1].append(line)
 
     if len(cells) > 0:
-        cells[-1].parse()
+        cells[-1].parse(external, info)
 
     return cells

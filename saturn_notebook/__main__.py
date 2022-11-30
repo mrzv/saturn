@@ -4,10 +4,14 @@ from    rich.console import Console
 from    rich.rule    import Rule
 from    rich.theme   import Theme
 from    rich.style   import Style
+from    rich.panel   import Panel
 
 import  io
 from    atomicwrites import atomic_write
 from    more_itertools import peekable
+
+import  zipfile
+from    contextlib import nullcontext
 
 from    .           import cells as c, notebook
 from    .repl       import PythonReplWithExecute
@@ -44,6 +48,14 @@ def info(*args, block = False, **kw):
             console.print(Rule(*args, **kw))
         else:
             console.print(*args, **kw)
+
+def error(*args, **kw):
+    if root:
+        console.print(Panel(*args, **kw, style='error'))
+
+def warn(*args, **kw):
+    if root:
+        console.print(Panel(*args, **kw, style='warn'))
 
 def show_console(cell, rule = False, verbose = False, no_show = False):
     if rule:
@@ -84,10 +96,15 @@ katex_preamble = r"""
 def show(fn: "input notebook",
          html: "save HTML to a file" = '',
          katex: "include KaTeX in HTML output" = False,
+         external: "load binary content from external zip archive" = '',
          debug: "show debugging information" = False):
     """Show the contents of the notebook, without evaluating."""
     with open(fn) as f:
-        cells = c.parse(f, show_only = True)
+        if external and not os.path.exists(external):
+            warn(f"External zip archive [error]{external}[/error] not found. Ignoring.")
+            external = ''
+        with zipfile.ZipFile(external, 'r') if external else nullcontext() as external_zip:
+            cells = c.parse(f, external_zip, show_only = True, info=info)
     _show(cells, html, katex, debug)
 
 def _show(cells, html, katex, debug):
@@ -125,6 +142,7 @@ def run(infn: "input notebook",
         outfn: "output notebook (if empty, input modified in place)",
         clean: "run from scratch, ignoring checkpoints" = False,
         auto_capture: "automatically capture images" = False,
+        external: "save binary content in external zip archive" = '',
         debug: "show debugging information" = False,
         dry_run: "don't save the processed notebook" = False,
         only_root_output: "suppress output everywhere but rank 0 (for MPI)" = False,
@@ -132,11 +150,17 @@ def run(infn: "input notebook",
     """Run the notebook."""
     if os.path.exists(infn):
         with open(infn) as f:
-            cells = c.parse(f)
+            if external and os.path.exists(external):
+                with zipfile.ZipFile(external, 'r') if external else nullcontext() as external_zip:
+                    cells = c.parse(f, external_zip, info=info)
+            else:
+                if external:
+                    warn(f"External zip archive [error]{external}[/error] not found. Will use it for output only.")
+                cells = c.parse(f, '', info=info)
     else:
         cells = []
         if outfn and not dry_run:
-            console.print(f"Input file [warn]{infn}[/warn] doesn't exist, but given an output file [warn]{outfn}[/warn]; forcing [affirm]dry_run[/affirm]")
+            warn(f"Input file [error]{infn}[/error] doesn't exist, but given an output file [cyan]{outfn}[/cyan]; forcing [affirm]--dry-run[/affirm]")
             dry_run = True
 
     if not outfn:
@@ -162,7 +186,7 @@ def run(infn: "input notebook",
         nb.process(output, info)
 
         if interactive:
-            run_repl(nb, output, outfn, dry_run)
+            run_repl(nb, output, outfn, external, dry_run)
     except SystemExit:
         info("Caught SystemExit")
         nb.move_all_incoming()
@@ -179,10 +203,10 @@ def run(infn: "input notebook",
         nb.move_all_incoming()
 
     if not dry_run and root:
-        nb.save(outfn)
+        nb.save(outfn, external)
 
 
-def run_repl(nb, output, outfn = '', dry_run = True):
+def run_repl(nb, output, outfn = '', external = '', dry_run = True):
     if using_mpi:
         comm = MPI.COMM_WORLD
 
@@ -191,7 +215,7 @@ def run_repl(nb, output, outfn = '', dry_run = True):
             line = comm.bcast(line, root = 0)
         blank = c.Blanks()
         blank.append('\n')
-        cells = [blank] + c.parse(io.StringIO(line))
+        cells = [blank] + c.parse(io.StringIO(line), None, info=info)
         nb.add(cells)
         nb.process(output)
 
@@ -218,7 +242,7 @@ def run_repl(nb, output, outfn = '', dry_run = True):
     @repl.add_key_binding('c-w')
     def _(event):
         if not dry_run and root:
-            nb.save(outfn)
+            nb.save(outfn, external)
 
     repl.run()
 
@@ -253,14 +277,17 @@ def clean(infn: "input notebook",
 
 @argh.arg('i',   nargs='?', type=int)
 @argh.arg('out', nargs='?')
-def image(infn: "input notebook", i: "image index", out: "output PNG filename"):
+def image(infn: "input notebook", i: "image index", out: "output PNG filename",
+          external: "load binary content from external zip archive" = '',
+          ):
     """Extract an image from the notebook."""
     if i is not None and not out:
         console.print("Must specify output filename, if image is specified")
         return
 
     with open(infn) as f:
-        cells = c.parse(f, show_only = True)
+        with zipfile.ZipFile(external, 'r') if external else nullcontext() as external_zip:
+            cells = c.parse(f, external_zip, show_only = True, info=info)
 
     count = 0
     for cell in cells:
@@ -291,6 +318,7 @@ def version():
 def convert(infn: "Jupyter notebook",
             outfn: "output notebook (if empty, show the cells instead)",
             version: "notebook version" = 4,
+            external: "save binary content in external zip archive" = '',
             html: "save HTML to a file" = '',
             katex: "include KaTeX in HTML output" = False,
             debug: "show debugging information" = False):
@@ -339,24 +367,26 @@ def convert(infn: "Jupyter notebook",
         nb = notebook.Notebook(name = outfn)
         nb.add(cells)
         nb.move_all_incoming()
-        nb.save(outfn)
+        nb.save(outfn, external)
 
 
 @argh.arg('outfn', nargs='?')
 def rehash(infn: "input notebook",
-           outfn: "output notebook (if empty, input modified in place)"):
+           outfn: "output notebook (if empty, input modified in place)",
+           external: "load binary content from external zip archive" = ''):
     """Rehash all the code cells, updating the hashes stored with checkpoints and variable cells. (advanced)"""
     if not outfn:
         outfn = infn
 
     with open(infn) as f:
-        cells = c.parse(f)
+        with zipfile.ZipFile(external, 'r') if external else nullcontext() as external_zip:
+            cells = c.parse(f, external_zip, info=info)
 
     nb = notebook.Notebook(name = infn)
     nb.add(cells)
     nb.rehash()
 
-    nb.save(outfn)
+    nb.save(outfn, external)
 
 def main():
     global argv

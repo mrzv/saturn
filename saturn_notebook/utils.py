@@ -1,6 +1,7 @@
 import sys, os, io, contextlib
 from  wurlitzer         import pipes, STDOUT, Wurlitzer, _default_encoding
 from  . import image
+from rich.rule     import Rule
 
 # From: https://stackoverflow.com/a/18854817/44738
 def chunkstring(string, length):
@@ -33,6 +34,10 @@ class CompositeIO:
         self.outer.append(io.StringIO())
         if self.outfd is not None:
             image.show_png(buf, self.outfd)
+
+    def append_rich(self, msg):
+        self.outer.append(msg)
+        self.outer.append(io.StringIO())
 
 @contextlib.contextmanager
 def captured_passthrough():

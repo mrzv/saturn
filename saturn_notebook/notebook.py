@@ -1,5 +1,7 @@
 import  hashlib
 import  io
+import  zipfile
+from    contextlib import nullcontext
 from    atomicwrites import atomic_write
 from    wurlitzer    import pipes, STDOUT
 
@@ -176,13 +178,14 @@ class Notebook:
 
             self.append(cell)
 
-    def save(self, fn):
+    def save(self, fn, external):
         with atomic_write(fn, mode='w', overwrite=True) as f:
-            for i,cell in enumerate(self.cells):
-                for line in cell.save():
-                    f.write(line)
-                if i != len(self.cells) - 1 and not line.endswith('\n'):
-                    f.write('\n')
+            with zipfile.ZipFile(external, 'w') if external else nullcontext() as external_zip:
+                for i,cell in enumerate(self.cells):
+                    for line in cell.save(external_zip):
+                        f.write(line)
+                    if i != len(self.cells) - 1 and not line.endswith('\n'):
+                        f.write('\n')
 
     def find_checkpoint(self):
         m = Hasher()
