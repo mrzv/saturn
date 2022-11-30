@@ -21,6 +21,9 @@ from . import utils
 from . import image
 from . import evaluate
 
+# Prefix for the filename inside an external zipfile
+_zip_fn_prefix = 'name='
+
 class Cell:
     def __init__(self):
         self.lines_ = []
@@ -140,9 +143,9 @@ class OutputCell(Cell):
             if not line.startswith('png'):
                 self.composite_.write(line)
             else:
-                if 'hash=' in line:
-                    # take everything from hash= to the end (-1 to not include \n)
-                    fn = line[line.index('hash=') + len('hash='):-1]
+                if _zip_fn_prefix in line:
+                    # take everything from name= to the end (-1 to not include \n)
+                    fn = line[line.index(_zip_fn_prefix) + len(_zip_fn_prefix):-1]
                     if external:
                         png_content = external.read(fn)
                         self.composite_.append_png(png_content)
@@ -167,7 +170,7 @@ class OutputCell(Cell):
                     fn = f"{hash(x) % 2**64:0x}.png"
                     with external.open(fn, 'w') as f:
                         f.write(x)
-                    lines_ += [self._prefix + f'png hash={fn}\n']
+                    lines_ += [self._prefix + f'png {_zip_fn_prefix}{fn}\n']
                 else:   # inline
                     content = base64.b64encode(x).decode('ascii')
                     lines_ += [self._prefix + 'png' + line + '\n' for line in chunk(content, 80, markers = True)]
@@ -210,6 +213,8 @@ class BreakCell(Cell):
 
 class CheckpointCell(Cell):
     _prefix = '#chk>'
+    _extension = '.chk'
+    _warning_name = "checkpoint"
 
     def expected(self, h):
         if self.expected_hash() == None:
@@ -222,9 +227,9 @@ class CheckpointCell(Cell):
             self._expected = dill.load(self._content)
         return self._expected
 
-    @classmethod
-    def display(cls):
-        return False
+    def show_console(self, console):
+        if hasattr(self, '_warning'):
+            console.print(self._warning)
 
     def repl_history(self):
         return []
@@ -237,9 +242,18 @@ class CheckpointCell(Cell):
             self._expected = None
             return
 
-        content = self.lines()
-        content = base64.b64decode(content)
-        self._content = io.BytesIO(content)
+        line = self.lines_[0]
+        if _zip_fn_prefix in line:
+            fn = line[line.index(_zip_fn_prefix) + len(_zip_fn_prefix):-1]
+            if external:
+                self._content = io.BytesIO(external.read(fn))
+            else:
+                self._warning = Rule(f"[warn]{self._warning_name} hash found, but no external file given ([cyan]{fn}[/cyan])[/warn]")
+                self._expected = None
+        else:
+            content = self.lines()
+            content = base64.b64decode(content)
+            self._content = io.BytesIO(content)
 
     def load(self):
         h = self.expected_hash()    # just to make sure it's been parsed
@@ -253,22 +267,37 @@ class CheckpointCell(Cell):
             content = io.BytesIO()
             dill.dump(running, content)
             dill.dump(locals_, content)
-            content = base64.b64encode(content.getvalue()).decode('ascii')
-            self.lines_ = [line + '\n' for line in chunk(content, 80, markers = True)]
+            self._content = content
         except:
-            self.lines_ = ['']      # to keep the blank checkpoint cell
+            self._content = None
             raise
+
+    def save(self, external):
+        if self._content:
+            content = self._content.getvalue()
+            if not external:
+                content = base64.b64encode(content).decode('ascii')
+                self.lines_ = [line + '\n' for line in chunk(content, 80, markers = True)]
+            else:
+                fn = f"{hash(content) % 2**64:0x}{self._extension}"
+                with external.open(fn, 'w') as f:
+                    f.write(content)
+                self.lines_ = [f' {_zip_fn_prefix}{fn}\n']
+        else:
+            self.lines_ = ['']      # to keep the blank checkpoint cell
+        return super().save(external)
 
     def replace_hash(self, running):
         if self.expected_hash() == None: return
         content = io.BytesIO()
         dill.dump(running, content)
         content.write(self._content.read())
-        content = base64.b64encode(content.getvalue()).decode('ascii')
-        self.lines_ = [line + '\n' for line in chunk(content, 80, markers = True)]
+        self._content = content
 
 class VariableCell(CheckpointCell):
     _prefix = '#var>'
+    _extension = '.var'
+    _warning_name = "variable"
 
     def parse(self, external, info):
         self.variables = self.lines_[0]
@@ -285,8 +314,7 @@ class VariableCell(CheckpointCell):
         content = io.BytesIO()
         dill.dump(running, content)
         dill.dump(evaluate.eval_expression(self.variables, locals_), content)
-        content = base64.b64encode(content.getvalue()).decode('ascii')
-        self.lines_ = [line + '\n' for line in chunk(content, 80, markers = True)]
+        self._content = content
 
     def header(self):
         return self.__class__._prefix + self.variables
