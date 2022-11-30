@@ -277,7 +277,7 @@ class CheckpointCell(Cell):
             raise
 
     def save(self, external):
-        if self._content:
+        if hasattr(self, '_content') and self._content:
             content = self._content.getvalue()
             if not external:
                 content = base64.b64encode(content).decode('ascii')
