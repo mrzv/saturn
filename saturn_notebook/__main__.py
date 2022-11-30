@@ -96,7 +96,7 @@ katex_preamble = r"""
 def show(fn: "input notebook",
          html: "save HTML to a file" = '',
          katex: "include KaTeX in HTML output" = False,
-         external: "load binary content from external zip archive" = '',
+         external: "external zip archive with binary content" = '',
          debug: "show debugging information" = False):
     """Show the contents of the notebook, without evaluating."""
     with open(fn) as f:
@@ -142,7 +142,7 @@ def run(infn: "input notebook",
         outfn: "output notebook (if empty, input modified in place)",
         clean: "run from scratch, ignoring checkpoints" = False,
         auto_capture: "automatically capture images" = False,
-        external: "save binary content in external zip archive" = '',
+        external: "external zip archive with binary content" = '',
         debug: "show debugging information" = False,
         dry_run: "don't save the processed notebook" = False,
         only_root_output: "suppress output everywhere but rank 0 (for MPI)" = False,
@@ -278,7 +278,7 @@ def clean(infn: "input notebook",
 @argh.arg('i',   nargs='?', type=int)
 @argh.arg('out', nargs='?')
 def image(infn: "input notebook", i: "image index", out: "output PNG filename",
-          external: "load binary content from external zip archive" = '',
+          external: "external zip archive with binary content" = '',
           ):
     """Extract an image from the notebook."""
     if i is not None and not out:
@@ -318,7 +318,7 @@ def version():
 def convert(infn: "Jupyter notebook",
             outfn: "output notebook (if empty, show the cells instead)",
             version: "notebook version" = 4,
-            external: "save binary content in external zip archive" = '',
+            external: "external zip archive with binary content" = '',
             html: "save HTML to a file" = '',
             katex: "include KaTeX in HTML output" = False,
             debug: "show debugging information" = False):
@@ -373,7 +373,7 @@ def convert(infn: "Jupyter notebook",
 @argh.arg('outfn', nargs='?')
 def rehash(infn: "input notebook",
            outfn: "output notebook (if empty, input modified in place)",
-           external: "load binary content from external zip archive" = ''):
+           external: "external zip archive with binary content" = ''):
     """Rehash all the code cells, updating the hashes stored with checkpoints and variable cells. (advanced)"""
     if not outfn:
         outfn = infn
@@ -388,13 +388,48 @@ def rehash(infn: "input notebook",
 
     nb.save(outfn, external)
 
+@argh.arg('outfn', nargs='?')
+def extract(infn: "input notebook",
+            external: "external zip archive with binary content",
+            outfn: "output notebook (if empty, input modified in place)"):
+    """Extract embedded binary content into external zip archive."""
+    if not outfn:
+        outfn = infn
+
+    with open(infn) as f:
+        cells = c.parse(f, '', info=info)       # read without external
+
+    nb = notebook.Notebook(name = infn)
+    nb.add(cells)
+    nb.move_all_incoming()
+
+    nb.save(outfn, external)
+
+@argh.arg('outfn', nargs='?')
+def embed(infn: "input notebook",
+          external: "external zip archive with binary content",
+          outfn: "output notebook (if empty, input modified in place)"):
+    """Embed binary content from external zip archive into notebook body."""
+    if not outfn:
+        outfn = infn
+
+    with open(infn) as f:
+        with zipfile.ZipFile(external, 'r') if external else nullcontext() as external_zip:
+            cells = c.parse(f, external_zip, info=info)
+
+    nb = notebook.Notebook(name = infn)
+    nb.add(cells)
+    nb.move_all_incoming()
+
+    nb.save(outfn, '')      # write without external
+
 def main():
     global argv
     if '--' in sys.argv:
         idx = sys.argv.index('--')
         argv = sys.argv[idx+1:]
         sys.argv = sys.argv[:idx]
-    argh.dispatch_commands([show, run, clean, image, version, convert, rehash])
+    argh.dispatch_commands([show, run, clean, image, version, convert, rehash, extract, embed])
 
 if __name__ == '__main__':
     main()
