@@ -45,6 +45,8 @@
     be added to the notebook.
   * `-n, --dry-run`: don't save the result.
   * `--only-root-output`: under MPI, suppress output from all ranks other than 0.
+  * `-e`, `--external notebook.zip`: use external zip archive `notebook.zip`
+    to store binary content (instead of embedding it inline).
 
   Any arguments passed after `--` will be passed as `sys.argv` to the notebook.
 
@@ -70,6 +72,14 @@
   Convert a Jupyter notebook into a Saturn notebook. If the output name
   `notebook.py` is missing, only show the Jupyter notebook. Optional
   `--html OUTPUT.html` flag will produce HTML output.
+
+* `saturn extract notebook.py notebook.zip`
+
+  Extract inline binary content into external archive.
+
+* `saturn embed notebook.py notebook.zip`
+
+  Embed binary content from external archive into the notebook.
 
 
 ## Cell types
