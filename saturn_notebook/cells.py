@@ -8,6 +8,7 @@ from  itertools import chain
 import base64
 import io
 import dill
+import hashlib
 from  more_itertools    import peekable
 
 import html
@@ -23,6 +24,9 @@ from . import evaluate
 
 # Prefix for the filename inside an external zipfile
 _zip_fn_prefix = 'name='
+
+def hash_bytes(content):
+    return hashlib.sha256(content).hexdigest()[:16]
 
 class Cell:
     def __init__(self):
@@ -167,7 +171,7 @@ class OutputCell(Cell):
                 lines_ += [self._prefix + line for line in utils.collapse_carriage_return(x)]
             else:
                 if external:
-                    fn = f"{hash(x) % 2**64:0x}.png"
+                    fn = f"{hash_bytes(x)}.png"
                     with external.open(fn, 'w') as f:
                         f.write(x)
                     lines_ += [self._prefix + f'png {_zip_fn_prefix}{fn}\n']
@@ -279,7 +283,7 @@ class CheckpointCell(Cell):
                 content = base64.b64encode(content).decode('ascii')
                 self.lines_ = [line + '\n' for line in chunk(content, 80, markers = True)]
             else:
-                fn = f"{hash(content) % 2**64:0x}{self._extension}"
+                fn = f"{hash_bytes(content)}{self._extension}"
                 with external.open(fn, 'w') as f:
                     f.write(content)
                 self.lines_ = [f' {_zip_fn_prefix}{fn}\n']
