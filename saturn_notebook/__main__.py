@@ -351,11 +351,17 @@ def convert(infn: "Jupyter notebook",
                 if out['output_type'] == 'stream':
                     cell = c.OutputCell.from_string(out['text'])
                     cells.append(cell)
-                elif out['output_type'] == 'display_data' and 'image/png' in out['data']:
-                    cell = c.OutputCell()
-                    png_content = out['data']['image/png']
-                    cell.composite_.append_png(c.base64.b64decode(png_content))
-                    cells.append(cell)
+                elif out['output_type'] in ['display_data', 'execute_result']:
+                    if 'image/png' in out['data']:
+                        cell = c.OutputCell()
+                        png_content = out['data']['image/png']
+                        cell.composite_.append_png(c.base64.b64decode(png_content))
+                        cells.append(cell)
+                    elif 'text/plain' in out['data']:
+                        cell = c.OutputCell.from_string(out['data']['text/plain'])
+                        cells.append(cell)
+                    else:
+                        info('Unrecognized data type', style="magenta")
                 else:
                     info('Unrecognized output type', style="magenta")
         else:
