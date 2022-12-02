@@ -5,7 +5,8 @@
 ## Features
 
 * Plain-text format. Notebooks are regular Python files. Different types of
-  cells are comments with special formatting.
+  cells are comments with special formatting. Markdown rendering and syntax
+  highlighting in the terminal thanks to [rich](https://github.com/Textualize/rich).
 
 * Checkpoints. Special checkpoint cells allow to save the state of the session
   or individual variables.
