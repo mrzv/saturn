@@ -225,12 +225,16 @@ def run_repl(nb, output, outfn = '', external = '', dry_run = True):
             if not line: return
             execute_line(line)
 
+    saturn_dir = os.path.expanduser('~/.saturn')
+    if not os.path.exists(saturn_dir):
+        os.makedirs(saturn_dir)
+
     repl = PythonReplWithExecute(
         execute = execute_line,
         get_globals=lambda: nb.g,
         get_locals=lambda: nb.l,
         vi_mode=False,
-        history_filename=None,
+        history_filename=saturn_dir + '/history',
         startup_paths=None,
     )
 
