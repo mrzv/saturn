@@ -9,6 +9,10 @@ class PythonReplWithExecute(PythonRepl):
         self.title = "Saturn "
         self.use_code_colorscheme('vim')
 
+        self.complete_while_typing = False
+        self.enable_history_search = True
+        self.enable_auto_suggest = True
+
         # Swap enter and meta+enter #
         @self.add_key_binding('escape', 'enter')
         def _(event):
