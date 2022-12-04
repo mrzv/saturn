@@ -177,7 +177,7 @@ def run(infn: "input notebook",
         nb.process(output, force=interactive, info=info, debug=debug)
 
         if interactive:
-            run_repl(nb, output, outfn, external, dry_run)
+            run_repl(nb, output, outfn, external, dry_run, debug=debug)
     except:
         nb.move_all_incoming()
 
@@ -185,7 +185,7 @@ def run(infn: "input notebook",
         nb.save(outfn, external)
 
 
-def run_repl(nb, output, outfn = '', external = '', dry_run = True):
+def run_repl(nb, output, outfn = '', external = '', dry_run = True, debug = False):
     if using_mpi:
         comm = MPI.COMM_WORLD
 
@@ -219,6 +219,7 @@ def run_repl(nb, output, outfn = '', external = '', dry_run = True):
         vi_mode=False,
         history_filename=saturn_dir + '/history',
         startup_paths=None,
+        debug=debug,
     )
 
     # Add the code cells to history

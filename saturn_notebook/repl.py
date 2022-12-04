@@ -1,7 +1,7 @@
 from ptpython.repl import PythonRepl
 
 class PythonReplWithExecute(PythonRepl):
-    def __init__(self, execute, *args, **kw):
+    def __init__(self, execute, *args, debug=False, **kw):
         self.execute__ = execute
         super().__init__(*args, **kw)
 
@@ -22,7 +22,9 @@ class PythonReplWithExecute(PythonRepl):
         def _(event):
             event.current_buffer.validate_and_handle()
 
+        # Unless we are in debug mode, silence ptpython's exception handling, in favor of our own
+        if not debug:
+            self._handle_exception = lambda e: None
+
     def eval(self, line: str) -> None:
         self.execute__(line)
-
-
