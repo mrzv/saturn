@@ -134,7 +134,7 @@ class Notebook:
         if type(self.next_cell()) is c.OutputCell:
             self.current += 1
 
-    def process(self, output, info = lambda *args: None):
+    def process(self, output, info = lambda *args, **kwargs: None):
         while self.current < len(self.incoming):
             cell = self.incoming[self.current]
             self.current += 1
