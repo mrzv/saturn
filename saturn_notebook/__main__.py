@@ -212,7 +212,8 @@ def run_repl(nb, output, outfn = '', external = '', dry_run = True):
 
     repl = PythonReplWithExecute(
         execute = execute_line,
-        get_globals=lambda: nb.g,
+        # get_globals=lambda: nb.g,     # this breaks checkpointing inside repl;
+                                        # not sure why, but commenting it out for now
         get_locals=lambda: nb.l,
         vi_mode=False,
         history_filename=saturn_dir + '/history',
