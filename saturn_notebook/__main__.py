@@ -190,6 +190,7 @@ def run_repl(nb, output, outfn = '', external = '', dry_run = True):
         comm = MPI.COMM_WORLD
 
     def execute_line(line):
+        line += '\n'
         if using_mpi and root:
             line = comm.bcast(line, root = 0)
         cells = []
