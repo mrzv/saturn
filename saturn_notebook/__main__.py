@@ -2,8 +2,6 @@ import  os, sys
 import  argh
 from    rich.console import Console
 from    rich.rule    import Rule
-from    rich.theme   import Theme
-from    rich.style   import Style
 from    rich.panel   import Panel
 
 import  io
@@ -30,14 +28,7 @@ except ImportError:
 import  shutil
 width = None if shutil.get_terminal_size().columns != 0 else 80
 
-theme = Theme({
-    "variables":    Style.parse("yellow"),
-    "warn":         Style.parse("yellow"),
-    "affirm":       Style.parse("green"),
-    "error":        Style.parse("red"),
-    "cell-name":    Style.parse("yellow"),
-})
-
+from    .theme      import theme
 console = Console(width = width, theme = theme)
 
 argv = []
@@ -183,23 +174,11 @@ def run(infn: "input notebook",
             info('Resuming', style="magenta")
 
     try:
-        nb.process(output, info)
+        nb.process(output, force=interactive, info=info, debug=debug)
 
         if interactive:
             run_repl(nb, output, outfn, external, dry_run)
-    except SystemExit:
-        info("Caught SystemExit")
-        nb.move_all_incoming()
     except:
-        info("Caught exception, aborting")
-        from .traceback import Traceback
-        tb = Traceback(nb, debug = debug, width = 80)
-
-        console_tb = Console(record = True, width = 80, theme = theme)
-        console_tb.print(tb)
-
-        nb.skip_next_output()
-        nb.append(c.OutputCell.from_string(console_tb.export_text()))
         nb.move_all_incoming()
 
     if not dry_run and root:
@@ -213,11 +192,13 @@ def run_repl(nb, output, outfn = '', external = '', dry_run = True):
     def execute_line(line):
         if using_mpi and root:
             line = comm.bcast(line, root = 0)
-        blank = c.Blanks()
-        blank.append('\n')
-        cells = [blank] + c.parse(io.StringIO(line), None, info=info)
+        cells = []
+        cells.append(c.Blanks.create(1))
+        cells.append(c.BreakCell())
+        cells.append(c.Blanks.create(1))
+        cells += c.parse(io.StringIO(line), None, info=info)
         nb.add(cells)
-        nb.process(output)
+        nb.process(output,info=info)
 
     if not root:
         while True:

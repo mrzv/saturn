@@ -5,9 +5,12 @@ from    contextlib import nullcontext
 from    atomicwrites import atomic_write
 from    wurlitzer    import pipes, STDOUT
 
+from    rich.console import Console
+
 from    . import cells as c, utils, evaluate, image, mpl
 
 from    .traceback import Traceback
+from    .theme     import theme
 
 class Hasher:
     def __init__(self):
@@ -134,7 +137,7 @@ class Notebook:
         if type(self.next_cell()) is c.OutputCell:
             self.current += 1
 
-    def process(self, output, info = lambda *args, **kwargs: None):
+    def process(self, output, *, force = False, debug = False, info = lambda *args, **kwargs: None):
         while self.current < len(self.incoming):
             cell = self.incoming[self.current]
             self.current += 1
@@ -142,7 +145,23 @@ class Notebook:
             self.append(cell, output)
 
             if type(cell) is c.CodeCell:
-                self.execute(cell, output, info)
+                try:
+                    self.execute(cell, output, info)
+                except SystemExit:
+                    info("Caught SystemExit")
+                    raise       # SystemExit quits regardless of force
+                except:
+                    info("Caught exception")
+                    tb = Traceback(self, debug = debug, width = 80)
+
+                    console_tb = Console(record = True, width = 80, theme = theme)
+                    console_tb.print(tb)
+
+                    self.skip_next_output()
+                    self.append(c.OutputCell.from_string(console_tb.export_text()))
+
+                    if not force:
+                        raise
             elif type(cell) is c.VariableCell:
                 info(f"[warn]Warning:[/warn] isolated variable cell [variables]{cell.variables.strip()}[/variables]; result will never be used")
                 try:

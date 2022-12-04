@@ -16,6 +16,7 @@
 - Add option to embed both KaTeX and water.css into HTML output (to have a
   standalone page).
 - Add breakpoint cell that drops into repl (and then resumes execution)
+- Checkpointing is broken in the interactive mode.
 
 Done:
 
