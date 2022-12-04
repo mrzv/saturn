@@ -48,7 +48,7 @@ class Cell:
         return ''.join(self.lines_)
 
     def repl_history(self):
-        return self.save()
+        return self.save(None)
 
     @classmethod
     def display(cls):
