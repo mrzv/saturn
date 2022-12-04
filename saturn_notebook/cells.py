@@ -105,7 +105,10 @@ class CodeCell(Cell):
             self.hashable = False
 
     def code(self):
-        return self.lines()
+        lines = self.lines()
+        if len(lines) > 0 and lines[-1] == '\n':
+            return lines[:-1]
+        return lines
 
     def _render_html(self):
         return f"<div class='code'>{highlight(self.code(), PythonLexer(), HtmlFormatter())}</div>"
