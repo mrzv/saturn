@@ -74,6 +74,7 @@ class Notebook:
 
     def execute(self, cell, output, info = lambda *args: None):
         cell_id = len(self.cells) - 1
+        cell_id_display = len([x for x in self.cells if type(x) is c.CodeCell]) # human-readable display only counts code cells
 
         # figure out the range of cells that belong to the current cell
         begin = self.current
@@ -107,7 +108,7 @@ class Notebook:
         with utils.captured_passthrough() as out:
             mpl.figures = out
 
-            result = evaluate.exec_eval(cell.code(), self.g, self.l, name = f"{self.name}:{cell_id}")
+            result = evaluate.exec_eval(cell.code(), self.g, self.l, name = f"{self.name}:{cell_id}:{cell_id_display}")
             if result is not None:
                 out.write(repr(result) + '\n')
                 if self.auto_capture and image.is_new_mpl_available():

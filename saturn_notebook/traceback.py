@@ -22,25 +22,26 @@ class Traceback(RichTraceback):
 
     @staticmethod
     def filename_cell(fn):
-        colon_pos = fn.rfind(':')
-        if colon_pos == -1:
-            return fn, -1
-        filename = fn[:colon_pos]
-        cell_id = int(fn[colon_pos+1:])
-        return filename, cell_id
+        fn_split = fn.split(':')
+        if len(fn_split) == 1:
+            return fn, -1, -1
+        filename = fn_split[0]
+        cell_id = int(fn_split[1])
+        cell_id_display = int(fn_split[2])
+        return filename, cell_id, cell_id_display
 
     @render_group()
     def _render_stack(self, stack: Stack) -> RenderResult:
         path_highlighter = PathHighlighter()
         theme = self.theme or ("fruity" if WINDOWS else "monokai")
         for frame in stack.frames:
-            filename, cell_id = self.filename_cell(frame.filename)
+            filename, cell_id, cell_id_display = self.filename_cell(frame.filename)
             if cell_id != -1:
                 text = Text.assemble(
                     (" File ", "traceback.text"),
                     (f'"{filename}"', "traceback.filename"),
                     (", cell ", "traceback.text"),
-                    (f"{cell_id}", "traceback.lineno"),
+                    (f"{cell_id_display}", "traceback.lineno"),
                     (", line ", "traceback.text"),
                     (str(frame.lineno), "traceback.lineno"),
                     (", in ", "traceback.text"),
