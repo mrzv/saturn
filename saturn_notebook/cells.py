@@ -48,7 +48,7 @@ class Cell:
         return ''.join(self.lines_)
 
     def repl_history(self):
-        return self.save(None)
+        return []
 
     @classmethod
     def display(cls):
@@ -113,6 +113,9 @@ class CodeCell(Cell):
     def _render_html(self):
         return f"<div class='code'>{highlight(self.code(), PythonLexer(), HtmlFormatter())}</div>"
 
+    def repl_history(self):
+        return self.save(None)
+
 class MarkdownCell(Cell):
     _prefix = '#m>'
     _name   = 'Markdown'
@@ -133,9 +136,6 @@ class OutputCell(Cell):
             self.composite_ = utils.CompositeIO()
         else:
             self.composite_ = composite_
-
-    def repl_history(self):
-        return []
 
     @staticmethod
     def from_string(s):
@@ -237,9 +237,6 @@ class CheckpointCell(Cell):
     def show_console(self, console):
         if hasattr(self, '_warning'):
             console.print(self._warning)
-
-    def repl_history(self):
-        return []
 
     def parse(self, external, info):
         if all(l.strip() == '' for l in self.lines_):
