@@ -194,9 +194,10 @@ def run_repl(nb, output, outfn = '', external = '', dry_run = True, debug = Fals
         if using_mpi and root:
             line = comm.bcast(line, root = 0)
         cells = []
-        cells.append(c.Blanks.create(1))
-        cells.append(c.BreakCell())
-        cells.append(c.Blanks.create(1))
+        if len(nb) > 0:
+            cells.append(c.Blanks.create(1))
+            cells.append(c.BreakCell())
+            cells.append(c.Blanks.create(1))
         cells += c.parse(io.StringIO(line), None, info=info)
         nb.add(cells)
         nb.process(output,info=info)

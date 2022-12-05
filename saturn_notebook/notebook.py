@@ -39,6 +39,9 @@ class Notebook:
         self.l = self.g
         self.m = Hasher()
 
+    def __len__(self):
+        return len(self.cells) + len(self.incoming)
+
     def add(self, cells):
         self.incoming += cells
 
