@@ -23,6 +23,12 @@
 * Ability to convert from Jupyter to Saturn notebooks. This also allows to view
   Jupyter notebooks in the terminal.
 
+## Installation
+
+```
+pip install saturn-notebook
+```
+
 ## Commands and options
 
 * `saturn show notebook.py`
