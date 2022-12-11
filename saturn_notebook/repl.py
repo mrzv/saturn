@@ -22,6 +22,11 @@ class PythonReplWithExecute(PythonRepl):
         def _(event):
             event.current_buffer.validate_and_handle()
 
+        @self.add_key_binding('c-k')
+        def _(event):
+            event.app.current_buffer.insert_text("#chk>")
+            event.current_buffer.validate_and_handle()
+
         # Unless we are in debug mode, silence ptpython's exception handling, in favor of our own
         if not debug:
             self._handle_exception = lambda e: None
