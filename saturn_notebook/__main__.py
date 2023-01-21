@@ -55,9 +55,6 @@ def show_console(cell, rule = False, verbose = False, no_show = False):
     if not no_show:
         cell.show_console(console)
 
-    if not cell.empty() and not rule:
-        console.print()
-
 def show_html(cell, f):
     cell.show_html(f)
 
