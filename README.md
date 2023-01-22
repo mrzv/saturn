@@ -39,10 +39,12 @@ pip install saturn-notebook
 
   `saturn show notebook.py --html notebook.html -k`
 
-* `saturn run notebook.py [output.py]`
+* `saturn run [notebook.py [output.py]]`
 
   Execute a Python notebook, either modifying it in place, or saving the result
-  into a new notebook `output.py`.
+  into a new notebook `output.py`. If no input `notebook.py` is provided, drop
+  into REPL (`-i` is implied). When leaving, the REPL will ask whether to save
+  the resulting notebook.
 
   * `-c, --clean`: run from scratch, ignoring the checkpoints.
   * `-a, --auto-capture`: automatically capture matplotlib figures, without `show()`.
