@@ -125,6 +125,7 @@ def _show(cells, html, katex, debug):
         f_html.write('</body>\n')
         f_html.write('</html>\n')
 
+@argh.arg('infn', nargs='?')
 @argh.arg('outfn', nargs='?')
 @argh.arg('-n', '--dry-run')
 @argh.arg('-i', '--interactive')
@@ -138,7 +139,7 @@ def run(infn: "input notebook",
         only_root_output: "suppress output everywhere but rank 0 (for MPI)" = False,
         interactive: "run REPL after the notebook is processed" = False):
     """Run the notebook."""
-    if os.path.exists(infn):
+    if infn and os.path.exists(infn):
         with open(infn) as f:
             if external and os.path.exists(external):
                 with zipfile.ZipFile(external, 'r') if external else nullcontext() as external_zip:
@@ -152,6 +153,9 @@ def run(infn: "input notebook",
         if outfn and not dry_run:
             warn(f"Input file [error]{infn}[/error] doesn't exist, but given an output file [cyan]{outfn}[/cyan]; forcing [affirm]--dry-run[/affirm]")
             dry_run = True
+
+    if not infn:
+        interactive = True
 
     if not outfn:
         outfn = infn
@@ -174,20 +178,26 @@ def run(infn: "input notebook",
 
     try:
         nb.process_all(output,
-                       repl=lambda: run_repl(nb, output, external, dry_run, debug=debug,
+                       repl=lambda: run_repl(nb, dry_run, debug=debug,
                                              prefix = [c.Blanks.create(1)], suffix = [c.Blanks.create(1), c.BreakCell()]),
                        force=interactive, info=info, debug=debug)
 
         if interactive:
-            run_repl(nb, output, outfn, external, dry_run, debug=debug)
+            result = run_repl(nb, output, dry_run, debug=debug)
+            if result and not dry_run and not outfn:
+                from prompt_toolkit import prompt
+                from prompt_toolkit.completion import PathCompleter
+                outfn = prompt("Notebook filename (empty to not save): ", completer = PathCompleter())
+                if outfn:
+                    external = prompt("External zip archive filename (empty to inline): ", completer = PathCompleter())
     except:
         nb.move_all_incoming()
 
-    if not dry_run and root:
+    if not dry_run and root and outfn:
         nb.save(outfn, external)
 
 
-def run_repl(nb, output, outfn = '', external = '', dry_run = True, debug = False,
+def run_repl(nb, output, dry_run = True, debug = False,
              prefix = [c.Blanks.create(1), c.BreakCell(), c.Blanks.create(1)],
              suffix = []):
     if skip_repl:
