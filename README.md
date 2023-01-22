@@ -197,6 +197,16 @@ the following to `~/.vim/after/ftplugin/python.vim`:
 setlocal comments=b:#,fb:-,b:#m>
 ```
 
+## REPL
+
+REPL supports the following keyboard shortcuts:
+
+* `Ctrl-d`: exits the REPL.
+* `Ctrl-k`: inserts a checkpoint cell. Equivalent to typing in `#chk>` manually.
+* `Ctrl-e`: exits the REPL and doesn't drop into REPL, even if there are more
+  REPL cells or `-i` is provided on the command line.
+* `Ctrl-q`: exits the REPL and terminates execution of the entire notebook.
+
 ## Screenshots
 
 Running [samples/simple.py](https://github.com/mrzv/saturn/blob/master/samples/simple.py):
