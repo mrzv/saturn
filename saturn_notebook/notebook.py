@@ -193,7 +193,8 @@ class Notebook:
                     info(tb, block = True)
                     info(f"[affirm]continuing[/affirm]")
             elif type(cell) is c.REPLCell:
-                repl()
+                if repl() == False:
+                    raise SystemExit
 
     def append(self, cell, output = lambda x: None):
         self.cells.append(cell)

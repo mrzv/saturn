@@ -241,7 +241,15 @@ def run_repl(nb, output, outfn = '', external = '', dry_run = True, debug = Fals
         for line in cell.repl_history():
             repl.history.append_string(line)
 
+    result = True
+
     @repl.add_key_binding('c-q')
+    def _(event):
+        nonlocal result
+        event.app.exit(exception=EOFError)
+        result = False
+
+    @repl.add_key_binding('c-e')
     def _(event):
         global skip_repl
         skip_repl = True
@@ -255,6 +263,8 @@ def run_repl(nb, output, outfn = '', external = '', dry_run = True, debug = Fals
 
     if using_mpi:
         comm.bcast('', root = 0)
+
+    return result
 
 @argh.arg('outfn', nargs='?')
 def clean(infn: "input notebook",
