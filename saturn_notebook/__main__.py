@@ -171,7 +171,10 @@ def run(infn: "input notebook",
             info('Resuming', style="magenta")
 
     try:
-        nb.process(output, force=interactive, info=info, debug=debug)
+        nb.process_all(output,
+                       repl=lambda: run_repl(nb, output, external, dry_run, debug=debug,
+                                             prefix = [c.Blanks.create(1)], suffix = [c.Blanks.create(1), c.BreakCell()]),
+                       force=interactive, info=info, debug=debug)
 
         if interactive:
             run_repl(nb, output, outfn, external, dry_run, debug=debug)
@@ -182,7 +185,9 @@ def run(infn: "input notebook",
         nb.save(outfn, external)
 
 
-def run_repl(nb, output, outfn = '', external = '', dry_run = True, debug = False):
+def run_repl(nb, output, outfn = '', external = '', dry_run = True, debug = False,
+             prefix = [c.Blanks.create(1), c.BreakCell(), c.Blanks.create(1)],
+             suffix = []):
     if using_mpi:
         comm = MPI.COMM_WORLD
 
@@ -191,13 +196,13 @@ def run_repl(nb, output, outfn = '', external = '', dry_run = True, debug = Fals
         if using_mpi and root:
             line = comm.bcast(line, root = 0)
         cells = []
-        if len(nb) > 0:
-            cells.append(c.Blanks.create(1))
-            cells.append(c.BreakCell())
-            cells.append(c.Blanks.create(1))
+        if nb.current > 0:
+            cells += prefix
         cells += c.parse(io.StringIO(line), None, info=info)
-        nb.add(cells)
-        nb.process(output,info=info)
+        cells += suffix
+
+        nb.insert(cells)
+        nb.process_to(nb.current + len(cells),output,info=info)
 
     if not root:
         while True:
@@ -209,10 +214,12 @@ def run_repl(nb, output, outfn = '', external = '', dry_run = True, debug = Fals
     if not os.path.exists(saturn_dir):
         os.makedirs(saturn_dir)
 
+    g = {}  # fake empty globals;
+            # not specifying any get_globals throws an exception inside repl.run();
+            # specifying nb.globals breaks checkpointing inside repl; not sure why
     repl = PythonReplWithExecute(
         execute = execute_line,
-        # get_globals=lambda: nb.g,     # this breaks checkpointing inside repl;
-                                        # not sure why, but commenting it out for now
+        get_globals=lambda: g,
         get_locals=lambda: nb.l,
         vi_mode=False,
         history_filename=saturn_dir + '/history',
@@ -227,10 +234,13 @@ def run_repl(nb, output, outfn = '', external = '', dry_run = True, debug = Fals
 
     @repl.add_key_binding('c-w')
     def _(event):
-        if not dry_run and root:
+        if not dry_run and root and outfn:
             nb.save(outfn, external)
 
-    repl.run()
+    try:
+        repl.run()
+    except Exception as e:
+        print("Caught exception in REPL:", e)
 
     if using_mpi:
         comm.bcast('', root = 0)

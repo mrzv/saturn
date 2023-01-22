@@ -13,6 +13,8 @@ class PythonReplWithExecute(PythonRepl):
         self.enable_history_search = True
         self.enable_auto_suggest = True
 
+        self.confirm_exit = False
+
         # Swap enter and meta+enter #
         @self.add_key_binding('escape', 'enter')
         def _(event):

@@ -153,6 +153,12 @@ pip install saturn-notebook
   These are used to break code cells that don't have any other type of a cell
   between them.
 
+* REPL cells `#-REPL-#`
+
+  These instruct Saturn to drop into an interactive REPL loop, just like the
+  `-i` option. All the cells from the REPL will be inserted after this cell in
+  the notebook. Afterwards, execution proceeds as normal.
+
 * Code cells
 
   All contiguous lines, not marked as one of the above, are grouped together

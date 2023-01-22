@@ -45,6 +45,9 @@ class Notebook:
     def add(self, cells):
         self.incoming += cells
 
+    def insert(self, cells):
+        self.incoming = self.incoming[:self.current] + cells + self.incoming[self.current:]
+
     def skip(self, location, output = lambda x: None):
         while self.current < location:
             cell = self.incoming[self.current]
@@ -141,8 +144,14 @@ class Notebook:
         if type(self.next_cell()) is c.OutputCell:
             self.current += 1
 
-    def process(self, output, *, force = False, debug = False, info = lambda *args, **kwargs: None):
+    def process_all(self, output, **kwargs):
+        # Since extra cells may be added via REPL during the execution,
+        # we need the outer loop to make sure everything is processed
         while self.current < len(self.incoming):
+            self.process_to(len(self.incoming), output, **kwargs)
+
+    def process_to(self, to, output, *, repl = lambda: None, force = False, debug = False, info = lambda *args, **kwargs: None):
+        while self.current < to:
             cell = self.incoming[self.current]
             self.current += 1
 
@@ -183,6 +192,8 @@ class Notebook:
                     tb = Traceback(self, self.debug)
                     info(tb, block = True)
                     info(f"[affirm]continuing[/affirm]")
+            elif type(cell) is c.REPLCell:
+                repl()
 
     def append(self, cell, output = lambda x: None):
         self.cells.append(cell)

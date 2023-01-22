@@ -218,6 +218,16 @@ class BreakCell(Cell):
     def save(self, external):
         return [self._prefix + '\n']
 
+class REPLCell(Cell):
+    _prefix = '#-REPL-#'
+
+    @classmethod
+    def display(cls):
+        return False
+
+    def save(self, external):
+        return [self._prefix + '\n']
+
 class CheckpointCell(Cell):
     _prefix = '#chk>'
     _extension = '.chk'
@@ -350,7 +360,7 @@ class Blanks(Cell):
         cell.lines_ = ['\n']*n
         return cell
 
-cell_types = [MarkdownCell, OutputCell, BreakCell, CheckpointCell, VariableCell]
+cell_types = [MarkdownCell, OutputCell, BreakCell, CheckpointCell, VariableCell, REPLCell]
 
 def identify(line):
     for Type in chain(cell_types, [CodeCell]):        # CodeCell matches everything, so comes last
