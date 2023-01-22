@@ -241,16 +241,11 @@ def run_repl(nb, output, outfn = '', external = '', dry_run = True, debug = Fals
         for line in cell.repl_history():
             repl.history.append_string(line)
 
-    @repl.add_key_binding('c-w')
-    def _(event):
-        if not dry_run and root and outfn:
-            nb.save(outfn, external)
-
     @repl.add_key_binding('c-q')
     def _(event):
         global skip_repl
         skip_repl = True
-        repl._app.exit(exception=EOFError)
+        event.app.exit(exception=EOFError)
 
     try:
         repl.run()
