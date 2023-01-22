@@ -23,6 +23,8 @@ except ImportError:
     root = True
     using_mpi = False
 
+skip_repl = False
+
 # workaround for a bug in OpenMPI (or anything else that screws up the terminal size);
 # see https://github.com/willmcgugan/rich/issues/127
 import  shutil
@@ -188,6 +190,9 @@ def run(infn: "input notebook",
 def run_repl(nb, output, outfn = '', external = '', dry_run = True, debug = False,
              prefix = [c.Blanks.create(1), c.BreakCell(), c.Blanks.create(1)],
              suffix = []):
+    if skip_repl:
+        return
+
     if using_mpi:
         comm = MPI.COMM_WORLD
 
@@ -214,18 +219,22 @@ def run_repl(nb, output, outfn = '', external = '', dry_run = True, debug = Fals
     if not os.path.exists(saturn_dir):
         os.makedirs(saturn_dir)
 
-    g = {}  # fake empty globals;
-            # not specifying any get_globals throws an exception inside repl.run();
-            # specifying nb.globals breaks checkpointing inside repl; not sure why
-    repl = PythonReplWithExecute(
-        execute = execute_line,
-        get_globals=lambda: g,
-        get_locals=lambda: nb.l,
-        vi_mode=False,
-        history_filename=saturn_dir + '/history',
-        startup_paths=None,
-        debug=debug,
-    )
+    try:
+        g = {}  # fake empty globals;
+                # not specifying any get_globals throws an exception inside repl.run();
+                # specifying nb.globals breaks checkpointing inside repl; not sure why
+        repl = PythonReplWithExecute(
+            execute = execute_line,
+            get_globals=lambda: g,
+            get_locals=lambda: nb.l,
+            vi_mode=False,
+            history_filename=saturn_dir + '/history',
+            startup_paths=None,
+            debug=debug,
+        )
+    except Exception as e:
+        print("Caught exception setting up REPL:", e)
+        raise
 
     # Add the code cells to history
     for cell in nb.cells:
@@ -237,10 +246,17 @@ def run_repl(nb, output, outfn = '', external = '', dry_run = True, debug = Fals
         if not dry_run and root and outfn:
             nb.save(outfn, external)
 
+    @repl.add_key_binding('c-q')
+    def _(event):
+        global skip_repl
+        skip_repl = True
+        repl._app.exit(exception=EOFError)
+
     try:
         repl.run()
     except Exception as e:
         print("Caught exception in REPL:", e)
+        raise
 
     if using_mpi:
         comm.bcast('', root = 0)
