@@ -215,18 +215,12 @@ class BreakCell(Cell):
     def display(cls):
         return False
 
-    def save(self, external):
-        return [self._prefix + '\n']
-
 class REPLCell(Cell):
     _prefix = '#-REPL-#'
 
     @classmethod
     def display(cls):
         return False
-
-    def save(self, external):
-        return [self._prefix + '\n']
 
 class CheckpointCell(Cell):
     _prefix = '#chk>'
