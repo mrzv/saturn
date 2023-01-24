@@ -8,7 +8,6 @@ import  io
 from    atomicwrites import atomic_write
 from    more_itertools import peekable
 
-import  zipfile
 from    contextlib import nullcontext
 
 from    .           import cells as c, notebook
@@ -90,11 +89,7 @@ def show(fn: "input notebook",
          debug: "show debugging information" = False):
     """Show the contents of the notebook, without evaluating."""
     with open(fn) as f:
-        if external and not os.path.exists(external):
-            warn(f"External zip archive [error]{external}[/error] not found. Ignoring.")
-            external = ''
-        with zipfile.ZipFile(external, 'r') if external else nullcontext() as external_zip:
-            cells = c.parse(f, external_zip, show_only = True, info=info)
+        cells = c.parse(f, external, show_only = True, info=info)
     _show(cells, html, katex, debug)
 
 def _show(cells, html, katex, debug):
@@ -141,13 +136,7 @@ def run(infn: "input notebook",
     """Run the notebook."""
     if infn and os.path.exists(infn):
         with open(infn) as f:
-            if external and os.path.exists(external):
-                with zipfile.ZipFile(external, 'r') if external else nullcontext() as external_zip:
-                    cells = c.parse(f, external_zip, info=info)
-            else:
-                if external:
-                    warn(f"External zip archive [error]{external}[/error] not found. Will use it for output only.")
-                cells = c.parse(f, '', info=info)
+            cells = c.parse(f, external, info=info)
     else:
         cells = []
         if outfn and not dry_run:
@@ -313,8 +302,7 @@ def image(infn: "input notebook", i: "image index", out: "output PNG filename",
         return
 
     with open(infn) as f:
-        with zipfile.ZipFile(external, 'r') if external else nullcontext() as external_zip:
-            cells = c.parse(f, external_zip, show_only = True, info=info)
+        cells = c.parse(f, external, show_only = True, info=info)
 
     count = 0
     for cell in cells:
@@ -412,8 +400,7 @@ def rehash(infn: "input notebook",
         outfn = infn
 
     with open(infn) as f:
-        with zipfile.ZipFile(external, 'r') if external else nullcontext() as external_zip:
-            cells = c.parse(f, external_zip, info=info)
+        cells = c.parse(f, external, info=info)
 
     nb = notebook.Notebook(name = infn)
     nb.add(cells)
@@ -447,8 +434,7 @@ def embed(infn: "input notebook",
         outfn = infn
 
     with open(infn) as f:
-        with zipfile.ZipFile(external, 'r') if external else nullcontext() as external_zip:
-            cells = c.parse(f, external_zip, info=info)
+        cells = c.parse(f, external, info=info)
 
     nb = notebook.Notebook(name = infn)
     nb.add(cells)

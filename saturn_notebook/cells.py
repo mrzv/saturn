@@ -22,6 +22,8 @@ from . import utils
 from . import image
 from . import evaluate
 
+import  zipfile, os
+
 # Prefix for the filename inside an external zipfile
 _zip_fn_prefix = 'name='
 
@@ -154,8 +156,15 @@ class OutputCell(Cell):
                     # take everything from name= to the end (-1 to not include \n)
                     fn = line[line.index(_zip_fn_prefix) + len(_zip_fn_prefix):-1]
                     if external:
-                        png_content = external.read(fn)
-                        self.composite_.append_png(png_content)
+                        if zipfile.Path(external, at=fn).exists():
+                            png_content = external.read(fn)
+                            self.composite_.append_png(png_content)
+                        else:
+                            # here and below, we use
+                            # self.composite_.append_rich, instead of info, so
+                            # that the message appears in place of the cell,
+                            # rather than before any other cell is processed
+                            self.composite_.append_rich(Rule(f"[warn]image hash [cyan]{fn}[/cyan] not found in the external archive [cyan]{external.filename}[/cyan][/warn]"))
                     else:
                         self.composite_.append_rich(Rule(f"[warn]image hash found, but no external file given ([cyan]{fn}[/cyan])[/warn]"))
                 else:
@@ -254,7 +263,11 @@ class CheckpointCell(Cell):
         if _zip_fn_prefix in line:
             fn = line[line.index(_zip_fn_prefix) + len(_zip_fn_prefix):-1]
             if external:
-                self._content = io.BytesIO(external.read(fn))
+                if zipfile.Path(external, at=fn).exists():
+                    self._content = io.BytesIO(external.read(fn))
+                else:
+                    self._warning = Rule(f"[warn]{self._warning_name} hash [cyan]{fn}[/cyan] not found in the external archive [cyan]{external.filename}[/cyan][/warn]")
+                    self._expected = None
             else:
                 self._warning = Rule(f"[warn]{self._warning_name} hash found, but no external file given ([cyan]{fn}[/cyan])[/warn]")
                 self._expected = None
@@ -367,7 +380,17 @@ def chunk(content, width, markers = False):
         chunking = chain(['{{{'], chunking, ['}}}'])
     return chunking
 
-def parse(f, external, show_only = False, *, info = lambda *args: None):
+def parse(f, external_fn, show_only = False, *, info = lambda *args, **kwargs: None):
+    if external_fn:
+        if not os.path.exists(external_fn):
+            if show_only:
+                info(f"External zip archive [error]{external_fn}[/error] not found.", style='warn')
+            external = None
+        else:
+            external = zipfile.ZipFile(external_fn, 'r')
+    else:
+        external = None
+
     cells = []
     def cells_append(cell):
         if len(cells) > 0:
