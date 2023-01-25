@@ -167,7 +167,7 @@ def run(infn: "input notebook",
 
     try:
         nb.process_all(output,
-                       repl=lambda: run_repl(nb, dry_run, debug=debug,
+                       repl=lambda: run_repl(nb, output, dry_run, debug=debug,
                                              prefix = [c.Blanks.create(1)], suffix = [c.Blanks.create(1), c.BreakCell()]),
                        force=interactive, info=info, debug=debug)
 
@@ -177,7 +177,7 @@ def run(infn: "input notebook",
                 from prompt_toolkit import prompt
                 from prompt_toolkit.completion import PathCompleter
                 outfn = prompt("Notebook filename (empty to not save): ", completer = PathCompleter())
-                if outfn:
+                if outfn and not external:
                     external = prompt("External zip archive filename (empty to inline): ", completer = PathCompleter())
     except:
         nb.move_all_incoming()

@@ -231,6 +231,24 @@ class REPLCell(Cell):
     def display(cls):
         return False
 
+class SaturnCell(Cell):
+    _prefix = '#saturn:'
+
+    _external_prefix = 'external='
+
+    def parse(self, external, info):            # called after all the lines have been read
+        super().parse(external, info)
+        line = self.lines_[0]
+        self.external_fn = ''
+        if self._external_prefix in line:
+            # take everything from external= to the end (-1 to not include \n)
+            # eventually, we'll want a more elaborate support, once we have other kinds of metadata
+            self.external_fn = line[line.index(self._external_prefix) + len(self._external_prefix):-1]
+
+    @classmethod
+    def display(cls):
+        return False
+
 class CheckpointCell(Cell):
     _prefix = '#chk>'
     _extension = '.chk'
@@ -367,7 +385,7 @@ class Blanks(Cell):
         cell.lines_ = ['\n']*n
         return cell
 
-cell_types = [MarkdownCell, OutputCell, BreakCell, CheckpointCell, VariableCell, REPLCell]
+cell_types = [MarkdownCell, OutputCell, BreakCell, CheckpointCell, VariableCell, REPLCell, SaturnCell]
 
 def identify(line):
     for Type in chain(cell_types, [CodeCell]):        # CodeCell matches everything, so comes last
@@ -380,21 +398,35 @@ def chunk(content, width, markers = False):
         chunking = chain(['{{{'], chunking, ['}}}'])
     return chunking
 
-def parse(f, external_fn, show_only = False, *, info = lambda *args, **kwargs: None):
+def open_external(external_fn, show_only, info):
     if external_fn:
         if not os.path.exists(external_fn):
             if show_only:
                 info(f"External zip archive [error]{external_fn}[/error] not found.", style='warn')
-            external = None
-        else:
-            external = zipfile.ZipFile(external_fn, 'r')
+            return None
+
+        return zipfile.ZipFile(external_fn, 'r')
     else:
-        external = None
+        return None
+
+def parse(f, external_fn, *, show_only = False, info = lambda *args, **kwargs: None):
+    external = open_external(external_fn, show_only, info)
+
+    def should_parse(cell):
+        # skip check-point cells in show mode
+        return not show_only or cell.display() or type(cell) is SaturnCell
 
     cells = []
     def cells_append(cell):
-        if len(cells) > 0:
+        nonlocal external
+        if len(cells) > 0 and should_parse(cells[-1]):
             cells[-1].parse(external, info)
+
+            if type(cells[-1]) is SaturnCell:
+                if not external and cells[-1].external_fn:
+                    external_fn = cells[-1].external_fn
+                    external = open_external(external_fn, show_only, info)
+
         cells.append(cell)
 
     p = peekable(f)
@@ -416,13 +448,12 @@ def parse(f, external_fn, show_only = False, *, info = lambda *args, **kwargs: N
 
         Type = identify(line)
 
-        if show_only and not Type.display(): continue     # skip check-point cells in show mode
-
         if len(cells) == 0 or type(cells[-1]) is not Type:
             cells_append(Type())
         cells[-1].append(line)
 
     if len(cells) > 0:
-        cells[-1].parse(external, info)
+        if should_parse(cells[-1]):
+            cells[-1].parse(external, info)
 
     return cells

@@ -214,6 +214,12 @@ class Notebook:
             self.append(cell)
 
     def save(self, fn, external):
+        if not external:
+            for cell in self.cells:
+                if type(cell) is c.SaturnCell and cell.external_fn:
+                    external = cell.external_fn
+                    break
+
         with atomic_write(fn, mode='w', overwrite=True) as f:
             with zipfile.ZipFile(external, 'w') if external else nullcontext() as external_zip:
                 for i,cell in enumerate(self.cells):
