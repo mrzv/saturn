@@ -224,6 +224,13 @@ class BreakCell(Cell):
     def display(cls):
         return False
 
+    @staticmethod
+    def create():
+        cell = BreakCell()
+        cell.lines_ = ['\n']
+        return cell
+
+
 class REPLCell(Cell):
     _prefix = '#-REPL-#'
 

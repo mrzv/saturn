@@ -168,7 +168,7 @@ def run(infn: "input notebook",
     try:
         nb.process_all(output,
                        repl=lambda: run_repl(nb, output, dry_run, debug=debug,
-                                             prefix = [c.Blanks.create(1)], suffix = [c.Blanks.create(1), c.BreakCell()]),
+                                             prefix = [c.Blanks.create(1)], suffix = [c.Blanks.create(1), c.BreakCell.create()]),
                        force=interactive, info=info, debug=debug)
 
         if interactive:
@@ -187,7 +187,7 @@ def run(infn: "input notebook",
 
 
 def run_repl(nb, output, dry_run = True, debug = False,
-             prefix = [c.Blanks.create(1), c.BreakCell(), c.Blanks.create(1)],
+             prefix = [c.Blanks.create(1), c.BreakCell.create(), c.Blanks.create(1)],
              suffix = []):
     if skip_repl:
         return
@@ -356,7 +356,7 @@ def convert(infn: "Jupyter notebook",
         elif jcell['cell_type'] == 'code':
             if type(cells[-1]) is c.CodeCell:
                 cells.append(c.Blanks.create(1))
-                cells.append(c.BreakCell())
+                cells.append(c.BreakCell.create())
                 cells.append(c.Blanks.create(1))
             cell = c.CodeCell()
             cell.lines_ = [line + '\n' for line in jcell['source'].split('\n')]
