@@ -418,12 +418,12 @@ def parse(f, external_fn, *, show_only = False, info = lambda *args, **kwargs: N
 
     cells = []
     def cells_append(cell):
-        nonlocal external
+        nonlocal external, external_fn
         if len(cells) > 0 and should_parse(cells[-1]):
             cells[-1].parse(external, info)
 
             if type(cells[-1]) is SaturnCell:
-                if not external and cells[-1].external_fn:
+                if not external_fn and cells[-1].external_fn:
                     external_fn = cells[-1].external_fn
                     external = open_external(external_fn, show_only, info)
 
