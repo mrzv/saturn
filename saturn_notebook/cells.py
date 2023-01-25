@@ -232,7 +232,7 @@ class REPLCell(Cell):
         return False
 
 class SaturnCell(Cell):
-    _prefix = '#saturn:'
+    _prefix = '#saturn>'
 
     _external_prefix = 'external='
 

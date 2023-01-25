@@ -10,6 +10,7 @@
   - Ctrl-q: to exit REPL and stop execution of the rest of the notebook.
 - Make `saturn run` into a command that launches REPL directly.
 - If no filename given, ask where to save the notebook when exiting REPL.
+- Add ability to inline the name of external archive: `#saturn> external=out.zip`
 
 ### Removed
 

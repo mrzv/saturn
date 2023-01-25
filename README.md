@@ -181,6 +181,11 @@ pip install saturn-notebook
   with cells that don't change any variables, e.g., purely output or plotting
   cells.
 
+* Saturn cells `#saturn> external=out.zip`
+
+  These provide metadata. For now, the only option is to provide the name of
+  the external zip archive to store the binary content.
+
 ## Vim support
 
 All the binary (non-human-readable) cell content is wrapped in `{{{`, `}}}`
