@@ -6,7 +6,7 @@
 
 - REPL cells `#-REPL-#`.
 - More keyboard shortcuts in REPL:
-  - Ctrl-e: to exit REPL, but continue execution.
+  - Ctrl-w: to exit REPL, but continue execution.
   - Ctrl-q: to exit REPL and stop execution of the rest of the notebook.
 - Make `saturn run` into a command that launches REPL directly.
 - If no filename given, ask where to save the notebook when exiting REPL.

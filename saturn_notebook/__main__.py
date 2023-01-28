@@ -248,7 +248,7 @@ def run_repl(nb, output, dry_run = True, debug = False,
         event.app.exit(exception=EOFError)
         result = False
 
-    @repl.add_key_binding('c-e')
+    @repl.add_key_binding('c-w')
     def _(event):
         global skip_repl
         skip_repl = True
