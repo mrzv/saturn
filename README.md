@@ -213,6 +213,7 @@ REPL supports the following keyboard shortcuts:
 * `Ctrl-w`: exits the REPL and doesn't drop into REPL, even if there are more
   REPL cells or `-i` is provided on the command line.
 * `Ctrl-q`: exits the REPL and terminates execution of the entire notebook.
+* `F10`: aborts execution of the entire notebook and doesn't save it out, even if we are not in `--dry-run` mode.
 
 ## Screenshots
 

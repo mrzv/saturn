@@ -155,7 +155,7 @@ def run(infn: "input notebook",
         if root or (not only_root_output and type(cell) is c.OutputCell):
             show_console(cell, rule = debug, verbose = debug)
 
-    nb = notebook.Notebook(name = infn, auto_capture = auto_capture)
+    nb = notebook.Notebook(name = infn, auto_capture = auto_capture, dry_run = dry_run)
     nb.add(cells)
 
     if not clean:
@@ -167,13 +167,13 @@ def run(infn: "input notebook",
 
     try:
         nb.process_all(output,
-                       repl=lambda: run_repl(nb, output, dry_run, debug=debug,
+                       repl=lambda: run_repl(nb, output, debug=debug,
                                              prefix = [c.Blanks.create(1)], suffix = [c.Blanks.create(1), c.BreakCell.create()]),
                        force=interactive, info=info, debug=debug)
 
         if interactive:
-            result = run_repl(nb, output, dry_run, debug=debug)
-            if result and not dry_run and not outfn:
+            result = run_repl(nb, output, debug=debug)
+            if result and not nb.dry_run and not outfn:
                 from prompt_toolkit import prompt
                 from prompt_toolkit.completion import PathCompleter
                 outfn = prompt("Notebook filename (empty to not save): ", completer = PathCompleter())
@@ -182,11 +182,11 @@ def run(infn: "input notebook",
     except:
         nb.move_all_incoming()
 
-    if not dry_run and root and outfn:
+    if not nb.dry_run and root and outfn:
         nb.save(outfn, external)
 
 
-def run_repl(nb, output, dry_run = True, debug = False,
+def run_repl(nb, output, debug = False,
              prefix = [c.Blanks.create(1), c.BreakCell.create(), c.Blanks.create(1)],
              suffix = []):
     if skip_repl:
@@ -245,6 +245,14 @@ def run_repl(nb, output, dry_run = True, debug = False,
     @repl.add_key_binding('c-q')
     def _(event):
         nonlocal result
+        event.app.exit(exception=EOFError)
+        result = False
+
+    # TODO: think about changing this to a toggle
+    @repl.add_key_binding('f10')
+    def _(event):
+        nonlocal result
+        nb.dry_run = True
         event.app.exit(exception=EOFError)
         result = False
 

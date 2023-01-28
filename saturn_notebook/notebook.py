@@ -25,10 +25,11 @@ class Hasher:
         return self.m.digest()
 
 class Notebook:
-    def __init__(self, name = '', auto_capture = False, debug = False):
+    def __init__(self, *, name = '', auto_capture = False, debug = False, dry_run = False):
         self.name = name
         self.auto_capture = auto_capture
         self.debug = debug
+        self.dry_run = dry_run
 
         self.incoming = []
         self.current  = 0
@@ -214,6 +215,9 @@ class Notebook:
             self.append(cell)
 
     def save(self, fn, external):
+        if self.dry_run:
+            return
+
         if not external:
             for cell in self.cells:
                 if type(cell) is c.SaturnCell and cell.external_fn:
