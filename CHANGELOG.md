@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [1.2.0] - 2023-02-04
 
 ### Added
 
@@ -8,8 +8,9 @@
 - More keyboard shortcuts in REPL:
   - `Ctrl-w`: to exit REPL, but continue execution.
   - `Ctrl-q`: to exit REPL and stop execution of the rest of the notebook.
-  - `F10`: aborts execution of the entire notebook and doesn't save it out, even if we are not in `--dry-run` mode.
-- Make `saturn run` into a command that launches REPL directly.
+  - `F10`: aborts execution of the entire notebook and doesn't save it out,
+    even if we are not in `--dry-run` mode.
+- `saturn run` launches REPL directly.
 - If no filename given, ask where to save the notebook when exiting REPL.
 - Add ability to inline the name of external archive: `#saturn> external=out.zip`
 

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "saturn-notebook"
-version = "1.1.0"
+version = "1.2.0"
 description = "Plain-text Python notebooks with checkpointing"
 authors = ["Dmitriy Morozov <dmitriy@mrzv.org>"]
 license = "BSD-3-Clause-LBNL"
