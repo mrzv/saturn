@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1] - 2023-03-24
+
+### Fixed
+
+- Bump ptpython to 3.0.23 to make it run with Python 3.10.
+
+
 ## [1.2.0] - 2023-02-04
 
 ### Added
