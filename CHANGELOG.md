@@ -5,6 +5,7 @@
 ### Added
 
  - `saturn version` outputs Python version.
+ - `saturn` by itself launches REPL (equivalent to `saturn run -i`)
 
 ## [1.2.1] - 2023-03-24
 

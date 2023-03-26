@@ -452,6 +452,11 @@ def embed(infn: "input notebook",
 
 def main():
     global argv
+
+    if len(sys.argv) == 1:
+        run('', '', interactive=True)
+        return
+
     if '--' in sys.argv:
         idx = sys.argv.index('--')
         argv = sys.argv[idx+1:]
