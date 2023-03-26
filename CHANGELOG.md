@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+ - `saturn version` outputs Python version.
+
 ## [1.2.1] - 2023-03-24
 
 ### Fixed
