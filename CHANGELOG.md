@@ -7,6 +7,10 @@
  - `saturn version` outputs Python version.
  - `saturn` by itself launches REPL (equivalent to `saturn run -i`)
 
+### Changed
+
+ - Display blanks in the console, to better preserve the formatting.
+
 ## [1.2.1] - 2023-03-24
 
 ### Fixed

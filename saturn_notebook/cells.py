@@ -199,7 +199,7 @@ class OutputCell(Cell):
         for x in self.composite_:
             if type(x) is io.StringIO:
                 if x.getvalue():
-                    console.print(Text(x.getvalue()))
+                    console.print(Text(x.getvalue()), end='')
             elif type(x) is bytes:
                 image.show_png(x)
             elif isinstance(x,RichRenderable):
@@ -377,14 +377,11 @@ class Blanks(Cell):
     _prefix = ''
 
     def show_console(self, console):
-        pass
+        for line in self.lines_:
+            console.print(line, end='')
 
     def show_html(self, f):
         pass
-
-    @classmethod
-    def display(cls):
-        return False
 
     @staticmethod
     def create(n):
