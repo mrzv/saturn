@@ -450,18 +450,28 @@ def embed(infn: "input notebook",
 
     nb.save(outfn, '')      # write without external
 
+@argh.arg('-n', '--dry-run')
+def _run(clean: "run from scratch, ignoring checkpoints" = False,
+        auto_capture: "automatically capture images" = False,
+        external: "external zip archive with binary content" = '',
+        debug: "show debugging information" = False,
+        dry_run: "don't save the processed notebook" = False,
+        only_root_output: "suppress output everywhere but rank 0 (for MPI)" = False):
+    """Launch Saturn REPL."""
+    run(None, None, clean, auto_capture, external, debug, dry_run, only_root_output, True)
+
 def main():
     global argv
 
-    if len(sys.argv) == 1:
-        run('', '', interactive=True)
-        return
+    parser = argh.ArghParser()
+    parser.set_default_command(_run)
 
     if '--' in sys.argv:
         idx = sys.argv.index('--')
         argv = sys.argv[idx+1:]
         sys.argv = sys.argv[:idx]
-    argh.dispatch_commands([show, run, clean, image, version, convert, rehash, extract, embed])
+    parser.add_commands([show, run, clean, image, version, convert, rehash, extract, embed])
+    parser.dispatch()
 
 if __name__ == '__main__':
     main()
