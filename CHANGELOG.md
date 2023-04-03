@@ -11,6 +11,11 @@
 
  - Display blanks in the console, to better preserve the formatting.
 
+### Fixed
+
+ - Notebook directory is added to `sys.path` to make imports work correctly,
+   i.e., like in the normal Python run.
+
 ## [1.2.1] - 2023-03-24
 
 ### Fixed

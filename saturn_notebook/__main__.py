@@ -166,6 +166,7 @@ def run(infn: "input notebook",
             info('Resuming', style="magenta")
 
     try:
+        sys.path.insert(0, os.path.dirname(infn))
         nb.process_all(output,
                        repl=lambda: run_repl(nb, output, debug=debug,
                                              prefix = [c.Blanks.create(1)], suffix = [c.Blanks.create(1), c.BreakCell.create()]),
