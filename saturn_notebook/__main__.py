@@ -459,7 +459,7 @@ def _run(clean: "run from scratch, ignoring checkpoints" = False,
         dry_run: "don't save the processed notebook" = False,
         only_root_output: "suppress output everywhere but rank 0 (for MPI)" = False):
     """Launch Saturn REPL."""
-    run(None, None, clean, auto_capture, external, debug, dry_run, only_root_output, True)
+    run('', '', clean, auto_capture, external, debug, dry_run, only_root_output, True)
 
 def main():
     global argv
