@@ -6,6 +6,8 @@
 
  - `saturn version` outputs Python version.
  - `saturn` by itself launches REPL (equivalent to `saturn run -i`)
+ - `saturn [run] --no-mpi` disables MPI awareness (useful on login nodes, where
+   [importing](importing) mpi4py triggers an error).
 
 ### Changed
 

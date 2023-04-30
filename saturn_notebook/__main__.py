@@ -14,13 +14,8 @@ from    .           import cells as c, notebook
 from    .repl       import PythonReplWithExecute
 from    .image      import show_png
 
-try:
-    from mpi4py import MPI
-    root = MPI.COMM_WORLD.Get_rank() == 0
-    using_mpi = MPI.COMM_WORLD.Get_size() > 1
-except ImportError:
-    root = True
-    using_mpi = False
+root = True
+using_mpi = False
 
 skip_repl = False
 
@@ -122,6 +117,7 @@ def _show(cells, html, katex, debug):
 
 @argh.arg('infn', nargs='?')
 @argh.arg('outfn', nargs='?')
+@argh.arg('--no-mpi')
 @argh.arg('-n', '--dry-run')
 @argh.arg('-i', '--interactive')
 def run(infn: "input notebook",
@@ -130,10 +126,23 @@ def run(infn: "input notebook",
         auto_capture: "automatically capture images" = False,
         external: "external zip archive with binary content" = '',
         debug: "show debugging information" = False,
+        no_mpi: "disable MPI awareness" = False,
         dry_run: "don't save the processed notebook" = False,
         only_root_output: "suppress output everywhere but rank 0 (for MPI)" = False,
         interactive: "run REPL after the notebook is processed" = False):
     """Run the notebook."""
+
+    global using_mpi
+    global root
+
+    if not no_mpi:
+        try:
+            from mpi4py import MPI
+            root = MPI.COMM_WORLD.Get_rank() == 0
+            using_mpi = MPI.COMM_WORLD.Get_size() > 1
+        except:
+            pass
+
     if infn and os.path.exists(infn):
         with open(infn) as f:
             cells = c.parse(f, external, info=info)
@@ -194,6 +203,7 @@ def run_repl(nb, output, debug = False,
         return
 
     if using_mpi:
+        from mpi4py import MPI
         comm = MPI.COMM_WORLD
 
     def execute_line(line):
@@ -451,15 +461,17 @@ def embed(infn: "input notebook",
 
     nb.save(outfn, '')      # write without external
 
+@argh.arg('--no-mpi')
 @argh.arg('-n', '--dry-run')
 def _run(clean: "run from scratch, ignoring checkpoints" = False,
         auto_capture: "automatically capture images" = False,
         external: "external zip archive with binary content" = '',
         debug: "show debugging information" = False,
+        no_mpi: "disable MPI awareness" = False,
         dry_run: "don't save the processed notebook" = False,
         only_root_output: "suppress output everywhere but rank 0 (for MPI)" = False):
     """Launch Saturn REPL."""
-    run('', '', clean, auto_capture, external, debug, dry_run, only_root_output, True)
+    run('', '', clean, auto_capture, external, debug, no_mpi, dry_run, only_root_output, True)
 
 def main():
     global argv

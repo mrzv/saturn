@@ -52,6 +52,7 @@ pip install saturn-notebook
     drop into REPL (using [ptpython](https://github.com/prompt-toolkit/ptpython))
     after all the cells are processed; the results of the REPL interaction will
     be added to the notebook.
+  * `--no-mpi`: disable MPI awareness.
   * `-n, --dry-run`: don't save the result.
   * `--only-root-output`: under MPI, suppress output from all ranks other than 0.
   * `-e`, `--external notebook.zip`: use external zip archive `notebook.zip`
