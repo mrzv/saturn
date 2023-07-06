@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [1.2.2] - 2023-07-05
+
 ### Added
 
  - `saturn version` outputs Python version.
