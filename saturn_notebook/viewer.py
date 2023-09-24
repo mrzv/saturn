@@ -30,6 +30,6 @@ def view(html):
             of.write(f'{int(window.width)}\n')
             of.write(f'{int(window.height)}\n')
 
-    window.closing += save_shape
+    window.events.closing += save_shape
 
     webview.start()
