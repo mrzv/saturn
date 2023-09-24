@@ -85,6 +85,7 @@ katex_preamble = r"""
 
 def show(fn: "input notebook",
          html: "save HTML to a file" = '',
+         *,
          katex: "include KaTeX in HTML output" = False,
          external: "external zip archive with binary content" = '',
          debug: "show debugging information" = False):
@@ -132,7 +133,7 @@ def _show(cells, html, katex, debug):
 
 def view(fn, debug = False):
     html = io.StringIO()
-    show(fn, html, debug)
+    show(fn, html, debug = debug, katex = True)
 
     viewer.view(html.getvalue())
 
