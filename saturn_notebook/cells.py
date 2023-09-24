@@ -340,6 +340,12 @@ class CheckpointCell(Cell):
         content.write(self._content.read())
         self._content = content
 
+    def header(self):
+        return self.__class__._prefix
+
+    def _render_html(self):
+        return f'<div class="muted"><pre>{self.header()}</pre></div>'
+
 class VariableCell(CheckpointCell):
     _prefix = '#var>'
     _extension = '.var'

@@ -98,6 +98,7 @@ def _show(cells, html, katex, debug):
         f_html.write('<html>\n')
         f_html.write('<head>\n')
         f_html.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">\n')
+        f_html.write('<style> .muted { color: gray; } </style>')
         if katex:
             f_html.write(katex_preamble)
         f_html.write('<style>\n')
