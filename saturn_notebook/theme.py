@@ -8,4 +8,5 @@ theme = Theme({
     "error":        Style.parse("red"),
     "cell-name":    Style.parse("yellow"),
     "version":      Style.parse("green"),
+    "path":         Style.parse("yellow"),
 })
