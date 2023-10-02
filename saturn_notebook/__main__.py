@@ -132,6 +132,7 @@ def _show(cells, html, katex, debug):
         f_html.write('</html>\n')
 
 def view(fn, debug = False):
+    """View notebook in a GUI."""
     html = io.StringIO()
     show(fn, html, debug = debug, katex = True)
 
@@ -376,8 +377,10 @@ def version():
         console.print(f"Config path: [path]{viewer.config_path}[/path]")
 
 @argh.arg('outfn', nargs='?')
+@argh.arg('-v', '--view')
 def convert(infn: "Jupyter notebook",
             outfn: "output notebook (if empty, show the cells instead)",
+            view: "view notebook in GUI" = False,
             version: "notebook version" = 4,
             external: "external zip archive with binary content" = '',
             html: "save HTML to a file" = '',
@@ -429,7 +432,11 @@ def convert(infn: "Jupyter notebook",
             info('Unrecognized cell type', style="magenta")
 
     if not outfn:
+        if view:
+            html = io.StringIO()
         _show(cells, html, katex, debug)
+        if view:
+            viewer.view(html.getvalue())
     else:
         nb = notebook.Notebook(name = outfn)
         nb.add(cells)

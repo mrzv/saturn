@@ -2,10 +2,16 @@
 
 ## Unreleased
 
+### Added
+
+ - `saturn view` shows notebook in a GUI (via [pywebview](https://pywebview.flowrl.com)).
+ - `saturn convert --viewer` or `-v` shows Jupyter notebook in a GUI.
+
 ### Fixed
 
  - Make `_` return the last evaluation result in the REPL,
    to match [Python's behavior](https://docs.python.org/3/reference/lexical_analysis.html#reserved-classes-of-identifiers). (Fixes #3.)
+
 
 ## [1.2.2] - 2023-07-05
 
