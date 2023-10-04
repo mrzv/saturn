@@ -88,6 +88,7 @@ def show(fn: "input notebook",
          *,
          katex: "include KaTeX in HTML output" = False,
          external: "external zip archive with binary content" = '',
+         gui: "view notebook in GUI" = False,
          debug: "show debugging information" = False):
     """Show the contents of the notebook, without evaluating."""
 
@@ -97,7 +98,12 @@ def show(fn: "input notebook",
 
     with open(fn) as f:
         cells = c.parse(f, external, show_only = True, info=info)
+
+    if gui:
+        html = io.StringIO()
     _show(cells, html, katex, debug)
+    if gui:
+        viewer.view(html.getvalue())
 
 def _show(cells, html, katex, debug):
     output   = lambda cell: show_console(cell, rule = debug, verbose = debug)
@@ -130,13 +136,6 @@ def _show(cells, html, katex, debug):
     if html:
         f_html.write('</body>\n')
         f_html.write('</html>\n')
-
-def view(fn, debug = False):
-    """View notebook in a GUI."""
-    html = io.StringIO()
-    show(fn, html, debug = debug, katex = True)
-
-    viewer.view(html.getvalue())
 
 @argh.arg('infn', nargs='?')
 @argh.arg('outfn', nargs='?')
@@ -377,10 +376,9 @@ def version():
         console.print(f"Config path: [path]{viewer.config_path}[/path]")
 
 @argh.arg('outfn', nargs='?')
-@argh.arg('-v', '--view')
 def convert(infn: "Jupyter notebook",
             outfn: "output notebook (if empty, show the cells instead)",
-            view: "view notebook in GUI" = False,
+            gui: "view notebook in GUI" = False,
             version: "notebook version" = 4,
             external: "external zip archive with binary content" = '',
             html: "save HTML to a file" = '',
@@ -432,10 +430,10 @@ def convert(infn: "Jupyter notebook",
             info('Unrecognized cell type', style="magenta")
 
     if not outfn:
-        if view:
+        if gui:
             html = io.StringIO()
         _show(cells, html, katex, debug)
-        if view:
+        if gui:
             viewer.view(html.getvalue())
     else:
         nb = notebook.Notebook(name = outfn)
@@ -518,8 +516,6 @@ def main():
         argv = sys.argv[idx+1:]
         sys.argv = sys.argv[:idx]
     commands = [show, run, clean, image, version, convert, rehash, extract, embed]
-    if has_viewer:
-        commands.append(view)
     parser.add_commands(commands)
     parser.dispatch()
 

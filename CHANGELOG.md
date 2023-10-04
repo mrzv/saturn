@@ -4,8 +4,8 @@
 
 ### Added
 
- - `saturn view` shows notebook in a GUI (via [pywebview](https://pywebview.flowrl.com)).
- - `saturn convert --viewer` or `-v` shows Jupyter notebook in a GUI.
+ - `saturn show --gui` shows notebook in a GUI (via [pywebview](https://pywebview.flowrl.com)).
+ - `saturn convert --gui` shows Jupyter notebook in a GUI.
 
 ### Fixed
 
