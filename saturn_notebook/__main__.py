@@ -178,7 +178,7 @@ def run(infn: "input notebook",
     try:
         sys.path.insert(0, os.path.dirname(infn))
         nb.process_all(output,
-                       repl=lambda: run_repl(nb, output, debug=debug,
+                       run_repl=lambda: run_repl(nb, output, debug=debug,
                                              prefix = [c.Blanks.create(1)], suffix = [c.Blanks.create(1), c.BreakCell.create()]),
                        force=interactive, info=info, debug=debug)
 
@@ -218,7 +218,7 @@ def run_repl(nb, output, debug = False,
         cells += suffix
 
         nb.insert(cells)
-        nb.process_to(nb.current + len(cells),output,info=info)
+        nb.process_to(nb.current + len(cells),output,info=info, repl = True)
 
     if not root:
         while True:

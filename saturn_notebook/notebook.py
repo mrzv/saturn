@@ -49,7 +49,7 @@ class Notebook:
     def insert(self, cells):
         self.incoming = self.incoming[:self.current] + cells + self.incoming[self.current:]
 
-    def skip(self, location, output = lambda x: None):
+    def skip(self, location, output = lambda x: None, repl = False):
         while self.current < location:
             cell = self.incoming[self.current]
             self.append(cell, output)
@@ -58,7 +58,7 @@ class Notebook:
                 if cell.skippable:
                     self.m.update(cell)
                 else:
-                    self.execute(cell, output)
+                    self.execute(cell, output, repl = repl)
 
         cell = self.incoming[self.current]
         assert type(cell) is c.CheckpointCell
@@ -79,7 +79,7 @@ class Notebook:
         else:
             return None
 
-    def execute(self, cell, output, info = lambda *args: None):
+    def execute(self, cell, output, info = lambda *args: None, repl = False):
         cell_id = len(self.cells) - 1
         cell_id_display = len([x for x in self.cells if type(x) is c.CodeCell]) # human-readable display only counts code cells
 
@@ -120,6 +120,8 @@ class Notebook:
                 out.write(repr(result) + '\n')
                 if self.auto_capture and image.is_new_mpl_available():
                     out.append_png(image.save_mpl_png())
+                if repl:
+                    self.g['_'] = result
 
         if type(self.next_cell()) is c.VariableCell:
             try:
@@ -151,7 +153,7 @@ class Notebook:
         while self.current < len(self.incoming):
             self.process_to(len(self.incoming), output, **kwargs)
 
-    def process_to(self, to, output, *, repl = lambda: None, force = False, debug = False, info = lambda *args, **kwargs: None):
+    def process_to(self, to, output, *, run_repl = lambda: None, force = False, debug = False, info = lambda *args, **kwargs: None, repl = False):
         while self.current < to:
             cell = self.incoming[self.current]
             self.current += 1
@@ -160,7 +162,7 @@ class Notebook:
 
             if type(cell) is c.CodeCell:
                 try:
-                    self.execute(cell, output, info)
+                    self.execute(cell, output, info, repl = repl)
                 except SystemExit:
                     info("Caught SystemExit")
                     raise       # SystemExit quits regardless of force
@@ -194,7 +196,7 @@ class Notebook:
                     info(tb, block = True)
                     info(f"[affirm]continuing[/affirm]")
             elif type(cell) is c.REPLCell:
-                if repl() == False:
+                if run_repl() == False:
                     raise SystemExit
 
     def append(self, cell, output = lambda x: None):

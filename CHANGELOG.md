@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Fixed
+
+ - Make `_` return the last evaluation result in the REPL,
+   to match [Python's behavior](https://docs.python.org/3/reference/lexical_analysis.html#reserved-classes-of-identifiers). (Fixes #3.)
+
 ## [1.2.2] - 2023-07-05
 
 ### Added
