@@ -1,4 +1,7 @@
 - Make external default (fn.zip) + add --inline option
+- Recognize `if __name__ == '__main__':` and allow its contents to process like
+  separate cells. (Need to be able to skip the other branches of the
+  conditional.)
 - Clean up evaluation:
     - Get rid of eval_expression (exec_eval already does the job)
     - Capture errors correctly
