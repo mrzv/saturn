@@ -9,7 +9,7 @@ from base64 import standard_b64encode
 from . import utils
 from more_itertools import peekable
 
-enabled = os.environ['TERM'] == 'xterm-kitty' and sys.stdout.isatty()      # TODO: find a better way
+enabled = (os.environ['TERM'] == 'xterm-kitty' or 'WEZTERM_PANE' in os.environ) and sys.stdout.isatty()      # TODO: find a better way
 seen = []
 
 def is_new_mpl_available():
