@@ -83,6 +83,11 @@ def show(fn: "input notebook",
          external: "external zip archive with binary content" = '',
          debug: "show debugging information" = False):
     """Show the contents of the notebook, without evaluating."""
+
+    if not os.path.exists(fn):
+        console.print(f"No such file: [error]{fn}[/error]")
+        return
+
     with open(fn) as f:
         cells = c.parse(f, external, show_only = True, info=info)
     _show(cells, html, katex, debug)
