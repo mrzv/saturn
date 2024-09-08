@@ -1,8 +1,8 @@
 [project]
 name = "saturn-notebook"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Plain-text Python notebooks with checkpointing"
-authors = ["Dmitriy Morozov <dmitriy@mrzv.org>"]
+author = "Dmitriy Morozov <dmitriy@mrzv.org>"
 license = "BSD-3-Clause-LBNL"
 packages = [
     { include = "saturn_notebook" },
@@ -37,3 +37,15 @@ dev-dependencies = [
     "icecream>=2.1.3",
     "mpi4py>=4.0.0",
 ]
+
+[build-system]
+requires = ["hatchling", "uv-dynamic-versioning"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
+
+[tool.uv-dynamic-versioning]
+enable = true
+vcs = "git"
+pattern  = "default-unprefixed"
