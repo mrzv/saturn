@@ -7,4 +7,5 @@ theme = Theme({
     "affirm":       Style.parse("green"),
     "error":        Style.parse("red"),
     "cell-name":    Style.parse("yellow"),
+    "version":      Style.parse("green"),
 })

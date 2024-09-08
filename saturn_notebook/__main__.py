@@ -348,11 +348,14 @@ def image(infn: "input notebook", i: "image index", out: "output PNG filename",
 def version():
     """Show version of Saturn and its dependencies."""
     from importlib_metadata import version as ver
-    print(f"Saturn {ver('saturn_notebook')} (Python {sys.version})")
+    console.print(f"Saturn [version]{ver('saturn_notebook')}[/version] (Python {sys.version})")
     for dep in ['wurlitzer', 'rich', 'ptpython',
                 'dill', 'markdown', 'atomicwrites',
                 'pygments', 'more_itertools', 'matplotlib', 'nbformat']:
-        print(f"   {dep} {ver(dep)}")
+        try:
+            console.print(f"   {dep} [version]{ver(dep)}[/version]")
+        except:
+            console.print(f"   {dep} [error]not found[/error]")
 
 @argh.arg('outfn', nargs='?')
 def convert(infn: "Jupyter notebook",
