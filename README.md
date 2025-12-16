@@ -47,7 +47,7 @@ pip install saturn-notebook[viewer]
 
   `saturn show -g notebook.py`
 
-  * `saturn run [notebook.py [output.py]]`
+* `saturn run [notebook.py [output.py]]`
 
   Execute a Python notebook, either modifying it in place, or saving the result
   into a new notebook `output.py`. If no input `notebook.py` is provided, drop
