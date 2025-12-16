@@ -32,6 +32,9 @@ viewer = [
     "pywebview>=3.3.1",
 ]
 
+[project.scripts]
+saturn = "saturn_notebook.__main__:main"
+
 [tool.uv]
 dev-dependencies = [
     "icecream>=2.1.3",
