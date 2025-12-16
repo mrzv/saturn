@@ -35,8 +35,8 @@ viewer = [
 [project.scripts]
 saturn = "saturn_notebook.__main__:main"
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "icecream>=2.1.3",
     "mpi4py>=4.0.0",
 ]
