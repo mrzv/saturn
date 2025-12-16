@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [1.3.0] - 2025-12-16
+
 ### Added
 
  - `saturn show --gui` shows notebook in a GUI (via [pywebview](https://pywebview.flowrl.com)).
