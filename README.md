@@ -28,6 +28,10 @@
 ```
 pip install saturn-notebook
 ```
+or add `[viewer]` extras for the `--gui` options below.
+```
+pip install saturn-notebook[viewer]
+```
 
 ## Commands and options
 
@@ -39,11 +43,11 @@ pip install saturn-notebook
 
   `saturn show notebook.py --html notebook.html -k`
 
-* `saturn view notebook.py`
+  When installed with `[viewer]` extras, `-g, --gui` option will display the notebook in a GUI (using [pywebview](https://pywebview.flowrl.com/)).
 
-  Display the notebook in a GUI (using [pywebview](https://pywebview.flowrl.com/)).
+  `saturn show -g notebook.py`
 
-* `saturn run [notebook.py [output.py]]`
+  * `saturn run [notebook.py [output.py]]`
 
   Execute a Python notebook, either modifying it in place, or saving the result
   into a new notebook `output.py`. If no input `notebook.py` is provided, drop
@@ -86,6 +90,8 @@ pip install saturn-notebook
   Convert a Jupyter notebook into a Saturn notebook. If the output name
   `notebook.py` is missing, only show the Jupyter notebook. Optional
   `--html OUTPUT.html` flag will produce HTML output.
+
+  When installed with `[viewer]` extras, `-g, --gui` option will display the notebook in a GUI (using [pywebview](https://pywebview.flowrl.com/)).
 
 * `saturn extract notebook.py notebook.zip`
 
