@@ -10,7 +10,7 @@ from    more_itertools import peekable
 
 from    contextlib import nullcontext
 
-from    .           import cells as c, notebook
+from    .           import cells as c, convert as jupyter_convert, html as saturn_html, notebook
 from    .repl       import PythonReplWithExecute
 from    .image      import show_png
 
@@ -57,32 +57,6 @@ def show_console(cell, rule = False, verbose = False, no_show = False):
     if not no_show:
         cell.show_console(console)
 
-def show_html(cell, f):
-    cell.show_html(f)
-
-katex_preamble = r"""
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.css" integrity="sha384-Juol1FqnotbkyZUT5Z7gUPjQ9gzlwCENvUZTpQBAPxtusdwFLRy382PSDx5UUJ4/" crossorigin="anonymous">
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.js" integrity="sha384-97gW6UIJxnlKemYavrqDHSX3SiygeOwIZhwyOKRfSaf0JWKRVj9hLASHgFTzT+0O" crossorigin="anonymous"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        renderMathInElement(document.body, {
-          // customised options
-          // • auto-render specific keys, e.g.:
-          delimiters: [
-              {left: '$$', right: '$$', display: true},
-              {left: '$', right: '$', display: false},
-              {left: '\\(', right: '\\)', display: false},
-              {left: '\\[', right: '\\]', display: true}
-          ],
-          // • rendering keys, e.g.:
-          throwOnError : false
-        });
-    });
-</script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/contrib/copy-tex.min.js" integrity="sha384-ww/583aHhxWkz5DEVn6OKtNiIaLi2iBRNZXfJRiY1Ai7tnJ9UXpEsyvOITVpTl4A" crossorigin="anonymous"></script>
-"""
-
 def show(fn: "input notebook",
          html: "save HTML to a file" = '',
          *,
@@ -106,36 +80,13 @@ def show(fn: "input notebook",
         viewer.view(html.getvalue())
 
 def _show(cells, html, katex, debug):
-    output   = lambda cell: show_console(cell, rule = debug, verbose = debug)
-
     if html:
-        if type(html) is str:
-            f_html = open(html, 'w')
-        else:
-            f_html = html
-        output = lambda cell: show_html(cell, f_html)
+        saturn_html.render(cells, html, katex)
+        return
 
-        f_html.write('<!DOCTYPE html>\n')
-        f_html.write('<html>\n')
-        f_html.write('<head>\n')
-        f_html.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">\n')
-        f_html.write('<style> .muted { color: gray; } </style>')
-        if katex:
-            f_html.write(katex_preamble)
-        f_html.write('<style>\n')
-        f_html.write(c.HtmlFormatter().get_style_defs('.highlight'))
-        f_html.write('</style>\n')
-        f_html.write('</head>\n')
-        f_html.write('<body>\n')
-
-
-    for i,cell in enumerate(cells):
+    for cell in cells:
         if not cell.display(): continue
-        output(cell)
-
-    if html:
-        f_html.write('</body>\n')
-        f_html.write('</html>\n')
+        show_console(cell, rule = debug, verbose = debug)
 
 @argh.arg('infn', nargs='?')
 @argh.arg('outfn', nargs='?')
@@ -392,47 +343,7 @@ def convert(infn: "Jupyter notebook",
     """Convert a Jupyter notebook into a Saturn notebook."""
     import nbformat
     jnb = nbformat.read(infn, as_version=version)
-
-    header = c.CodeCell()
-    header.lines_ = ['# vim: ft=python foldmethod=marker foldlevel=0\n']
-    cells = [header]
-
-    for jcell in jnb.cells:
-        if jcell['cell_type'] == 'markdown':
-            cell = c.MarkdownCell()
-            cell.lines_ = [' ' + line + '\n' if len(line) else '\n' for line in jcell['source'].split('\n')]
-            if type(cells[-1]) is not c.Blanks:
-                cells.append(c.Blanks.create(1))
-            cells.append(cell)
-            cells.append(c.Blanks.create(1))
-        elif jcell['cell_type'] == 'code':
-            if type(cells[-1]) is c.CodeCell:
-                cells.append(c.Blanks.create(1))
-                cells.append(c.BreakCell.create())
-                cells.append(c.Blanks.create(1))
-            cell = c.CodeCell()
-            cell.lines_ = [line + '\n' for line in jcell['source'].split('\n')]
-            cells.append(cell)
-
-            for out in jcell['outputs']:
-                if out['output_type'] == 'stream':
-                    cell = c.OutputCell.from_string(out['text'])
-                    cells.append(cell)
-                elif out['output_type'] in ['display_data', 'execute_result']:
-                    if 'image/png' in out['data']:
-                        cell = c.OutputCell()
-                        png_content = out['data']['image/png']
-                        cell.composite_.append_png(c.base64.b64decode(png_content))
-                        cells.append(cell)
-                    elif 'text/plain' in out['data']:
-                        cell = c.OutputCell.from_string(out['data']['text/plain'])
-                        cells.append(cell)
-                    else:
-                        info('Unrecognized data type', style="magenta")
-                else:
-                    info('Unrecognized output type', style="magenta")
-        else:
-            info('Unrecognized cell type', style="magenta")
+    cells = jupyter_convert.from_jupyter(jnb, info)
 
     if not outfn:
         if gui:

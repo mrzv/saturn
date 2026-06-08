@@ -1,0 +1,46 @@
+from . import cells as c
+
+
+def from_jupyter(jnb, info):
+    header = c.CodeCell()
+    header.lines_ = ['# vim: ft=python foldmethod=marker foldlevel=0\n']
+    cells = [header]
+
+    for jcell in jnb.cells:
+        if jcell['cell_type'] == 'markdown':
+            cell = c.MarkdownCell()
+            cell.lines_ = [' ' + line + '\n' if len(line) else '\n' for line in jcell['source'].split('\n')]
+            if type(cells[-1]) is not c.Blanks:
+                cells.append(c.Blanks.create(1))
+            cells.append(cell)
+            cells.append(c.Blanks.create(1))
+        elif jcell['cell_type'] == 'code':
+            if type(cells[-1]) is c.CodeCell:
+                cells.append(c.Blanks.create(1))
+                cells.append(c.BreakCell.create())
+                cells.append(c.Blanks.create(1))
+            cell = c.CodeCell()
+            cell.lines_ = [line + '\n' for line in jcell['source'].split('\n')]
+            cells.append(cell)
+
+            for out in jcell['outputs']:
+                if out['output_type'] == 'stream':
+                    cell = c.OutputCell.from_string(out['text'])
+                    cells.append(cell)
+                elif out['output_type'] in ['display_data', 'execute_result']:
+                    if 'image/png' in out['data']:
+                        cell = c.OutputCell()
+                        png_content = out['data']['image/png']
+                        cell.composite_.append_png(c.base64.b64decode(png_content))
+                        cells.append(cell)
+                    elif 'text/plain' in out['data']:
+                        cell = c.OutputCell.from_string(out['data']['text/plain'])
+                        cells.append(cell)
+                    else:
+                        info('Unrecognized data type', style="magenta")
+                else:
+                    info('Unrecognized output type', style="magenta")
+        else:
+            info('Unrecognized cell type', style="magenta")
+
+    return cells
