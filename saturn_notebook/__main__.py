@@ -132,6 +132,8 @@ def run(infn: "input notebook",
     if not outfn:
         outfn = infn
 
+    original_argv = sys.argv
+    inserted_path = None
     sys.argv = [infn] + argv
 
     def output(cell):
@@ -151,10 +153,11 @@ def run(infn: "input notebook",
     caught = None
     try:
         if infn:
-            sys.path.insert(0, os.path.dirname(infn))
+            inserted_path = os.path.dirname(infn)
+            sys.path.insert(0, inserted_path)
         nb.process_all(output,
                        run_repl=lambda: run_repl(nb, output, debug=debug,
-                                              prefix = [c.Blanks.create(1)], suffix = [c.Blanks.create(1), c.BreakCell.create()]),
+                                               prefix = [c.Blanks.create(1)], suffix = [c.Blanks.create(1), c.BreakCell.create()]),
                        force=interactive, info=info, debug=debug)
 
         if interactive:
@@ -169,12 +172,23 @@ def run(infn: "input notebook",
         caught = sys.exc_info()
         nb.move_all_incoming()
 
-    if not nb.dry_run and root and outfn:
-        nb.save(outfn, external)
+    try:
+        if not nb.dry_run and root and outfn:
+            nb.save(outfn, external)
 
-    if caught:
-        _, exc, tb = caught
-        raise exc.with_traceback(tb)
+        if caught:
+            _, exc, tb = caught
+            raise exc.with_traceback(tb)
+    finally:
+        sys.argv = original_argv
+        if inserted_path is not None:
+            if sys.path and sys.path[0] == inserted_path:
+                sys.path.pop(0)
+            else:
+                try:
+                    sys.path.remove(inserted_path)
+                except ValueError:
+                    pass
 
 
 def run_repl(nb, output, debug = False,
