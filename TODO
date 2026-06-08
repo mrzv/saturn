@@ -1,4 +1,3 @@
-- Make external default (fn.zip) + add --inline option
 - Recognize `if __name__ == '__main__':` and allow its contents to process like
   separate cells. (Need to be able to skip the other branches of the
   conditional.)
@@ -6,7 +5,7 @@
     - Get rid of eval_expression (exec_eval already does the job)
     - Capture errors correctly
         - Save traceback in REPL
-        - This is mostly needed in REPL. In normal run, we should abort on error.
+        - [Done] In normal run, abort on error after writing the processed state.
         - [Done] Preserve checkpoints, if we catch an exception. In general,
           reconcile whether the notebook (the processed part) should be written
           out, if an exception occurs.
@@ -17,11 +16,22 @@
     - [Fixed: locals = globals] Possibly related: debug usage with joblib.Parallel
 - Stream cells (via a generator) to produce output faster
 - Better, explicit Vim support
-- Add option to embed both KaTeX and water.css into HTML output (to have a
-  standalone page).
+- Add option to embed KaTeX into HTML output (to have a fully standalone page).
+  [Done] Added --standalone for inline CSS / no water.css CDN. KaTeX still uses
+  external assets and is rejected with --standalone.
 
 Done:
 
+- Make external default (fn.zip) + add --inline option
+- Add focused pytest coverage and keep legacy golden tests available
+- Add subprocess CLI fixture coverage for stable notebooks
+- Add Ruff checks and CI for pytest, Ruff, and package builds
+- Fix package build metadata and exclude VCS/tooling directories from sdists
+- Split HTML rendering and Jupyter conversion helpers out of __main__.py
+- Restore sys.argv and sys.path after in-process notebook runs
+- Extract MPI detection into a testable module
+- Harden parser edge cases for empty Saturn/variable cells and external archives
+- Harden optional imports, TERM handling, and traceback filename parsing
 - Add breakpoint cell that drops into repl (and then resumes execution)
 - Checkpointing is broken in the interactive mode.
 - Add ability to save assets in an external zip file.
@@ -58,4 +68,3 @@ Done:
 - Clean up traceback (line numbers are broken across cells)
 - [Done: not a bug] fig.clear() and/or ax.clear() with Matplotlib (many cheatsheets are failing)
     - the problem was with using plt.show(), rather than fig.show()
-
