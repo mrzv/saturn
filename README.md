@@ -238,6 +238,7 @@ REPL supports the following keyboard shortcuts:
 
 ## Documentation
 
+- [Saturn notebook format](docs/format.md)
 - [Execution error policy](docs/error-policy.md)
 
 ## Development
