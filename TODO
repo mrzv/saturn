@@ -1,6 +1,3 @@
-- Recognize `if __name__ == '__main__':` and allow its contents to process like
-  separate cells. (Need to be able to skip the other branches of the
-  conditional.)
 - Clean up evaluation:
     - [Done] Get rid of eval_expression (exec_eval already does the job)
     - Capture errors correctly
@@ -15,6 +12,8 @@
     - [No reason] Lift more logic from ptpython
     - [Fixed: locals = globals] Possibly related: debug usage with joblib.Parallel
 - Stream cells (via a generator) to produce output faster
+    - [Done] Keep captured output passthrough file-like and covered by tests; a
+      deeper parser/executor generator split is no longer the next bottleneck.
 - Better, explicit Vim support
 - Consider bundling a true KaTeX renderer for standalone HTML. [Done]
   --standalone --katex now produces offline output without CDN assets, but keeps
@@ -22,13 +21,21 @@
 
 Done:
 
+- Write external zip archives atomically
+- Resolve explicit relative external archives beside output notebooks
+- Add subprocess coverage for extract/embed archive round-trips
+- Add semantic compatibility tests for legacy inline checkpoint and variable caches
+- Parse cells inside top-level `if __name__ == '__main__':` guards and skip sibling branches
+- Replace argh string-annotation CLI metadata with explicit decorators
+- Add mypy checks for typed leaf modules and run them in CI
+- Add release validation script for pytest, Ruff, mypy, and build
 - Add semantic checkpoint and variable cache round-trip tests
 - Make external archive metadata portable for sibling zip files
 - Reject unsafe external archive member names when loading content
 - Document execution error policy
 - Add CLI subprocess coverage for checkpoint and variable cache behavior
 - Add Saturn notebook format documentation
-- Broaden Ruff to full Pyflakes with a targeted argh annotation ignore
+- Broaden Ruff to full Pyflakes
 - Add lightweight typing to leaf modules
 - Introduce explicit notebook execution state object
 - Expand CI Python matrix to 3.8 through 3.13
