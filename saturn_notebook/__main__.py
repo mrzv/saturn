@@ -10,12 +10,13 @@ from    more_itertools import peekable
 
 from    contextlib import nullcontext
 
-from    .           import cells as c, convert as jupyter_convert, html as saturn_html, notebook
+from    .           import cells as c, convert as jupyter_convert, html as saturn_html, mpi, notebook
 from    .repl       import PythonReplWithExecute
 from    .image      import show_png
 
 root = True
 using_mpi = False
+mpi_comm = None
 
 skip_repl = False
 
@@ -122,14 +123,12 @@ def run(infn: "input notebook",
 
     global using_mpi
     global root
+    global mpi_comm
 
-    if not no_mpi:
-        try:
-            from mpi4py import MPI
-            root = MPI.COMM_WORLD.Get_rank() == 0
-            using_mpi = MPI.COMM_WORLD.Get_size() > 1
-        except Exception:
-            pass
+    mpi_state = mpi.detect(no_mpi)
+    root = mpi_state.root
+    using_mpi = mpi_state.using
+    mpi_comm = mpi_state.comm
 
     if infn and os.path.exists(infn):
         with open(infn) as f:
@@ -217,8 +216,7 @@ def run_repl(nb, output, debug = False,
         return
 
     if using_mpi:
-        from mpi4py import MPI
-        comm = MPI.COMM_WORLD
+        comm = mpi_comm
 
     def execute_line(line):
         line += '\n'
