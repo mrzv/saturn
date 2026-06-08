@@ -2,13 +2,10 @@
 name = "saturn-notebook"
 dynamic = ["version"]
 description = "Plain-text Python notebooks with checkpointing"
-author = "Dmitriy Morozov <dmitriy@mrzv.org>"
-license = "BSD-3-Clause-LBNL"
-packages = [
-    { include = "saturn_notebook" },
+authors = [
+    { name = "Dmitriy Morozov", email = "dmitriy@mrzv.org" },
 ]
-repository = "https://github.com/mrzv/saturn"
-homepage = "https://github.com/mrzv/saturn"
+license = "BSD-3-Clause-LBNL"
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
@@ -60,6 +57,18 @@ select = ["E9", "F63", "F82"]
 [build-system]
 requires = ["hatchling", "uv-dynamic-versioning"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build]
+exclude = [
+    "/.git",
+    "/.github",
+    "/.jj",
+    "/.opencode",
+    "/dist",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["saturn_notebook"]
 
 [tool.hatch.version]
 source = "uv-dynamic-versioning"
