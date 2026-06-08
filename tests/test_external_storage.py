@@ -1,4 +1,6 @@
+import io
 import zipfile
+from pathlib import Path
 
 import pytest
 
@@ -24,7 +26,7 @@ def test_notebook_save_externalizes_binary_content_by_default(tmp_path):
     nb.save(str(outfn), external)
 
     saved = outfn.read_text()
-    assert saved.startswith(f"#saturn> external={external}\n")
+    assert saved.startswith("#saturn> external=image.zip\n")
     assert "#o> png name=" in saved
     with zipfile.ZipFile(external) as zf:
         names = zf.namelist()
@@ -63,3 +65,42 @@ def test_notebook_save_inline_embeds_binary_content(tmp_path):
 def test_external_and_inline_flags_conflict(tmp_path):
     with pytest.raises(ValueError, match="--external and --inline"):
         cli.save_external_name(str(tmp_path / "image.py"), external="image.zip", inline=True)
+
+
+def test_parse_resolves_relative_external_archive_next_to_notebook(tmp_path):
+    outfn = tmp_path / "image.py"
+    external = cli.save_external_name(str(outfn), external="", inline=False)
+    nb = make_notebook_with_png()
+    nb.save(str(outfn), external)
+
+    with outfn.open() as f:
+        parsed = cells.parse(f, "", external_base=str(outfn.parent))
+
+    outputs = [cell for cell in parsed if isinstance(cell, cells.OutputCell)]
+    assert len(outputs) == 1
+    assert any(item == b"png-bytes" for item in outputs[0].composite_)
+
+
+def test_unsafe_archive_member_names_are_not_loaded(tmp_path):
+    external = tmp_path / "unsafe.zip"
+    with zipfile.ZipFile(external, "w") as zf:
+        zf.writestr("../escape.png", b"png-bytes")
+    source = io.StringIO("#o> png name=../escape.png\n")
+
+    parsed = cells.parse(source, str(external))
+
+    output = next(cell for cell in parsed if isinstance(cell, cells.OutputCell))
+    assert not any(item == b"png-bytes" for item in output.composite_)
+
+
+def test_explicit_absolute_external_path_is_preserved_in_metadata(tmp_path):
+    outfn = tmp_path / "nested" / "image.py"
+    outfn.parent.mkdir()
+    external = tmp_path / "archives" / "image.zip"
+    external.parent.mkdir()
+    nb = make_notebook_with_png()
+
+    nb.save(str(outfn), str(external))
+
+    assert outfn.read_text().startswith(f"#saturn> external={external}\n")
+    assert Path(external).exists()

@@ -30,6 +30,9 @@ _zip_fn_prefix = 'name='
 def hash_bytes(content):
     return hashlib.sha256(content).hexdigest()[:16]
 
+def safe_archive_name(name):
+    return name and not os.path.isabs(name) and os.path.normpath(name) == name and os.path.dirname(name) == ''
+
 class Cell:
     def __init__(self):
         self.lines_ = []
@@ -155,7 +158,9 @@ class OutputCell(Cell):
                 if _zip_fn_prefix in line:
                     # take everything from name= to the end (-1 to not include \n)
                     fn = line[line.index(_zip_fn_prefix) + len(_zip_fn_prefix):-1]
-                    if external:
+                    if not safe_archive_name(fn):
+                        self.composite_.append_rich(Rule(f"[warn]unsafe image archive name [cyan]{fn}[/cyan] ignored[/warn]"))
+                    elif external:
                         if zipfile.Path(external, at=fn).exists():
                             png_content = external.read(fn)
                             self.composite_.append_png(png_content)
@@ -301,7 +306,10 @@ class CheckpointCell(Cell):
         line = self.lines_[0]
         if _zip_fn_prefix in line:
             fn = line[line.index(_zip_fn_prefix) + len(_zip_fn_prefix):-1]
-            if external:
+            if not safe_archive_name(fn):
+                self._warning = Rule(f"[warn]unsafe {self._warning_name} archive name [cyan]{fn}[/cyan] ignored[/warn]")
+                self._expected = None
+            elif external:
                 if zipfile.Path(external, at=fn).exists():
                     self._content = io.BytesIO(external.read(fn))
                 else:
@@ -427,8 +435,10 @@ def chunk(content, width, markers = False):
         chunking = chain(['{{{'], chunking, ['}}}'])
     return chunking
 
-def open_external(external_fn, show_only, info):
+def open_external(external_fn, show_only, info, external_base = ''):
     if external_fn:
+        if not os.path.isabs(external_fn) and external_base:
+            external_fn = os.path.join(external_base, external_fn)
         if not os.path.exists(external_fn):
             if show_only:
                 info(f"External zip archive [error]{external_fn}[/error] not found.", style='warn')
@@ -438,8 +448,8 @@ def open_external(external_fn, show_only, info):
     else:
         return None
 
-def parse(f, external_fn, *, show_only = False, info = lambda *args, **kwargs: None):
-    external = open_external(external_fn, show_only, info)
+def parse(f, external_fn, *, show_only = False, info = lambda *args, **kwargs: None, external_base = ''):
+    external = open_external(external_fn, show_only, info, external_base)
 
     def should_parse(cell):
         # skip check-point cells in show mode
@@ -454,7 +464,7 @@ def parse(f, external_fn, *, show_only = False, info = lambda *args, **kwargs: N
             if type(cells[-1]) is SaturnCell:
                 if not external_fn and cells[-1].external_fn:
                     external_fn = cells[-1].external_fn
-                    external = open_external(external_fn, show_only, info)
+                    external = open_external(external_fn, show_only, info, external_base)
 
         cells.append(cell)
 

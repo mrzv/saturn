@@ -84,7 +84,7 @@ def show(fn: "input notebook",
         return
 
     with open(fn) as f:
-        cells = c.parse(f, external, show_only = True, info=info)
+        cells = c.parse(f, external, show_only = True, info=info, external_base=os.path.dirname(fn))
 
     if gui:
         html = io.StringIO()
@@ -130,7 +130,7 @@ def run(infn: "input notebook",
 
     if infn and os.path.exists(infn):
         with open(infn) as f:
-            cells = c.parse(f, external, info=info)
+            cells = c.parse(f, external, info=info, external_base=os.path.dirname(infn))
     else:
         cells = []
         if outfn and not dry_run:
@@ -330,7 +330,7 @@ def image(infn: "input notebook", i: "image index", out: "output PNG filename",
         return
 
     with open(infn) as f:
-        cells = c.parse(f, external, show_only = True, info=info)
+        cells = c.parse(f, external, show_only = True, info=info, external_base=os.path.dirname(infn))
 
     count = 0
     for cell in cells:
@@ -401,7 +401,7 @@ def rehash(infn: "input notebook",
         outfn = infn
 
     with open(infn) as f:
-        cells = c.parse(f, external, info=info)
+        cells = c.parse(f, external, info=info, external_base=os.path.dirname(infn))
 
     nb = notebook.Notebook(name = infn)
     nb.add(cells)
@@ -418,7 +418,7 @@ def extract(infn: "input notebook",
         outfn = infn
 
     with open(infn) as f:
-        cells = c.parse(f, '', info=info)       # read without external
+        cells = c.parse(f, '', info=info, external_base=os.path.dirname(infn))       # read without external
 
     nb = notebook.Notebook(name = infn)
     nb.add(cells)
@@ -435,7 +435,7 @@ def embed(infn: "input notebook",
         outfn = infn
 
     with open(infn) as f:
-        cells = c.parse(f, external, info=info)
+        cells = c.parse(f, external, info=info, external_base=os.path.dirname(infn))
 
     nb = notebook.Notebook(name = infn)
     nb.add(cells)

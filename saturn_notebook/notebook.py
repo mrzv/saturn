@@ -1,4 +1,5 @@
 import  hashlib
+import  os
 import  zipfile
 from    contextlib import nullcontext
 from    atomicwrites import atomic_write
@@ -225,6 +226,14 @@ class Notebook:
                 return True
         return False
 
+    def external_metadata_name(self, fn, external):
+        if os.path.isabs(external):
+            notebook_dir = os.path.abspath(os.path.dirname(fn) or '.')
+            external_dir = os.path.abspath(os.path.dirname(external) or '.')
+            if notebook_dir == external_dir:
+                return os.path.basename(external)
+        return external
+
     def save(self, fn, external, *, inline = False):
         if self.dry_run:
             return
@@ -240,13 +249,15 @@ class Notebook:
         if external and not self.has_external_content():
             external = ''
 
+        external_metadata = self.external_metadata_name(fn, external) if external else ''
+
         if external:
             for cell in self.cells:
                 if type(cell) is c.SaturnCell:
-                    cell.external_fn = external
+                    cell.external_fn = external_metadata
                     break
             else:
-                self.cells.insert(0, c.SaturnCell.create(external))
+                self.cells.insert(0, c.SaturnCell.create(external_metadata))
 
         with atomic_write(fn, mode='w', overwrite=True) as f:
             with zipfile.ZipFile(external, 'w') if external else nullcontext() as external_zip:
