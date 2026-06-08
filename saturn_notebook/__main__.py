@@ -76,14 +76,21 @@ def show_console(cell, rule = False, verbose = False, no_show = False):
     if not no_show:
         cell.show_console(console)
 
-def show(fn: "input notebook",
-         html: "save HTML to a file" = '',
+@argh.arg('fn', help="input notebook")
+@argh.arg('--html', help="save HTML to a file")
+@argh.arg('--katex', help="include KaTeX in HTML output")
+@argh.arg('--standalone', help="inline CSS instead of linking CDN assets in HTML output")
+@argh.arg('--external', help="external zip archive with binary content")
+@argh.arg('--gui', help="view notebook in GUI")
+@argh.arg('--debug', help="show debugging information")
+def show(fn,
+         html = '',
          *,
-         katex: "include KaTeX in HTML output" = False,
-         standalone: "inline CSS instead of linking CDN assets in HTML output" = False,
-         external: "external zip archive with binary content" = '',
-         gui: "view notebook in GUI" = False,
-         debug: "show debugging information" = False):
+         katex = False,
+         standalone = False,
+         external = '',
+         gui = False,
+         debug = False):
     """Show the contents of the notebook, without evaluating."""
 
     if not os.path.exists(fn):
@@ -108,22 +115,28 @@ def _show(cells, html, katex, standalone, debug):
         if not cell.display(): continue
         show_console(cell, rule = debug, verbose = debug)
 
-@argh.arg('infn', nargs='?')
-@argh.arg('outfn', nargs='?')
-@argh.arg('--no-mpi')
-@argh.arg('-n', '--dry-run')
-@argh.arg('-i', '--interactive')
-def run(infn: "input notebook",
-        outfn: "output notebook (if empty, input modified in place)",
-        clean: "run from scratch, ignoring checkpoints" = False,
-        auto_capture: "automatically capture images" = False,
-        external: "external zip archive with binary content" = '',
-        inline: "embed binary content inline instead of using an external archive" = False,
-        debug: "show debugging information" = False,
-        no_mpi: "disable MPI awareness" = False,
-        dry_run: "don't save the processed notebook" = False,
-        only_root_output: "suppress output everywhere but rank 0 (for MPI)" = False,
-        interactive: "run REPL after the notebook is processed" = False):
+@argh.arg('infn', nargs='?', help="input notebook")
+@argh.arg('outfn', nargs='?', help="output notebook (if empty, input modified in place)")
+@argh.arg('--clean', help="run from scratch, ignoring checkpoints")
+@argh.arg('--auto-capture', help="automatically capture images")
+@argh.arg('--external', help="external zip archive with binary content")
+@argh.arg('--inline', help="embed binary content inline instead of using an external archive")
+@argh.arg('--debug', help="show debugging information")
+@argh.arg('--no-mpi', help="disable MPI awareness")
+@argh.arg('-n', '--dry-run', help="don't save the processed notebook")
+@argh.arg('--only-root-output', help="suppress output everywhere but rank 0 (for MPI)")
+@argh.arg('-i', '--interactive', help="run REPL after the notebook is processed")
+def run(infn,
+        outfn,
+        clean = False,
+        auto_capture = False,
+        external = '',
+        inline = False,
+        debug = False,
+        no_mpi = False,
+        dry_run = False,
+        only_root_output = False,
+        interactive = False):
     """Run the notebook."""
 
     global using_mpi
@@ -300,10 +313,12 @@ def run_repl(nb, output, debug = False,
 
     return result
 
-@argh.arg('outfn', nargs='?')
-def clean(infn: "input notebook",
-          outfn: "output notebook (if empty, input modified in place)",
-          strip_output: "also strip all output" = False):
+@argh.arg('infn', help="input notebook")
+@argh.arg('outfn', nargs='?', help="output notebook (if empty, input modified in place)")
+@argh.arg('--strip-output', help="also strip all output")
+def clean(infn,
+          outfn,
+          strip_output = False):
     """Remove all binary data from the notebook."""
     if not outfn:
         outfn = infn
@@ -326,10 +341,12 @@ def clean(infn: "input notebook",
                             next(pf)
                     of.write(line)
 
-@argh.arg('i',   nargs='?', type=int)
-@argh.arg('out', nargs='?')
-def image(infn: "input notebook", i: "image index", out: "output PNG filename",
-          external: "external zip archive with binary content" = '',
+@argh.arg('infn', help="input notebook")
+@argh.arg('i',   nargs='?', type=int, help="image index")
+@argh.arg('out', nargs='?', help="output PNG filename")
+@argh.arg('--external', help="external zip archive with binary content")
+def image(infn, i, out,
+          external = '',
           ):
     """Extract an image from the notebook."""
     if i is not None and not out:
@@ -369,17 +386,26 @@ def version():
     if has_viewer:
         console.print(f"Config path: [path]{viewer.config_path}[/path]")
 
-@argh.arg('outfn', nargs='?')
-def convert(infn: "Jupyter notebook",
-            outfn: "output notebook (if empty, show the cells instead)",
-            gui: "view notebook in GUI" = False,
-            version: "notebook version" = 4,
-            external: "external zip archive with binary content" = '',
-            inline: "embed binary content inline instead of using an external archive" = False,
-            html: "save HTML to a file" = '',
-            katex: "include KaTeX in HTML output" = False,
-            standalone: "inline CSS instead of linking CDN assets in HTML output" = False,
-            debug: "show debugging information" = False):
+@argh.arg('infn', help="Jupyter notebook")
+@argh.arg('outfn', nargs='?', help="output notebook (if empty, show the cells instead)")
+@argh.arg('--gui', help="view notebook in GUI")
+@argh.arg('--version', help="notebook version")
+@argh.arg('--external', help="external zip archive with binary content")
+@argh.arg('--inline', help="embed binary content inline instead of using an external archive")
+@argh.arg('--html', help="save HTML to a file")
+@argh.arg('--katex', help="include KaTeX in HTML output")
+@argh.arg('--standalone', help="inline CSS instead of linking CDN assets in HTML output")
+@argh.arg('--debug', help="show debugging information")
+def convert(infn,
+            outfn,
+            gui = False,
+            version = 4,
+            external = '',
+            inline = False,
+            html = '',
+            katex = False,
+            standalone = False,
+            debug = False):
     """Convert a Jupyter notebook into a Saturn notebook."""
     import nbformat
     jnb = nbformat.read(infn, as_version=version)
@@ -398,11 +424,14 @@ def convert(infn: "Jupyter notebook",
         nb.save(outfn, save_external_name(outfn, external, inline), inline=inline)
 
 
-@argh.arg('outfn', nargs='?')
-def rehash(infn: "input notebook",
-           outfn: "output notebook (if empty, input modified in place)",
-           external: "external zip archive with binary content" = '',
-           inline: "embed binary content inline instead of using an external archive" = False):
+@argh.arg('infn', help="input notebook")
+@argh.arg('outfn', nargs='?', help="output notebook (if empty, input modified in place)")
+@argh.arg('--external', help="external zip archive with binary content")
+@argh.arg('--inline', help="embed binary content inline instead of using an external archive")
+def rehash(infn,
+           outfn,
+           external = '',
+           inline = False):
     """Rehash all the code cells, updating the hashes stored with checkpoints and variable cells. (advanced)"""
     if not outfn:
         outfn = infn
@@ -416,10 +445,12 @@ def rehash(infn: "input notebook",
 
     nb.save(outfn, save_external_name(outfn, external, inline), inline=inline)
 
-@argh.arg('outfn', nargs='?')
-def extract(infn: "input notebook",
-            external: "external zip archive with binary content",
-            outfn: "output notebook (if empty, input modified in place)"):
+@argh.arg('infn', help="input notebook")
+@argh.arg('external', help="external zip archive with binary content")
+@argh.arg('outfn', nargs='?', help="output notebook (if empty, input modified in place)")
+def extract(infn,
+            external,
+            outfn):
     """Extract embedded binary content into external zip archive."""
     if not outfn:
         outfn = infn
@@ -433,10 +464,12 @@ def extract(infn: "input notebook",
 
     nb.save(outfn, save_external_name(outfn, external, inline=False))
 
-@argh.arg('outfn', nargs='?')
-def embed(infn: "input notebook",
-          external: "external zip archive with binary content",
-          outfn: "output notebook (if empty, input modified in place)"):
+@argh.arg('infn', help="input notebook")
+@argh.arg('external', help="external zip archive with binary content")
+@argh.arg('outfn', nargs='?', help="output notebook (if empty, input modified in place)")
+def embed(infn,
+          external,
+          outfn):
     """Embed binary content from external zip archive into notebook body."""
     if not outfn:
         outfn = infn
@@ -450,16 +483,22 @@ def embed(infn: "input notebook",
 
     nb.save(outfn, '', inline=True)      # write without external
 
-@argh.arg('--no-mpi')
-@argh.arg('-n', '--dry-run')
-def _run(clean: "run from scratch, ignoring checkpoints" = False,
-        auto_capture: "automatically capture images" = False,
-        external: "external zip archive with binary content" = '',
-        inline: "embed binary content inline instead of using an external archive" = False,
-        debug: "show debugging information" = False,
-        no_mpi: "disable MPI awareness" = False,
-        dry_run: "don't save the processed notebook" = False,
-        only_root_output: "suppress output everywhere but rank 0 (for MPI)" = False):
+@argh.arg('--clean', help="run from scratch, ignoring checkpoints")
+@argh.arg('--auto-capture', help="automatically capture images")
+@argh.arg('--external', help="external zip archive with binary content")
+@argh.arg('--inline', help="embed binary content inline instead of using an external archive")
+@argh.arg('--debug', help="show debugging information")
+@argh.arg('--no-mpi', help="disable MPI awareness")
+@argh.arg('-n', '--dry-run', help="don't save the processed notebook")
+@argh.arg('--only-root-output', help="suppress output everywhere but rank 0 (for MPI)")
+def _run(clean = False,
+        auto_capture = False,
+        external = '',
+        inline = False,
+        debug = False,
+        no_mpi = False,
+        dry_run = False,
+        only_root_output = False):
     """Launch Saturn REPL."""
     run('', '', clean, auto_capture, external, inline, debug, no_mpi, dry_run, only_root_output, True)
 
