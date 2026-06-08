@@ -39,7 +39,8 @@ pip install saturn-notebook[viewer]
 
   Display the notebook in the terminal. No computation is performed. Optional
   `--html OUTPUT.html` flag will produce HTML output. Use `-k, --katex` flag to
-  embed [KaTeX](https://katex.org/) header into the HTML.
+  embed [KaTeX](https://katex.org/) header into the HTML. Use `--standalone` to
+  inline Saturn's CSS instead of linking CDN stylesheets.
 
   `saturn show notebook.py --html notebook.html -k`
 
@@ -89,7 +90,8 @@ pip install saturn-notebook[viewer]
 
   Convert a Jupyter notebook into a Saturn notebook. If the output name
   `notebook.py` is missing, only show the Jupyter notebook. Optional
-  `--html OUTPUT.html` flag will produce HTML output.
+  `--html OUTPUT.html` flag will produce HTML output. Use `--standalone` to
+  inline Saturn's CSS instead of linking CDN stylesheets.
 
   When installed with `[viewer]` extras, `-g, --gui` option will display the notebook in a GUI (using [pywebview](https://pywebview.flowrl.com/)).
 

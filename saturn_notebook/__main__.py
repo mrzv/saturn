@@ -61,6 +61,7 @@ def show(fn: "input notebook",
          html: "save HTML to a file" = '',
          *,
          katex: "include KaTeX in HTML output" = False,
+         standalone: "inline CSS instead of linking CDN assets in HTML output" = False,
          external: "external zip archive with binary content" = '',
          gui: "view notebook in GUI" = False,
          debug: "show debugging information" = False):
@@ -75,13 +76,13 @@ def show(fn: "input notebook",
 
     if gui:
         html = io.StringIO()
-    _show(cells, html, katex, debug)
+    _show(cells, html, katex, standalone, debug)
     if gui:
         viewer.view(html.getvalue())
 
-def _show(cells, html, katex, debug):
+def _show(cells, html, katex, standalone, debug):
     if html:
-        saturn_html.render(cells, html, katex)
+        saturn_html.render(cells, html, katex, standalone)
         return
 
     for cell in cells:
@@ -345,6 +346,7 @@ def convert(infn: "Jupyter notebook",
             external: "external zip archive with binary content" = '',
             html: "save HTML to a file" = '',
             katex: "include KaTeX in HTML output" = False,
+            standalone: "inline CSS instead of linking CDN assets in HTML output" = False,
             debug: "show debugging information" = False):
     """Convert a Jupyter notebook into a Saturn notebook."""
     import nbformat
@@ -354,7 +356,7 @@ def convert(infn: "Jupyter notebook",
     if not outfn:
         if gui:
             html = io.StringIO()
-        _show(cells, html, katex, debug)
+        _show(cells, html, katex, standalone, debug)
         if gui:
             viewer.view(html.getvalue())
     else:

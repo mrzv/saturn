@@ -1,6 +1,34 @@
 from . import cells as c
 
 
+standalone_css = """
+body {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    color: #1f2933;
+    background: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.55;
+}
+pre {
+    overflow-x: auto;
+    padding: 1rem;
+    background: #f6f8fa;
+    border-radius: 0.35rem;
+}
+code, pre {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+img {
+    max-width: 100%;
+}
+.muted {
+    color: gray;
+}
+"""
+
+
 katex_preamble = r"""
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.css" integrity="sha384-Juol1FqnotbkyZUT5Z7gUPjQ9gzlwCENvUZTpQBAPxtusdwFLRy382PSDx5UUJ4/" crossorigin="anonymous">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.3/dist/katex.min.js" integrity="sha384-97gW6UIJxnlKemYavrqDHSX3SiygeOwIZhwyOKRfSaf0JWKRVj9hLASHgFTzT+0O" crossorigin="anonymous"></script>
@@ -25,7 +53,10 @@ katex_preamble = r"""
 """
 
 
-def render(cells, html, katex=False):
+def render(cells, html, katex=False, standalone=False):
+    if katex and standalone:
+        raise ValueError("KaTeX HTML output requires external assets and cannot be standalone")
+
     close_html = False
     if isinstance(html, str):
         f_html = open(html, 'w')
@@ -37,8 +68,13 @@ def render(cells, html, katex=False):
         f_html.write('<!DOCTYPE html>\n')
         f_html.write('<html>\n')
         f_html.write('<head>\n')
-        f_html.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">\n')
-        f_html.write('<style> .muted { color: gray; } </style>')
+        if standalone:
+            f_html.write('<style>\n')
+            f_html.write(standalone_css)
+            f_html.write('</style>\n')
+        else:
+            f_html.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">\n')
+            f_html.write('<style> .muted { color: gray; } </style>')
         if katex:
             f_html.write(katex_preamble)
         f_html.write('<style>\n')

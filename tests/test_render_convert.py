@@ -1,5 +1,7 @@
 import io
 
+import pytest
+
 import nbformat
 
 from saturn_notebook import cells, convert, html
@@ -17,6 +19,21 @@ def test_html_render_writes_document_with_displayed_cells():
     assert "<body>" in rendered
     assert "Hello" in rendered
     assert rendered.endswith("</html>\n")
+
+
+def test_html_render_can_inline_standalone_css():
+    output = io.StringIO()
+
+    html.render([], output, standalone=True)
+
+    rendered = output.getvalue()
+    assert "cdn.jsdelivr.net" not in rendered
+    assert "font-family" in rendered
+
+
+def test_html_render_rejects_standalone_katex():
+    with pytest.raises(ValueError, match="KaTeX"):
+        html.render([], io.StringIO(), katex=True, standalone=True)
 
 
 def test_convert_from_jupyter_preserves_markdown_code_and_outputs():
