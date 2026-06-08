@@ -226,6 +226,22 @@ REPL supports the following keyboard shortcuts:
 * `Ctrl-q`: exits the REPL and terminates execution of the entire notebook.
 * `F10`: aborts execution of the entire notebook and doesn't save it out, even if we are not in `--dry-run` mode.
 
+## Development
+
+Install development dependencies and run checks with [uv](https://docs.astral.sh/uv/):
+
+```
+uv sync --group dev
+uv run pytest
+uv run ruff check .
+```
+
+The legacy golden-file notebook regression suite is still available:
+
+```
+./tests/run.sh
+```
+
 ## Screenshots
 
 Running [samples/simple.py](https://github.com/mrzv/saturn/blob/master/samples/simple.py):
