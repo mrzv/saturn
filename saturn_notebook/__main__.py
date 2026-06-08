@@ -147,11 +147,13 @@ def run(infn: "input notebook",
             nb.skip(checkpoint, output)
             info('Resuming', style="magenta")
 
+    caught = None
     try:
-        sys.path.insert(0, os.path.dirname(infn))
+        if infn:
+            sys.path.insert(0, os.path.dirname(infn))
         nb.process_all(output,
                        run_repl=lambda: run_repl(nb, output, debug=debug,
-                                             prefix = [c.Blanks.create(1)], suffix = [c.Blanks.create(1), c.BreakCell.create()]),
+                                              prefix = [c.Blanks.create(1)], suffix = [c.Blanks.create(1), c.BreakCell.create()]),
                        force=interactive, info=info, debug=debug)
 
         if interactive:
@@ -163,10 +165,15 @@ def run(infn: "input notebook",
                 if outfn and not external:
                     external = prompt("External zip archive filename (empty to inline): ", completer = PathCompleter())
     except BaseException:
+        caught = sys.exc_info()
         nb.move_all_incoming()
 
     if not nb.dry_run and root and outfn:
         nb.save(outfn, external)
+
+    if caught:
+        _, exc, tb = caught
+        raise exc.with_traceback(tb)
 
 
 def run_repl(nb, output, debug = False,
