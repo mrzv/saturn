@@ -392,7 +392,7 @@ class VariableCell(CheckpointCell):
     def dump(self, running, locals_):
         content = io.BytesIO()
         dill.dump(running, content)
-        dill.dump(evaluate.eval_expression(self.variables, locals_), content)
+        dill.dump(evaluate.exec_eval(self.variables.strip(), locals_, locals_), content)
         self._content = content
 
     def header(self):

@@ -28,6 +28,3 @@ def exec_eval(
     else:
         # otherwise we just execute the entire code
         return exec(compile(script, filename=name, mode="exec"), globals, locals)
-
-def eval_expression(expr: str, locals_: Dict[str, Any]) -> Any:
-    return eval(expr, locals_, locals_)

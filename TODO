@@ -2,7 +2,7 @@
   separate cells. (Need to be able to skip the other branches of the
   conditional.)
 - Clean up evaluation:
-    - Get rid of eval_expression (exec_eval already does the job)
+    - [Done] Get rid of eval_expression (exec_eval already does the job)
     - Capture errors correctly
         - [Done] Save traceback in REPL-entered cells and continue the REPL.
         - [Done] In normal run, abort on error after writing the processed state.
