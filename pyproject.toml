@@ -52,9 +52,10 @@ python_files = ["test_*.py"]
 line-length = 120
 
 [tool.ruff.lint]
-select = ["E9", "F401", "F541", "F63", "F82"]
+select = ["E9", "F"]
 
 [tool.ruff.lint.per-file-ignores]
+"saturn_notebook/__main__.py" = ["F722"]
 "samples/simple.py" = ["F401"]
 "tests/simple.py" = ["F401"]
 

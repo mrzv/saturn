@@ -1,7 +1,9 @@
+from typing import Any, Callable, List
+
 from . import cells as c
 
 
-def from_jupyter(jnb, info):
+def from_jupyter(jnb: Any, info: Callable[..., None]) -> List[c.Cell]:
     header = c.CodeCell()
     header.lines_ = ['# vim: ft=python foldmethod=marker foldlevel=0\n']
     cells = [header]

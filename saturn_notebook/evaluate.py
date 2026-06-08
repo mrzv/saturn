@@ -1,9 +1,15 @@
 import ast
 import sys
+from typing import Any, Dict, Optional
 
 # From: https://stackoverflow.com/questions/33908794/get-value-of-last-expression-in-exec-call
 # exec, but return the value of the last expression
-def exec_eval(script, globals=None, locals=None, name=''):
+def exec_eval(
+    script: str,
+    globals: Optional[Dict[str, Any]] = None,
+    locals: Optional[Dict[str, Any]] = None,
+    name: str = '',
+) -> Any:
     '''Execute a script and return the value of the last expression'''
     stmts = list(ast.iter_child_nodes(ast.parse(script)))
     if not stmts:
@@ -23,5 +29,5 @@ def exec_eval(script, globals=None, locals=None, name=''):
         # otherwise we just execute the entire code
         return exec(compile(script, filename=name, mode="exec"), globals, locals)
 
-def eval_expression(expr, locals_):
+def eval_expression(expr: str, locals_: Dict[str, Any]) -> Any:
     return eval(expr, locals_, locals_)

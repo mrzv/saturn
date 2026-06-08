@@ -1,3 +1,5 @@
+from typing import Any, Iterable, TextIO, Union
+
 from . import cells as c
 
 
@@ -76,7 +78,7 @@ standalone_katex_preamble = r"""
 """
 
 
-def render(cells, html, katex=False, standalone=False):
+def render(cells: Iterable[Any], html: Union[str, TextIO], katex: bool = False, standalone: bool = False) -> None:
     close_html = False
     if isinstance(html, str):
         f_html = open(html, 'w')
