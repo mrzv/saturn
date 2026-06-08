@@ -1,3 +1,7 @@
+import base64
+from functools import lru_cache
+from importlib import resources
+import re
 from typing import Any, Iterable, TextIO, Union
 
 from . import cells as c
@@ -59,26 +63,88 @@ katex_preamble = r"""
 """
 
 
-standalone_katex_preamble = r"""
-<style>
-.math-note {
-    border-left: 0.25rem solid #d0d7de;
-    margin: 1rem 0;
-    padding: 0.5rem 0 0.5rem 1rem;
-}
-</style>
+render_math_script = r"""
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        var note = document.createElement("p");
-        note.className = "math-note";
-        note.textContent = "Standalone output keeps TeX math delimiters in the document without loading external KaTeX assets.";
-        document.body.insertBefore(note, document.body.firstChild);
+        renderMathInElement(document.body, {
+          delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '$', right: '$', display: false},
+              {left: '\\(', right: '\\)', display: false},
+              {left: '\\[', right: '\\]', display: true}
+          ],
+          throwOnError : false
+        });
     });
 </script>
 """
 
 
+math_delimiters = re.compile(r"\$\$|(?<!\\)\$(?!\s)|\\\(|\\\[")
+
+
+def has_math(cells: Iterable[Any]) -> bool:
+    for cell in cells:
+        if isinstance(cell, c.MarkdownCell) and math_delimiters.search(cell.lines()):
+            return True
+    return False
+
+
+def resource_text(package: str, name: str) -> str:
+    if hasattr(resources, 'files'):
+        return (resources.files(package) / name).read_text()
+    return resources.read_text(package, name)
+
+
+def resource_binary(package: str, name: str) -> bytes:
+    if hasattr(resources, 'files'):
+        return (resources.files(package) / name).read_bytes()
+    return resources.read_binary(package, name)
+
+
+@lru_cache(maxsize=1)
+def standalone_katex_css() -> str:
+    css = resource_text('saturn_notebook.assets.katex', 'katex.min.css')
+
+    def embed_woff2(match: re.Match) -> str:
+        name = match.group(1)
+        font = resource_binary('saturn_notebook.assets.katex.fonts', name)
+        encoded = base64.b64encode(font).decode('ascii')
+        return f'src:url(data:font/woff2;base64,{encoded}) format("woff2")'
+
+    return re.sub(
+        r'src:url\(fonts/([^)]*?\.woff2)\) format\("woff2"\),url\(fonts/[^)]*?\.woff\) format\("woff"\),url\(fonts/[^)]*?\.ttf\) format\("truetype"\)',
+        embed_woff2,
+        css,
+    )
+
+
+@lru_cache(maxsize=1)
+def standalone_katex_preamble() -> str:
+    katex_js = resource_text('saturn_notebook.assets.katex', 'katex.min.js')
+    auto_render_js = resource_text('saturn_notebook.assets.katex', 'auto-render.min.js')
+    copy_tex_js = resource_text('saturn_notebook.assets.katex', 'copy-tex.min.js')
+    return (
+        '<style>\n'
+        + standalone_katex_css()
+        + '\n</style>\n'
+        + '<script>\n'
+        + katex_js
+        + '\n</script>\n'
+        + '<script>\n'
+        + auto_render_js
+        + '\n</script>\n'
+        + '<script>\n'
+        + copy_tex_js
+        + '\n</script>\n'
+        + render_math_script
+    )
+
+
 def render(cells: Iterable[Any], html: Union[str, TextIO], katex: bool = False, standalone: bool = False) -> None:
+    cell_list = list(cells)
+    include_katex = katex and has_math(cell_list)
+
     close_html = False
     if isinstance(html, str):
         f_html: TextIO = open(html, 'w')
@@ -97,9 +163,9 @@ def render(cells: Iterable[Any], html: Union[str, TextIO], katex: bool = False, 
         else:
             f_html.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">\n')
             f_html.write('<style> .muted { color: gray; } </style>')
-        if katex and standalone:
-            f_html.write(standalone_katex_preamble)
-        elif katex:
+        if include_katex and standalone:
+            f_html.write(standalone_katex_preamble())
+        elif include_katex:
             f_html.write(katex_preamble)
         f_html.write('<style>\n')
         f_html.write(c.HtmlFormatter().get_style_defs('.highlight'))
@@ -107,7 +173,7 @@ def render(cells: Iterable[Any], html: Union[str, TextIO], katex: bool = False, 
         f_html.write('</head>\n')
         f_html.write('<body>\n')
 
-        for cell in cells:
+        for cell in cell_list:
             if cell.display():
                 cell.show_html(f_html)
 

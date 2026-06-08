@@ -30,13 +30,41 @@ def test_html_render_can_inline_standalone_css():
 
 
 def test_html_render_keeps_standalone_katex_offline():
+    cell = cells.MarkdownCell()
+    cell.lines_ = [" Euler: $e^{i\\pi} + 1 = 0$\n"]
     output = io.StringIO()
 
-    html.render([], output, katex=True, standalone=True)
+    html.render([cell], output, katex=True, standalone=True)
 
     rendered = output.getvalue()
     assert "cdn.jsdelivr.net" not in rendered
-    assert "external KaTeX assets" in rendered
+    assert "renderMathInElement" in rendered
+    assert "data:font/woff2;base64" in rendered
+
+
+def test_html_render_skips_standalone_katex_when_no_math():
+    cell = cells.MarkdownCell()
+    cell.lines_ = [" No math here.\n"]
+    output = io.StringIO()
+
+    html.render([cell], output, katex=True, standalone=True)
+
+    rendered = output.getvalue()
+    assert "cdn.jsdelivr.net" not in rendered
+    assert "renderMathInElement" not in rendered
+    assert "data:font/woff2;base64" not in rendered
+
+
+def test_html_render_uses_cdn_katex_for_non_standalone_math():
+    cell = cells.MarkdownCell()
+    cell.lines_ = [" Euler: $e^{i\\pi} + 1 = 0$\n"]
+    output = io.StringIO()
+
+    html.render([cell], output, katex=True)
+
+    rendered = output.getvalue()
+    assert "cdn.jsdelivr.net/npm/katex" in rendered
+    assert "renderMathInElement" in rendered
 
 
 def test_convert_from_jupyter_preserves_markdown_code_and_outputs():
