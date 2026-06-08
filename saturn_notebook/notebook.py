@@ -293,16 +293,21 @@ class Notebook:
             else:
                 self.cells.insert(0, c.SaturnCell.create(external_metadata))
 
+        external_writer = atomic_write(external, mode='wb', overwrite=True) if external else nullcontext()
+
         with atomic_write(fn, mode='w', overwrite=True) as f:
-            with zipfile.ZipFile(external, 'w') if external else nullcontext() as external_zip:
-                for i,cell in enumerate(self.cells):
-                    if inline and type(cell) is c.SaturnCell:
-                        continue
-                    lines = cell.save(external_zip)
-                    for line in lines:
-                        f.write(line)
-                    if lines and i != len(self.cells) - 1 and not lines[-1].endswith('\n'):
-                        f.write('\n')
+            with external_writer as external_file:
+                external_target = external_file if external else external
+                external_context = zipfile.ZipFile(external_target, 'w') if external else nullcontext()
+                with external_context as external_zip:
+                    for i,cell in enumerate(self.cells):
+                        if inline and type(cell) is c.SaturnCell:
+                            continue
+                        lines = cell.save(external_zip)
+                        for line in lines:
+                            f.write(line)
+                        if lines and i != len(self.cells) - 1 and not lines[-1].endswith('\n'):
+                            f.write('\n')
 
     def find_checkpoint(self):
         m = Hasher()

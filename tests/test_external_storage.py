@@ -104,3 +104,28 @@ def test_explicit_absolute_external_path_is_preserved_in_metadata(tmp_path):
 
     assert outfn.read_text().startswith(f"#saturn> external={external}\n")
     assert Path(external).exists()
+
+
+def test_external_archive_write_failure_preserves_existing_files(tmp_path, monkeypatch):
+    outfn = tmp_path / "image.py"
+    external = tmp_path / "image.zip"
+    outfn.write_text("old notebook\n")
+    with zipfile.ZipFile(external, "w") as zf:
+        zf.writestr("old.png", b"old-png")
+
+    nb = make_notebook_with_png()
+    original_save = cells.OutputCell.save
+
+    def fail_after_zip_write(self, external_zip):
+        original_save(self, external_zip)
+        raise RuntimeError("simulated zip write failure")
+
+    monkeypatch.setattr(cells.OutputCell, "save", fail_after_zip_write)
+
+    with pytest.raises(RuntimeError, match="simulated zip write failure"):
+        nb.save(str(outfn), str(external))
+
+    assert outfn.read_text() == "old notebook\n"
+    with zipfile.ZipFile(external) as zf:
+        assert zf.namelist() == ["old.png"]
+        assert zf.read("old.png") == b"old-png"
