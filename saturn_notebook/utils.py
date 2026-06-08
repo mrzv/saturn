@@ -1,7 +1,6 @@
-import sys, os, io, contextlib
-from  wurlitzer         import pipes, STDOUT, Wurlitzer, _default_encoding
+import os, io, contextlib
+from  wurlitzer         import STDOUT, Wurlitzer, _default_encoding
 from  . import image
-from rich.rule     import Rule
 
 # From: https://stackoverflow.com/a/18854817/44738
 def chunkstring(string, length):
@@ -64,4 +63,3 @@ def collapse_carriage_return(lines):
                 break
 
     return result
-

@@ -8,8 +8,6 @@ import  io
 from    atomicwrites import atomic_write
 from    more_itertools import peekable
 
-from    contextlib import nullcontext
-
 from    .           import cells as c, convert as jupyter_convert, html as saturn_html, mpi, notebook
 from    .repl       import PythonReplWithExecute
 from    .image      import show_png

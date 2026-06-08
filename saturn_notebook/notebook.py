@@ -1,9 +1,7 @@
 import  hashlib
-import  io
 import  zipfile
 from    contextlib import nullcontext
 from    atomicwrites import atomic_write
-from    wurlitzer    import pipes, STDOUT
 
 from    rich.console import Console
 
@@ -131,7 +129,7 @@ class Notebook:
                 info(f"[error]Failed[/error] to save variables [variables]{self.next_cell().variables.strip()}[/variables], [affirm]skipping[/affirm]")
                 tb = Traceback(self, self.debug)
                 info(tb, block = True)
-                info(f"[affirm]continuing[/affirm]")
+                info("[affirm]continuing[/affirm]")
             self.append(self.next_cell(), output)
             self.current += 1
 
@@ -187,15 +185,15 @@ class Notebook:
                     info(f"[error]Failed[/error] to save variables [variables]{cell.variables.strip()}[/variables], [affirm]skipping[/affirm]")
                     tb = Traceback(self, self.debug)
                     info(tb, block = True)
-                    info(f"[affirm]continuing[/affirm]")
+                    info("[affirm]continuing[/affirm]")
             elif type(cell) is c.CheckpointCell:
                 try:
                     cell.dump(self.m.digest(), self.l)
                 except Exception:
-                    info(f"[error]Failed[/error] to save state in checkpoint cell, [affirm]skipping[/affirm]")
+                    info("[error]Failed[/error] to save state in checkpoint cell, [affirm]skipping[/affirm]")
                     tb = Traceback(self, self.debug)
                     info(tb, block = True)
-                    info(f"[affirm]continuing[/affirm]")
+                    info("[affirm]continuing[/affirm]")
             elif type(cell) is c.REPLCell:
                 if run_repl() == False:
                     raise SystemExit

@@ -52,7 +52,11 @@ python_files = ["test_*.py"]
 line-length = 120
 
 [tool.ruff.lint]
-select = ["E9", "F63", "F82"]
+select = ["E9", "F401", "F541", "F63", "F82"]
+
+[tool.ruff.lint.per-file-ignores]
+"samples/simple.py" = ["F401"]
+"tests/simple.py" = ["F401"]
 
 [build-system]
 requires = ["hatchling", "uv-dynamic-versioning"]

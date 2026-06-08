@@ -1,5 +1,5 @@
 from matplotlib._pylab_helpers import Gcf
-from matplotlib.backend_bases import (FigureCanvasBase, FigureManagerBase)
+from matplotlib.backend_bases import FigureManagerBase
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 import io
