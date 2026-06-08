@@ -16,12 +16,16 @@
       deeper parser/executor generator split is no longer the next bottleneck.
 - Better, explicit Vim support
 - Consider bundling a true KaTeX renderer for standalone HTML. [Done]
-  --standalone --katex now produces offline output without CDN assets, but keeps
-  TeX delimiters visible instead of vendoring KaTeX JavaScript.
+  --standalone --katex now embeds bundled KaTeX CSS, JavaScript, and fonts only
+  when markdown cells contain math delimiters.
 
 Done:
 
 - Write external zip archives atomically
+- Add CLI reference documentation
+- Add workflow examples and sample notebooks
+- Add changelog entry for the hardening work
+- Bundle KaTeX assets for standalone math HTML only when math is present
 - Resolve explicit relative external archives beside output notebooks
 - Add subprocess coverage for extract/embed archive round-trips
 - Add semantic compatibility tests for legacy inline checkpoint and variable caches
