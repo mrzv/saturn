@@ -145,3 +145,40 @@ def test_cli_extract_and_embed_round_trip_external_archive(tmp_path):
     embedded_text = embedded.read_text()
     assert "#saturn>" not in embedded_text
     assert "#o> png{{{" in embedded_text
+
+
+def test_cli_runs_cells_inside_main_guard(tmp_path):
+    marker = tmp_path / "main.marker"
+    source = tmp_path / "main_guard.py"
+    first = tmp_path / "main_guard.first.py"
+    second = tmp_path / "main_guard.second.py"
+    source.write_text(
+        "from pathlib import Path\n"
+        "\n"
+        "if __name__ == '__main__':\n"
+        f"    Path({str(marker)!r}).write_text(Path({str(marker)!r}).read_text() + 'x' if Path({str(marker)!r}).exists() else 'x')\n"
+        "    value = 40\n"
+        "    #chk>\n"
+        "\n"
+        "    print(value + 2)\n"
+        "else:\n"
+        "    print('imported')\n"
+    )
+
+    python_result = subprocess.run(
+        [sys.executable, str(source)],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    marker.unlink()
+    first_result, _ = run_saturn(source, tmp_path, first)
+    second_result, _ = run_saturn(first, tmp_path, second)
+
+    assert python_result.returncode == 0, python_result.stderr
+    assert normalize_terminal_output(python_result.stdout) == "42"
+    assert first_result.returncode == 0, first_result.stderr
+    assert second_result.returncode == 0, second_result.stderr
+    assert marker.read_text() == "x"
+    assert "Skipping to checkpoint" in second_result.stdout

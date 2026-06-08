@@ -9,6 +9,7 @@ import base64
 import io
 import dill
 import hashlib
+import ast
 from  more_itertools    import peekable
 
 import html
@@ -435,6 +436,70 @@ def chunk(content, width, markers = False):
         chunking = chain(['{{{'], chunking, ['}}}'])
     return chunking
 
+
+def is_main_guard(line):
+    if line != line.lstrip():
+        return False
+    try:
+        tree = ast.parse(line.rstrip('\n') + '\n    pass\n')
+    except SyntaxError:
+        return False
+    if len(tree.body) != 1 or not isinstance(tree.body[0], ast.If):
+        return False
+    test = tree.body[0].test
+    if not isinstance(test, ast.Compare) or len(test.ops) != 1 or len(test.comparators) != 1:
+        return False
+    if not isinstance(test.ops[0], ast.Eq):
+        return False
+    if not isinstance(test.left, ast.Name) or test.left.id != '__name__':
+        return False
+    comparator = test.comparators[0]
+    return isinstance(comparator, ast.Constant) and comparator.value == '__main__'
+
+
+def indentation(line):
+    return len(line) - len(line.lstrip(' '))
+
+
+def dedent_line(line, amount):
+    if not line.strip():
+        return line
+    return line[amount:] if indentation(line) >= amount else line.lstrip(' ')
+
+
+def expand_main_blocks(lines):
+    expanded = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if not is_main_guard(line):
+            expanded.append(line)
+            i += 1
+            continue
+
+        i += 1
+        while i < len(lines) and not lines[i].strip():
+            expanded.append(lines[i])
+            i += 1
+        if i == len(lines):
+            break
+
+        body_indent = indentation(lines[i])
+        while i < len(lines) and (not lines[i].strip() or indentation(lines[i]) >= body_indent):
+            expanded.append(dedent_line(lines[i], body_indent))
+            i += 1
+
+        while i < len(lines) and lines[i] == lines[i].lstrip() and lines[i].lstrip().startswith(('elif ', 'else:')):
+            i += 1
+            while i < len(lines) and not lines[i].strip():
+                i += 1
+            if i == len(lines):
+                break
+            branch_indent = indentation(lines[i])
+            while i < len(lines) and (not lines[i].strip() or indentation(lines[i]) >= branch_indent):
+                i += 1
+    return expanded
+
 def open_external(external_fn, show_only, info, external_base = ''):
     if external_fn:
         if not os.path.isabs(external_fn) and external_base:
@@ -469,7 +534,7 @@ def parse(f, external_fn, *, show_only = False, info = lambda *args, **kwargs: N
         cells.append(cell)
 
     try:
-        p = peekable(f)
+        p = peekable(expand_main_blocks(list(f)))
         for line in p:
             # agglomerate empty lines into Blanks and either store as such or return to the CodeCell, if in the middle of one
             if not line.strip():

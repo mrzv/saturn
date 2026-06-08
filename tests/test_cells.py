@@ -41,6 +41,33 @@ def test_empty_variable_cell_is_safe_to_parse():
     assert parsed[0].expected_hash() is None
 
 
+def test_parse_expands_top_level_main_guard_body_as_cells():
+    parsed = parse_text(
+        "if __name__ == '__main__':\n"
+        "    print('main')\n"
+        "    #m> heading\n"
+        "    #chk>\n"
+    )
+
+    assert [type(cell) for cell in parsed] == [cells.CodeCell, cells.MarkdownCell, cells.CheckpointCell]
+    assert parsed[0].code() == "print('main')"
+    assert parsed[1].lines() == " heading\n"
+
+
+def test_parse_main_guard_skips_else_branch():
+    parsed = parse_text(
+        "if __name__ == '__main__':\n"
+        "    print('main')\n"
+        "else:\n"
+        "    print('imported')\n"
+        "print('after')\n"
+    )
+
+    assert len(parsed) == 1
+    assert isinstance(parsed[0], cells.CodeCell)
+    assert parsed[0].code() == "print('main')\nprint('after')"
+
+
 def test_external_zip_is_closed_after_parse(tmp_path, monkeypatch):
     external = tmp_path / "notebook.zip"
     external.touch()
