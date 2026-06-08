@@ -1,7 +1,5 @@
 import io
 
-import pytest
-
 import nbformat
 
 from saturn_notebook import cells, convert, html
@@ -31,9 +29,14 @@ def test_html_render_can_inline_standalone_css():
     assert "font-family" in rendered
 
 
-def test_html_render_rejects_standalone_katex():
-    with pytest.raises(ValueError, match="KaTeX"):
-        html.render([], io.StringIO(), katex=True, standalone=True)
+def test_html_render_keeps_standalone_katex_offline():
+    output = io.StringIO()
+
+    html.render([], output, katex=True, standalone=True)
+
+    rendered = output.getvalue()
+    assert "cdn.jsdelivr.net" not in rendered
+    assert "external KaTeX assets" in rendered
 
 
 def test_convert_from_jupyter_preserves_markdown_code_and_outputs():

@@ -4,7 +4,7 @@
 - Clean up evaluation:
     - Get rid of eval_expression (exec_eval already does the job)
     - Capture errors correctly
-        - Save traceback in REPL
+        - [Done] Save traceback in REPL-entered cells and continue the REPL.
         - [Done] In normal run, abort on error after writing the processed state.
         - [Done] Preserve checkpoints, if we catch an exception. In general,
           reconcile whether the notebook (the processed part) should be written
@@ -16,9 +16,9 @@
     - [Fixed: locals = globals] Possibly related: debug usage with joblib.Parallel
 - Stream cells (via a generator) to produce output faster
 - Better, explicit Vim support
-- Add option to embed KaTeX into HTML output (to have a fully standalone page).
-  [Done] Added --standalone for inline CSS / no water.css CDN. KaTeX still uses
-  external assets and is rejected with --standalone.
+- Consider bundling a true KaTeX renderer for standalone HTML. [Done]
+  --standalone --katex now produces offline output without CDN assets, but keeps
+  TeX delimiters visible instead of vendoring KaTeX JavaScript.
 
 Done:
 

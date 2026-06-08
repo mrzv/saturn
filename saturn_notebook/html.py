@@ -26,6 +26,10 @@ img {
 .muted {
     color: gray;
 }
+.math-note {
+    color: #57606a;
+    font-size: 0.9rem;
+}
 """
 
 
@@ -53,10 +57,26 @@ katex_preamble = r"""
 """
 
 
-def render(cells, html, katex=False, standalone=False):
-    if katex and standalone:
-        raise ValueError("KaTeX HTML output requires external assets and cannot be standalone")
+standalone_katex_preamble = r"""
+<style>
+.math-note {
+    border-left: 0.25rem solid #d0d7de;
+    margin: 1rem 0;
+    padding: 0.5rem 0 0.5rem 1rem;
+}
+</style>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var note = document.createElement("p");
+        note.className = "math-note";
+        note.textContent = "Standalone output keeps TeX math delimiters in the document without loading external KaTeX assets.";
+        document.body.insertBefore(note, document.body.firstChild);
+    });
+</script>
+"""
 
+
+def render(cells, html, katex=False, standalone=False):
     close_html = False
     if isinstance(html, str):
         f_html = open(html, 'w')
@@ -75,7 +95,9 @@ def render(cells, html, katex=False, standalone=False):
         else:
             f_html.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">\n')
             f_html.write('<style> .muted { color: gray; } </style>')
-        if katex:
+        if katex and standalone:
+            f_html.write(standalone_katex_preamble)
+        elif katex:
             f_html.write(katex_preamble)
         f_html.write('<style>\n')
         f_html.write(c.HtmlFormatter().get_style_defs('.highlight'))
