@@ -41,8 +41,8 @@ pip install saturn-notebook[viewer]
   `--html OUTPUT.html` flag will produce HTML output. Use `-k, --katex` flag to
   embed [KaTeX](https://katex.org/) headers into non-standalone HTML. Use
   `--standalone` to inline Saturn's CSS instead of linking CDN stylesheets; with
-  `--katex`, standalone output keeps TeX delimiters visible without loading CDN
-  assets.
+  `--katex`, standalone output embeds bundled KaTeX assets when markdown cells
+  contain math delimiters.
 
   `saturn show notebook.py --html notebook.html -k`
 
@@ -97,7 +97,8 @@ pip install saturn-notebook[viewer]
   `notebook.py` is missing, only show the Jupyter notebook. Optional
   `--html OUTPUT.html` flag will produce HTML output. Use `--standalone` to
   inline Saturn's CSS instead of linking CDN stylesheets. With `--katex`,
-  standalone output keeps TeX delimiters visible without loading CDN assets.
+  standalone output embeds bundled KaTeX assets when markdown cells contain math
+  delimiters.
   When writing a Saturn notebook, binary content is stored in an external zip
   archive by default; use `--inline` to embed it directly in the notebook.
 
@@ -240,6 +241,8 @@ REPL supports the following keyboard shortcuts:
 
 - [Saturn notebook format](docs/format.md)
 - [Execution error policy](docs/error-policy.md)
+- [CLI reference](docs/cli.md)
+- [Workflow examples](docs/examples.md)
 
 ## Development
 

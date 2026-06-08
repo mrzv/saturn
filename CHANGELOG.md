@@ -2,6 +2,38 @@
 
 ## Unreleased
 
+### Added
+
+ - `saturn run`, `convert`, and `rehash` now store binary content in a sibling
+   external zip archive by default, with `--inline` for self-contained notebooks.
+ - Standalone HTML export can embed bundled KaTeX CSS, JavaScript, and fonts when
+   `--standalone --katex` is used and markdown cells contain math delimiters.
+ - Top-level `if __name__ == '__main__':` bodies can be used as notebook content,
+   so files can remain directly runnable as Python scripts.
+ - Added documentation for CLI behavior, notebook file format, execution error
+   policy, and common workflows.
+ - Added pytest, Ruff, mypy, CI, release validation, and subprocess coverage for
+   stable CLI workflows, cache reuse, extract/embed, and archive handling.
+
+### Changed
+
+ - Relative external archive paths are resolved beside the output notebook, and
+   sibling archives are recorded with portable basename metadata.
+ - Normal `saturn run` errors now save processed notebook state and then re-raise
+   the original exception instead of silently succeeding.
+ - In-process notebook runs restore `sys.argv` and `sys.path` after execution.
+ - MPI detection, HTML rendering, Jupyter conversion, and notebook execution
+   state are split into smaller testable units.
+
+### Fixed
+
+ - External zip archives are written atomically so failed writes do not replace
+   an existing archive.
+ - Unsafe external archive member names are ignored when loading notebook content.
+ - Empty Saturn metadata and variable cells parse safely.
+ - Optional imports, missing `TERM`, and traceback filenames containing colons are
+   handled more defensively.
+
 ## [1.3.0] - 2025-12-16
 
 ### Added
