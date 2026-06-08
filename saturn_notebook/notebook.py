@@ -2,6 +2,7 @@ import  hashlib
 import  os
 import  zipfile
 from    contextlib import nullcontext
+from    dataclasses import dataclass, field
 from    atomicwrites import atomic_write
 
 from    rich.console import Console
@@ -23,6 +24,21 @@ class Hasher:
     def digest(self):
         return self.m.digest()
 
+
+def default_globals():
+    return {'__name__' : '__main__'}
+
+
+@dataclass
+class ExecutionState:
+    globals: dict = field(default_factory=default_globals)
+    locals: dict = None
+    hasher: Hasher = field(default_factory=Hasher)
+
+    def __post_init__(self):
+        if self.locals is None:
+            self.locals = self.globals
+
 class Notebook:
     def __init__(self, *, name = '', auto_capture = False, debug = False, dry_run = False):
         self.name = name
@@ -35,9 +51,27 @@ class Notebook:
 
         self.cells = []
 
-        self.g = {'__name__' : '__main__'}
-        self.l = self.g
-        self.m = Hasher()
+        self.state = ExecutionState()
+
+    @property
+    def g(self):
+        return self.state.globals
+
+    @g.setter
+    def g(self, value):
+        self.state.globals = value
+
+    @property
+    def l(self):
+        return self.state.locals
+
+    @l.setter
+    def l(self, value):
+        self.state.locals = value
+
+    @property
+    def m(self):
+        return self.state.hasher
 
     def __len__(self):
         return len(self.cells) + len(self.incoming)
