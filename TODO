@@ -22,6 +22,16 @@
 
 Done:
 
+- Add semantic checkpoint and variable cache round-trip tests
+- Make external archive metadata portable for sibling zip files
+- Reject unsafe external archive member names when loading content
+- Document execution error policy
+- Add CLI subprocess coverage for checkpoint and variable cache behavior
+- Add Saturn notebook format documentation
+- Broaden Ruff to full Pyflakes with a targeted argh annotation ignore
+- Add lightweight typing to leaf modules
+- Introduce explicit notebook execution state object
+- Expand CI Python matrix to 3.8 through 3.13
 - Make external default (fn.zip) + add --inline option
 - Add focused pytest coverage and keep legacy golden tests available
 - Add subprocess CLI fixture coverage for stable notebooks
