@@ -217,22 +217,48 @@ class Notebook:
 
             self.append(cell)
 
-    def save(self, fn, external):
+    def has_external_content(self):
+        for cell in self.cells:
+            if isinstance(cell, c.OutputCell):
+                for item in cell.composite_:
+                    if isinstance(item, bytes):
+                        return True
+            elif isinstance(cell, c.CheckpointCell) and hasattr(cell, '_content') and cell._content:
+                return True
+        return False
+
+    def save(self, fn, external, *, inline = False):
         if self.dry_run:
             return
 
-        if not external:
+        if inline:
+            external = ''
+        elif not external:
             for cell in self.cells:
                 if type(cell) is c.SaturnCell and cell.external_fn:
                     external = cell.external_fn
                     break
 
+        if external and not self.has_external_content():
+            external = ''
+
+        if external:
+            for cell in self.cells:
+                if type(cell) is c.SaturnCell:
+                    cell.external_fn = external
+                    break
+            else:
+                self.cells.insert(0, c.SaturnCell.create(external))
+
         with atomic_write(fn, mode='w', overwrite=True) as f:
             with zipfile.ZipFile(external, 'w') if external else nullcontext() as external_zip:
                 for i,cell in enumerate(self.cells):
-                    for line in cell.save(external_zip):
+                    if inline and type(cell) is c.SaturnCell:
+                        continue
+                    lines = cell.save(external_zip)
+                    for line in lines:
                         f.write(line)
-                    if i != len(self.cells) - 1 and not line.endswith('\n'):
+                    if lines and i != len(self.cells) - 1 and not lines[-1].endswith('\n'):
                         f.write('\n')
 
     def find_checkpoint(self):

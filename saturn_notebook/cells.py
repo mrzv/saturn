@@ -255,6 +255,17 @@ class SaturnCell(Cell):
             # eventually, we'll want a more elaborate support, once we have other kinds of metadata
             self.external_fn = line[line.index(self._external_prefix) + len(self._external_prefix):-1]
 
+    @staticmethod
+    def create(external_fn):
+        cell = SaturnCell()
+        cell.external_fn = external_fn
+        return cell
+
+    def save(self, external):
+        if self.external_fn:
+            self.lines_ = [f' {self._external_prefix}{self.external_fn}\n']
+        return super().save(external)
+
     @classmethod
     def display(cls):
         return False

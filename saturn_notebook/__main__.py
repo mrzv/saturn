@@ -35,6 +35,19 @@ console = Console(width = width, theme = theme)
 
 argv = []
 
+
+def default_external_name(fn):
+    base, _ = os.path.splitext(fn)
+    return base + '.zip'
+
+
+def save_external_name(outfn, external, inline):
+    if external and inline:
+        raise ValueError("--external and --inline cannot be used together")
+    if inline or not outfn:
+        return ''
+    return external or default_external_name(outfn)
+
 def info(*args, block = False, **kw):
     if root:
         if not block:
@@ -99,6 +112,7 @@ def run(infn: "input notebook",
         clean: "run from scratch, ignoring checkpoints" = False,
         auto_capture: "automatically capture images" = False,
         external: "external zip archive with binary content" = '',
+        inline: "embed binary content inline instead of using an external archive" = False,
         debug: "show debugging information" = False,
         no_mpi: "disable MPI awareness" = False,
         dry_run: "don't save the processed notebook" = False,
@@ -166,15 +180,15 @@ def run(infn: "input notebook",
                 from prompt_toolkit import prompt
                 from prompt_toolkit.completion import PathCompleter
                 outfn = prompt("Notebook filename (empty to not save): ", completer = PathCompleter())
-                if outfn and not external:
-                    external = prompt("External zip archive filename (empty to inline): ", completer = PathCompleter())
+                if outfn and not external and not inline:
+                    external = default_external_name(outfn)
     except BaseException:
         caught = sys.exc_info()
         nb.move_all_incoming()
 
     try:
         if not nb.dry_run and root and outfn:
-            nb.save(outfn, external)
+            nb.save(outfn, save_external_name(outfn, external, inline), inline=inline)
 
         if caught:
             _, exc, tb = caught
@@ -358,6 +372,7 @@ def convert(infn: "Jupyter notebook",
             gui: "view notebook in GUI" = False,
             version: "notebook version" = 4,
             external: "external zip archive with binary content" = '',
+            inline: "embed binary content inline instead of using an external archive" = False,
             html: "save HTML to a file" = '',
             katex: "include KaTeX in HTML output" = False,
             standalone: "inline CSS instead of linking CDN assets in HTML output" = False,
@@ -377,13 +392,14 @@ def convert(infn: "Jupyter notebook",
         nb = notebook.Notebook(name = outfn)
         nb.add(cells)
         nb.move_all_incoming()
-        nb.save(outfn, external)
+        nb.save(outfn, save_external_name(outfn, external, inline), inline=inline)
 
 
 @argh.arg('outfn', nargs='?')
 def rehash(infn: "input notebook",
            outfn: "output notebook (if empty, input modified in place)",
-           external: "external zip archive with binary content" = ''):
+           external: "external zip archive with binary content" = '',
+           inline: "embed binary content inline instead of using an external archive" = False):
     """Rehash all the code cells, updating the hashes stored with checkpoints and variable cells. (advanced)"""
     if not outfn:
         outfn = infn
@@ -395,7 +411,7 @@ def rehash(infn: "input notebook",
     nb.add(cells)
     nb.rehash()
 
-    nb.save(outfn, external)
+    nb.save(outfn, save_external_name(outfn, external, inline), inline=inline)
 
 @argh.arg('outfn', nargs='?')
 def extract(infn: "input notebook",
@@ -429,19 +445,20 @@ def embed(infn: "input notebook",
     nb.add(cells)
     nb.move_all_incoming()
 
-    nb.save(outfn, '')      # write without external
+    nb.save(outfn, '', inline=True)      # write without external
 
 @argh.arg('--no-mpi')
 @argh.arg('-n', '--dry-run')
 def _run(clean: "run from scratch, ignoring checkpoints" = False,
         auto_capture: "automatically capture images" = False,
         external: "external zip archive with binary content" = '',
+        inline: "embed binary content inline instead of using an external archive" = False,
         debug: "show debugging information" = False,
         no_mpi: "disable MPI awareness" = False,
         dry_run: "don't save the processed notebook" = False,
         only_root_output: "suppress output everywhere but rank 0 (for MPI)" = False):
     """Launch Saturn REPL."""
-    run('', '', clean, auto_capture, external, debug, no_mpi, dry_run, only_root_output, True)
+    run('', '', clean, auto_capture, external, inline, debug, no_mpi, dry_run, only_root_output, True)
 
 def main():
     global argv

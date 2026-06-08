@@ -65,7 +65,10 @@ pip install saturn-notebook[viewer]
   * `-n, --dry-run`: don't save the result.
   * `--only-root-output`: under MPI, suppress output from all ranks other than 0.
   * `-e`, `--external notebook.zip`: use external zip archive `notebook.zip`
-    to store binary content (instead of embedding it inline).
+    to store binary content. If omitted, Saturn stores binary content next to
+    the output notebook in `notebook.zip` by default.
+  * `--inline`: embed binary content directly in the notebook instead of using
+    an external archive.
 
   Any arguments passed after `--` will be passed as `sys.argv` to the notebook.
 
@@ -91,7 +94,9 @@ pip install saturn-notebook[viewer]
   Convert a Jupyter notebook into a Saturn notebook. If the output name
   `notebook.py` is missing, only show the Jupyter notebook. Optional
   `--html OUTPUT.html` flag will produce HTML output. Use `--standalone` to
-  inline Saturn's CSS instead of linking CDN stylesheets.
+  inline Saturn's CSS instead of linking CDN stylesheets. When writing a Saturn
+  notebook, binary content is stored in an external zip archive by default; use
+  `--inline` to embed it directly in the notebook.
 
   When installed with `[viewer]` extras, `-g, --gui` option will display the notebook in a GUI (using [pywebview](https://pywebview.flowrl.com/)).
 
