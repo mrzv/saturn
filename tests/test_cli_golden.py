@@ -4,6 +4,8 @@ import sys
 import zipfile
 from pathlib import Path
 
+from saturn_notebook import cells, notebook
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -110,3 +112,36 @@ def test_cli_variable_cache_skips_work_on_second_run(tmp_path):
     assert first.read_text().startswith("#saturn> external=variables.first.zip\n")
     with zipfile.ZipFile(tmp_path / "variables.first.zip") as zf:
         assert any(name.endswith(".var") for name in zf.namelist())
+
+
+def make_inline_png_notebook(path):
+    output = cells.OutputCell()
+    output.composite_.append_png(b"png-bytes")
+    nb = notebook.Notebook(name=str(path))
+    nb.add([output])
+    nb.move_all_incoming()
+    nb.save(str(path), "", inline=True)
+
+
+def test_cli_extract_and_embed_round_trip_external_archive(tmp_path):
+    source = tmp_path / "inline.py"
+    extracted = tmp_path / "extracted.py"
+    embedded = tmp_path / "embedded.py"
+    external = tmp_path / "extracted.zip"
+    make_inline_png_notebook(source)
+
+    extract_result = run_saturn_command(["extract", str(source), "extracted.zip", str(extracted)])
+    embed_result = run_saturn_command(["embed", str(extracted), "extracted.zip", str(embedded)])
+
+    assert extract_result.returncode == 0, extract_result.stderr
+    assert embed_result.returncode == 0, embed_result.stderr
+    assert extracted.read_text().startswith("#saturn> external=extracted.zip\n")
+    with zipfile.ZipFile(external) as zf:
+        names = zf.namelist()
+        assert len(names) == 1
+        assert names[0].endswith(".png")
+        assert zf.read(names[0]) == b"png-bytes"
+
+    embedded_text = embedded.read_text()
+    assert "#saturn>" not in embedded_text
+    assert "#o> png{{{" in embedded_text

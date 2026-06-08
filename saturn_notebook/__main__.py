@@ -45,7 +45,14 @@ def save_external_name(outfn, external, inline):
         raise ValueError("--external and --inline cannot be used together")
     if inline or not outfn:
         return ''
-    return external or default_external_name(outfn)
+    if external:
+        if os.path.isabs(external):
+            return external
+        outdir = os.path.dirname(outfn)
+        if outdir:
+            return os.path.join(outdir, external)
+        return external
+    return default_external_name(outfn)
 
 def info(*args, block = False, **kw):
     if root:
@@ -424,7 +431,7 @@ def extract(infn: "input notebook",
     nb.add(cells)
     nb.move_all_incoming()
 
-    nb.save(outfn, external)
+    nb.save(outfn, save_external_name(outfn, external, inline=False))
 
 @argh.arg('outfn', nargs='?')
 def embed(infn: "input notebook",

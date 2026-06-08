@@ -67,6 +67,14 @@ def test_external_and_inline_flags_conflict(tmp_path):
         cli.save_external_name(str(tmp_path / "image.py"), external="image.zip", inline=True)
 
 
+def test_explicit_relative_external_path_resolves_next_to_output_notebook(tmp_path):
+    outfn = tmp_path / "nested" / "image.py"
+
+    external = cli.save_external_name(str(outfn), external="image.zip", inline=False)
+
+    assert external == str(tmp_path / "nested" / "image.zip")
+
+
 def test_parse_resolves_relative_external_archive_next_to_notebook(tmp_path):
     outfn = tmp_path / "image.py"
     external = cli.save_external_name(str(outfn), external="", inline=False)
