@@ -61,7 +61,8 @@ class Notebook:
                     self.execute(cell, output, repl = repl)
 
         cell = self.incoming[self.current]
-        assert type(cell) is c.CheckpointCell
+        if not isinstance(cell, c.CheckpointCell):
+            raise ValueError("Checkpoint skip target is not a checkpoint cell")
         self.g = cell.load()
         self.l = self.g
         self.append(cell, output)

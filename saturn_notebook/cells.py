@@ -178,7 +178,7 @@ class OutputCell(Cell):
     def save(self, external):
         lines_ = []
         for x in self.composite_:
-            if type(x) is io.StringIO:
+            if isinstance(x, io.StringIO):
                 x.seek(0)
                 lines_ += [self._prefix + line for line in utils.collapse_carriage_return(x)]
             else:
@@ -197,10 +197,10 @@ class OutputCell(Cell):
 
     def show_console(self, console):
         for x in self.composite_:
-            if type(x) is io.StringIO:
+            if isinstance(x, io.StringIO):
                 if x.getvalue():
                     console.print(Text(x.getvalue()), end='')
-            elif type(x) is bytes:
+            elif isinstance(x, bytes):
                 image.show_png(x)
             elif isinstance(x,RichRenderable):
                 console.print(x)
@@ -210,7 +210,7 @@ class OutputCell(Cell):
     def _render_html(self):
         result = ""
         for x in self.composite_:
-            if type(x) is io.StringIO:
+            if isinstance(x, io.StringIO):
                 result += f"<div class='output'><pre>{html.escape(x.getvalue())}</pre>\n"
             else:
                 result += f'<img src="data:image/png;base64,{base64.b64encode(x).decode("ascii")}"/>\n'

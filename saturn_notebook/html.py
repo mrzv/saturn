@@ -27,7 +27,7 @@ katex_preamble = r"""
 
 def render(cells, html, katex=False):
     close_html = False
-    if type(html) is str:
+    if isinstance(html, str):
         f_html = open(html, 'w')
         close_html = True
     else:

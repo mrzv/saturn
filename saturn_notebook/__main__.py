@@ -134,7 +134,7 @@ def run(infn: "input notebook",
     sys.argv = [infn] + argv
 
     def output(cell):
-        if root or (not only_root_output and type(cell) is c.OutputCell):
+        if root or (not only_root_output and isinstance(cell, c.OutputCell)):
             show_console(cell, rule = debug, verbose = debug)
 
     nb = notebook.Notebook(name = infn, auto_capture = auto_capture, dry_run = dry_run)
@@ -204,8 +204,7 @@ def run_repl(nb, output, debug = False,
             execute_line(line)
 
     saturn_dir = os.path.expanduser('~/.saturn')
-    if not os.path.exists(saturn_dir):
-        os.makedirs(saturn_dir)
+    os.makedirs(saturn_dir, exist_ok=True)
 
     try:
         g = {}  # fake empty globals;
@@ -303,10 +302,10 @@ def image(infn: "input notebook", i: "image index", out: "output PNG filename",
 
     count = 0
     for cell in cells:
-        if type(cell) is not c.OutputCell: continue
+        if not isinstance(cell, c.OutputCell): continue
 
         for x in cell.composite_:
-            if type(x) is io.StringIO: continue
+            if isinstance(x, io.StringIO): continue
 
             if i is None:
                 print(f"{count}:")

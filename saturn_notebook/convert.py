@@ -10,12 +10,12 @@ def from_jupyter(jnb, info):
         if jcell['cell_type'] == 'markdown':
             cell = c.MarkdownCell()
             cell.lines_ = [' ' + line + '\n' if len(line) else '\n' for line in jcell['source'].split('\n')]
-            if type(cells[-1]) is not c.Blanks:
+            if not isinstance(cells[-1], c.Blanks):
                 cells.append(c.Blanks.create(1))
             cells.append(cell)
             cells.append(c.Blanks.create(1))
         elif jcell['cell_type'] == 'code':
-            if type(cells[-1]) is c.CodeCell:
+            if isinstance(cells[-1], c.CodeCell):
                 cells.append(c.Blanks.create(1))
                 cells.append(c.BreakCell.create())
                 cells.append(c.Blanks.create(1))

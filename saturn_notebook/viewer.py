@@ -12,7 +12,7 @@ def view(html):
     height = 600
 
     try:
-        if not os.path.exists(config_path): os.makedirs(config_path)
+        os.makedirs(config_path, exist_ok=True)
         shape_fn = os.path.join(config_path, 'window-shape')
 
         if os.path.exists(shape_fn):
