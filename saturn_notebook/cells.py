@@ -245,6 +245,9 @@ class SaturnCell(Cell):
 
     def parse(self, external, info):            # called after all the lines have been read
         super().parse(external, info)
+        if not self.lines_:
+            self.external_fn = ''
+            return
         line = self.lines_[0]
         self.external_fn = ''
         if self._external_prefix in line:
@@ -303,7 +306,8 @@ class CheckpointCell(Cell):
 
     def load(self):
         h = self.expected_hash()    # just to make sure it's been parsed
-        assert h != None
+        if h is None:
+            raise ValueError(f"Cannot load empty or invalid {self._warning_name} cell")
         if not hasattr(self, '_locals'):
             self._locals = dill.load(self._content)
         return self._locals
@@ -314,7 +318,7 @@ class CheckpointCell(Cell):
             dill.dump(running, content)
             dill.dump(locals_, content)
             self._content = content
-        except:
+        except Exception:
             self._content = None
             raise
 
@@ -352,6 +356,10 @@ class VariableCell(CheckpointCell):
     _warning_name = "variable"
 
     def parse(self, external, info):
+        if not self.lines_:
+            self.variables = ''
+            self._expected = None
+            return
         self.variables = self.lines_[0]
         self.lines_ = self.lines_[1:]
 
@@ -439,31 +447,35 @@ def parse(f, external_fn, *, show_only = False, info = lambda *args, **kwargs: N
 
         cells.append(cell)
 
-    p = peekable(f)
-    for line in p:
-        # agglomerate empty lines into Blanks and either store as such or return to the CodeCell, if in the middle of one
-        if not line.strip():
-            blank = Blanks()
-            blank.append(line)
-            while p and not p.peek().strip():
-                blank.append(next(p))
+    try:
+        p = peekable(f)
+        for line in p:
+            # agglomerate empty lines into Blanks and either store as such or return to the CodeCell, if in the middle of one
+            if not line.strip():
+                blank = Blanks()
+                blank.append(line)
+                while p and not p.peek().strip():
+                    blank.append(next(p))
 
-            if p and len(cells) > 0 and type(cells[-1]) is CodeCell and identify(p.peek()) is CodeCell:
-                for line in blank.lines_:
-                    cells[-1].append(line)
-            else:
-                cells_append(blank)
+                if p and len(cells) > 0 and type(cells[-1]) is CodeCell and identify(p.peek()) is CodeCell:
+                    for line in blank.lines_:
+                        cells[-1].append(line)
+                else:
+                    cells_append(blank)
 
-            continue
+                continue
 
-        Type = identify(line)
+            Type = identify(line)
 
-        if len(cells) == 0 or type(cells[-1]) is not Type:
-            cells_append(Type())
-        cells[-1].append(line)
+            if len(cells) == 0 or type(cells[-1]) is not Type:
+                cells_append(Type())
+            cells[-1].append(line)
 
-    if len(cells) > 0:
-        if should_parse(cells[-1]):
-            cells[-1].parse(external, info)
+        if len(cells) > 0:
+            if should_parse(cells[-1]):
+                cells[-1].parse(external, info)
+    finally:
+        if external:
+            external.close()
 
     return cells

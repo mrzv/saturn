@@ -18,7 +18,7 @@ def view(html):
         if os.path.exists(shape_fn):
             with open(shape_fn, 'r') as f:
                 [x, y, width, height] = map(int, f.readlines())
-    except:
+    except Exception:
         pass
 
     window = webview.create_window('Saturn', html = html, x = x, y = y, width = width, height = height)

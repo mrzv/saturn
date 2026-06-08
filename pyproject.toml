@@ -39,7 +39,23 @@ saturn = "saturn_notebook.__main__:main"
 dev = [
     "icecream>=2.1.3",
     "mpi4py>=4.0.0",
+    "pytest>=8.0.0",
+    "ruff>=0.11.0",
 ]
+
+[project.urls]
+Repository = "https://github.com/mrzv/saturn"
+Homepage = "https://github.com/mrzv/saturn"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E9", "F63", "F82"]
 
 [build-system]
 requires = ["hatchling", "uv-dynamic-versioning"]

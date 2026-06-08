@@ -126,8 +126,8 @@ class Notebook:
         if type(self.next_cell()) is c.VariableCell:
             try:
                 self.next_cell().dump(self.m.digest(), self.l)
-            except:
-                info(f"[error]Failed[/error] to save varialbes [variables]{self.next_cell().variables.strip()}[/variables], [affirm]skipping[/affirm]")
+            except Exception:
+                info(f"[error]Failed[/error] to save variables [variables]{self.next_cell().variables.strip()}[/variables], [affirm]skipping[/affirm]")
                 tb = Traceback(self, self.debug)
                 info(tb, block = True)
                 info(f"[affirm]continuing[/affirm]")
@@ -166,7 +166,7 @@ class Notebook:
                 except SystemExit:
                     info("Caught SystemExit")
                     raise       # SystemExit quits regardless of force
-                except:
+                except Exception:
                     info("Caught exception")
                     tb = Traceback(self, debug = debug, width = 80)
 
@@ -182,7 +182,7 @@ class Notebook:
                 info(f"[warn]Warning:[/warn] isolated variable cell [variables]{cell.variables.strip()}[/variables]; result will never be used")
                 try:
                     cell.dump(self.m.digest(), self.l)
-                except:
+                except Exception:
                     info(f"[error]Failed[/error] to save variables [variables]{cell.variables.strip()}[/variables], [affirm]skipping[/affirm]")
                     tb = Traceback(self, self.debug)
                     info(tb, block = True)
@@ -190,7 +190,7 @@ class Notebook:
             elif type(cell) is c.CheckpointCell:
                 try:
                     cell.dump(self.m.digest(), self.l)
-                except:
+                except Exception:
                     info(f"[error]Failed[/error] to save state in checkpoint cell, [affirm]skipping[/affirm]")
                     tb = Traceback(self, self.debug)
                     info(tb, block = True)

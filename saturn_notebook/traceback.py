@@ -22,12 +22,15 @@ class Traceback(RichTraceback):
 
     @staticmethod
     def filename_cell(fn):
-        fn_split = fn.split(':')
-        if len(fn_split) == 1:
+        fn_split = fn.rsplit(':', 2)
+        if len(fn_split) != 3:
             return fn, -1, -1
         filename = fn_split[0]
-        cell_id = int(fn_split[1])
-        cell_id_display = int(fn_split[2])
+        try:
+            cell_id = int(fn_split[1])
+            cell_id_display = int(fn_split[2])
+        except ValueError:
+            return fn, -1, -1
         return filename, cell_id, cell_id_display
 
     @render_group()

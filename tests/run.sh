@@ -60,8 +60,9 @@ case $1 in
         $DIR/../saturn.py run $fn $fn.expected > $fn.expected-out
         res=$?
         ;;
-    "") # run all
-        for fn in `ls $DIR/*.py`; do
+    "") # run all notebook fixtures with golden files
+        for expected in "$DIR"/*.py.expected; do
+            fn=${expected%.expected}
             run_test $fn
         done
         ;;

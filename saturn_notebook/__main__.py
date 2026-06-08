@@ -22,7 +22,7 @@ skip_repl = False
 try:
     from . import viewer
     has_viewer = True
-except:
+except ImportError:
     has_viewer = False
 
 # workaround for a bug in OpenMPI (or anything else that screws up the terminal size);
@@ -162,7 +162,7 @@ def run(infn: "input notebook",
             from mpi4py import MPI
             root = MPI.COMM_WORLD.Get_rank() == 0
             using_mpi = MPI.COMM_WORLD.Get_size() > 1
-        except:
+        except Exception:
             pass
 
     if infn and os.path.exists(infn):
@@ -211,7 +211,7 @@ def run(infn: "input notebook",
                 outfn = prompt("Notebook filename (empty to not save): ", completer = PathCompleter())
                 if outfn and not external:
                     external = prompt("External zip archive filename (empty to inline): ", completer = PathCompleter())
-    except:
+    except BaseException:
         nb.move_all_incoming()
 
     if not nb.dry_run and root and outfn:
@@ -219,8 +219,13 @@ def run(infn: "input notebook",
 
 
 def run_repl(nb, output, debug = False,
-             prefix = [c.Blanks.create(1), c.BreakCell.create(), c.Blanks.create(1)],
-             suffix = []):
+             prefix = None,
+             suffix = None):
+    if prefix is None:
+        prefix = [c.Blanks.create(1), c.BreakCell.create(), c.Blanks.create(1)]
+    if suffix is None:
+        suffix = []
+
     if skip_repl:
         return
 
@@ -370,7 +375,7 @@ def version():
                 'pygments', 'more_itertools', 'matplotlib', 'nbformat', 'pywebview']:
         try:
             console.print(f"   {dep} [version]{ver(dep)}[/version]")
-        except:
+        except Exception:
             console.print(f"   {dep} [error]not found[/error]")
     if has_viewer:
         console.print(f"Config path: [path]{viewer.config_path}[/path]")
