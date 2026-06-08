@@ -27,6 +27,10 @@ class CompositeIO:
         self.outer[-1].write(s)
         if self.outfd is not None:
             os.write(self.outfd, s.encode(_default_encoding))
+        return len(s)
+
+    def flush(self):
+        pass
 
     def append_png(self, buf):
         self.outer.append(buf)
