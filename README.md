@@ -233,6 +233,10 @@ REPL supports the following keyboard shortcuts:
 * `Ctrl-q`: exits the REPL and terminates execution of the entire notebook.
 * `F10`: aborts execution of the entire notebook and doesn't save it out, even if we are not in `--dry-run` mode.
 
+## Documentation
+
+- [Execution error policy](docs/error-policy.md)
+
 ## Development
 
 Install development dependencies and run checks with [uv](https://docs.astral.sh/uv/):

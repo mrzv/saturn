@@ -227,7 +227,7 @@ def run_repl(nb, output, debug = False,
         cells += suffix
 
         nb.insert(cells)
-        nb.process_to(nb.current + len(cells),output,info=info, repl = True)
+        nb.process_to(nb.current + len(cells), output, info=info, repl=True, force=True)
 
     if not root:
         while True:
