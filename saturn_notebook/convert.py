@@ -6,7 +6,7 @@ from . import cells as c
 def from_jupyter(jnb: Any, info: Callable[..., None]) -> List[c.Cell]:
     header = c.CodeCell()
     header.lines_ = ['# vim: ft=python foldmethod=marker foldlevel=0\n']
-    cells = [header]
+    cells: List[c.Cell] = [header]
 
     for jcell in jnb.cells:
         if jcell['cell_type'] == 'markdown':
@@ -21,23 +21,23 @@ def from_jupyter(jnb: Any, info: Callable[..., None]) -> List[c.Cell]:
                 cells.append(c.Blanks.create(1))
                 cells.append(c.BreakCell.create())
                 cells.append(c.Blanks.create(1))
-            cell = c.CodeCell()
-            cell.lines_ = [line + '\n' for line in jcell['source'].split('\n')]
-            cells.append(cell)
+            code_cell = c.CodeCell()
+            code_cell.lines_ = [line + '\n' for line in jcell['source'].split('\n')]
+            cells.append(code_cell)
 
             for out in jcell['outputs']:
                 if out['output_type'] == 'stream':
-                    cell = c.OutputCell.from_string(out['text'])
-                    cells.append(cell)
+                    output_cell = c.OutputCell.from_string(out['text'])
+                    cells.append(output_cell)
                 elif out['output_type'] in ['display_data', 'execute_result']:
                     if 'image/png' in out['data']:
-                        cell = c.OutputCell()
+                        output_cell = c.OutputCell()
                         png_content = out['data']['image/png']
-                        cell.composite_.append_png(c.base64.b64decode(png_content))
-                        cells.append(cell)
+                        output_cell.composite_.append_png(c.base64.b64decode(png_content))
+                        cells.append(output_cell)
                     elif 'text/plain' in out['data']:
-                        cell = c.OutputCell.from_string(out['data']['text/plain'])
-                        cells.append(cell)
+                        output_cell = c.OutputCell.from_string(out['data']['text/plain'])
+                        cells.append(output_cell)
                     else:
                         info('Unrecognized data type', style="magenta")
                 else:

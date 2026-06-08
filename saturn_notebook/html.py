@@ -81,7 +81,7 @@ standalone_katex_preamble = r"""
 def render(cells: Iterable[Any], html: Union[str, TextIO], katex: bool = False, standalone: bool = False) -> None:
     close_html = False
     if isinstance(html, str):
-        f_html = open(html, 'w')
+        f_html: TextIO = open(html, 'w')
         close_html = True
     else:
         f_html = html

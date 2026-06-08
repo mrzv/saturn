@@ -1,5 +1,4 @@
 import ast
-import sys
 from typing import Any, Dict, Optional
 
 # From: https://stackoverflow.com/questions/33908794/get-value-of-last-expression-in-exec-call
@@ -11,17 +10,14 @@ def exec_eval(
     name: str = '',
 ) -> Any:
     '''Execute a script and return the value of the last expression'''
-    stmts = list(ast.iter_child_nodes(ast.parse(script)))
+    stmts = ast.parse(script).body
     if not stmts:
         return None
     if isinstance(stmts[-1], ast.Expr):
         # the last one is an expression and we will try to return the results
         # so we first execute the previous statements
         if len(stmts) > 1:
-            if sys.version_info >= (3, 8):
-                mod = ast.Module(stmts[:-1], [])
-            else:
-                mod = ast.Module(stmts[:-1])
+            mod = ast.Module(stmts[:-1], [])
             exec(compile(mod, filename=name, mode="exec"), globals, locals)
         # then we eval the last one
         return eval(compile(ast.Expression(body=stmts[-1].value), filename=name, mode="eval"), globals, locals)

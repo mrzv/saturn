@@ -24,5 +24,7 @@ jobs:
         run: uv run pytest
       - name: Run lint
         run: uv run ruff check .
+      - name: Run type checks
+        run: uv run mypy
       - name: Build distributions
         run: uv build
