@@ -63,6 +63,7 @@ select = ["E9", "F"]
 [tool.mypy]
 python_version = "3.8"
 files = [
+    "saturn_notebook/archive.py",
     "saturn_notebook/convert.py",
     "saturn_notebook/evaluate.py",
     "saturn_notebook/html.py",

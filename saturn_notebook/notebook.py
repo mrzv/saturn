@@ -1,5 +1,4 @@
 import  hashlib
-import  json
 import  os
 import  zipfile
 from    contextlib import nullcontext
@@ -8,53 +7,18 @@ from    atomicwrites import atomic_write
 
 from    rich.console import Console
 
-from    . import cells as c, utils, evaluate, image, mpl
+from    . import archive, cells as c, utils, evaluate, image, mpl
 
 from    .traceback import Traceback
 from    .theme     import theme
 
 
-ARCHIVE_MANIFEST = '.saturn-archive.json'
-ARCHIVE_MANIFEST_KIND = 'saturn-notebook-external-archive'
-
-
-def archive_manifest(fn):
-    return {
-        'kind': ARCHIVE_MANIFEST_KIND,
-        'version': 1,
-        'notebook': os.path.basename(fn),
-    }
-
-
-def read_archive_manifest(external):
-    try:
-        with zipfile.ZipFile(external) as zf:
-            return json.loads(zf.read(ARCHIVE_MANIFEST).decode('utf-8'))
-    except (KeyError, OSError, ValueError, zipfile.BadZipFile):
-        return None
-
-
-def validate_existing_archive(fn, external):
-    if not external or not os.path.exists(external):
-        return
-
-    manifest = read_archive_manifest(external)
-    if not manifest:
-        raise ValueError(
-            f"Refusing to overwrite external archive without Saturn manifest: {external}. "
-            "Use --force-external to replace it."
-        )
-    if manifest.get('kind') != ARCHIVE_MANIFEST_KIND:
-        raise ValueError(
-            f"Refusing to overwrite external archive with unrecognized Saturn manifest: {external}. "
-            "Use --force-external to replace it."
-        )
-    notebook_name = manifest.get('notebook')
-    if notebook_name and notebook_name != os.path.basename(fn):
-        raise ValueError(
-            f"Refusing to overwrite external archive for {notebook_name}: {external}. "
-            "Use --force-external to replace it."
-        )
+ARCHIVE_MANIFEST = archive.ARCHIVE_MANIFEST
+ARCHIVE_MANIFEST_KIND = archive.ARCHIVE_MANIFEST_KIND
+archive_manifest = archive.archive_manifest
+archive_manifest_json = archive.archive_manifest_json
+read_archive_manifest = archive.read_archive_manifest
+validate_existing_archive = archive.validate_existing_archive
 
 class Hasher:
     def __init__(self):
@@ -331,7 +295,7 @@ class Notebook:
 
         if external:
             if not force_external:
-                validate_existing_archive(fn, external)
+                archive.validate_existing_archive(fn, external)
             for cell in self.cells:
                 if type(cell) is c.SaturnCell:
                     cell.external_fn = external_metadata
@@ -347,7 +311,10 @@ class Notebook:
                 external_context = zipfile.ZipFile(external_target, 'w') if external else nullcontext()
                 with external_context as external_zip:
                     if external:
-                        external_zip.writestr(ARCHIVE_MANIFEST, json.dumps(archive_manifest(fn), sort_keys=True) + '\n')
+                        external_zip.writestr(
+                            archive.ARCHIVE_MANIFEST,
+                            archive.archive_manifest_json(fn),
+                        )
                     for i,cell in enumerate(self.cells):
                         if inline and type(cell) is c.SaturnCell:
                             continue
