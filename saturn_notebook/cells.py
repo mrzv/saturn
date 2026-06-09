@@ -34,6 +34,10 @@ def hash_bytes(content):
 def safe_archive_name(name):
     return name and not os.path.isabs(name) and os.path.normpath(name) == name and os.path.dirname(name) == ''
 
+
+def external_has_name(external, name):
+    return name in external.namelist()
+
 class Cell:
     def __init__(self):
         self.lines_ = []
@@ -162,7 +166,7 @@ class OutputCell(Cell):
                     if not safe_archive_name(fn):
                         self.composite_.append_rich(Rule(f"[warn]unsafe image archive name [cyan]{fn}[/cyan] ignored[/warn]"))
                     elif external:
-                        if zipfile.Path(external, at=fn).exists():
+                        if external_has_name(external, fn):
                             png_content = external.read(fn)
                             self.composite_.append_png(png_content)
                         else:
@@ -311,7 +315,7 @@ class CheckpointCell(Cell):
                 self._warning = Rule(f"[warn]unsafe {self._warning_name} archive name [cyan]{fn}[/cyan] ignored[/warn]")
                 self._expected = None
             elif external:
-                if zipfile.Path(external, at=fn).exists():
+                if external_has_name(external, fn):
                     self._content = io.BytesIO(external.read(fn))
                 else:
                     self._warning = Rule(f"[warn]{self._warning_name} hash [cyan]{fn}[/cyan] not found in the external archive [cyan]{external.filename}[/cyan][/warn]")

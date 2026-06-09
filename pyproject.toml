@@ -7,7 +7,7 @@ authors = [
 ]
 license = "BSD-3-Clause-LBNL"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "argh==0.26.2",
     "atomicwrites>=1.4.0",
@@ -63,7 +63,7 @@ select = ["E9", "F"]
 "tests/simple.py" = ["F401"]
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.9"
 files = [
     "saturn_notebook/archive.py",
     "saturn_notebook/convert.py",
