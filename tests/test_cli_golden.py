@@ -1,4 +1,5 @@
 import os
+import json
 import subprocess
 import sys
 import zipfile
@@ -149,6 +150,109 @@ def test_cli_extract_and_embed_round_trip_external_archive(tmp_path):
     embedded_text = embedded.read_text()
     assert "#saturn>" not in embedded_text
     assert "#o> png{{{" in embedded_text
+
+
+def test_cli_clean_strips_binary_and_optionally_output(tmp_path):
+    source = tmp_path / "dirty.py"
+    cleaned = tmp_path / "cleaned.py"
+    stripped = tmp_path / "stripped.py"
+    source.write_text(
+        "print('hello')\n"
+        "#o> hello\n"
+        "#o> png{{{\n"
+        "#o> cG5nLWJ5dGVz\n"
+        "#o> }}}\n"
+        "#chk> name=old.chk\n"
+        "#var> value\n"
+        "#var> cached\n"
+        "print('done')\n"
+    )
+
+    clean_result = run_saturn_command(["clean", str(source), str(cleaned)])
+    strip_result = run_saturn_command(["clean", str(source), str(stripped), "--strip-output"])
+
+    assert clean_result.returncode == 0, clean_result.stderr
+    assert strip_result.returncode == 0, strip_result.stderr
+
+    cleaned_text = cleaned.read_text()
+    assert "#o> hello" in cleaned_text
+    assert "#o> png" not in cleaned_text
+    assert "#chk>\n" in cleaned_text
+    assert "#chk> name=old.chk" not in cleaned_text
+    assert cleaned_text.count("#var>") == 1
+
+    stripped_text = stripped.read_text()
+    assert "#o>" not in stripped_text
+    assert "print('hello')" in stripped_text
+    assert "print('done')" in stripped_text
+
+
+def test_cli_image_extracts_png_to_file(tmp_path):
+    source = tmp_path / "image.py"
+    image_out = tmp_path / "image.png"
+    make_inline_png_notebook(source)
+
+    image_result = run_saturn_command(["image", str(source), "0", str(image_out)])
+
+    assert image_result.returncode == 0, image_result.stderr
+    assert image_out.read_bytes() == b"png-bytes"
+
+
+def test_cli_rehash_preserves_external_cache_archive(tmp_path):
+    source = tmp_path / "checkpoint.py"
+    first = tmp_path / "checkpoint.first.py"
+    rehashed = tmp_path / "checkpoint.rehashed.py"
+    source.write_text("value = 42\n#chk>\n\nprint(value)\n")
+
+    run_result, _ = run_saturn(source, tmp_path, first)
+    rehash_result = run_saturn_command(["rehash", str(first), str(rehashed)])
+
+    assert run_result.returncode == 0, run_result.stderr
+    assert rehash_result.returncode == 0, rehash_result.stderr
+    assert rehashed.read_text().startswith("#saturn> external=checkpoint.rehashed.zip\n")
+    with zipfile.ZipFile(tmp_path / "checkpoint.rehashed.zip") as zf:
+        assert notebook.ARCHIVE_MANIFEST in zf.namelist()
+        assert any(name.endswith(".chk") for name in payload_names(zf))
+
+
+def test_cli_convert_writes_standalone_katex_html(tmp_path):
+    source = tmp_path / "math.ipynb"
+    output = tmp_path / "math.html"
+    source.write_text(
+        json.dumps(
+            {
+                "cells": [
+                    {
+                        "cell_type": "markdown",
+                        "metadata": {},
+                        "source": ["Euler: $e^{i\\\\pi} + 1 = 0$"],
+                    },
+                    {
+                        "cell_type": "code",
+                        "execution_count": 1,
+                        "metadata": {},
+                        "outputs": [{"output_type": "stream", "name": "stdout", "text": ["42\\n"]}],
+                        "source": ["print(42)"],
+                    },
+                ],
+                "metadata": {},
+                "nbformat": 4,
+                "nbformat_minor": 5,
+            }
+        )
+    )
+
+    convert_result = run_saturn_command(
+        ["convert", str(source), "--html", str(output), "--standalone", "--katex"]
+    )
+
+    assert convert_result.returncode == 0, convert_result.stderr
+    html = output.read_text()
+    assert "renderMathInElement" in html
+    assert "data:font/woff2;base64" in html
+    assert "cdn.jsdelivr.net" not in html
+    assert "print" in html
+    assert "42" in html
 
 
 def test_cli_runs_cells_inside_main_guard(tmp_path):
