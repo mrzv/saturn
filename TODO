@@ -32,6 +32,7 @@ Done:
 - Document release validation and external archive lifecycle
 - Add checked-in compatibility fixtures for inline output and main-guard notebooks
 - Add subprocess coverage for clean, image, rehash, and standalone KaTeX conversion
+- Extract typed archive manifest and overwrite-validation helpers
 - Resolve explicit relative external archives beside output notebooks
 - Add subprocess coverage for extract/embed archive round-trips
 - Add semantic compatibility tests for legacy inline checkpoint and variable caches

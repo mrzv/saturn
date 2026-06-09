@@ -26,8 +26,8 @@
  - Normal `saturn run` errors now save processed notebook state and then re-raise
    the original exception instead of silently succeeding.
  - In-process notebook runs restore `sys.argv` and `sys.path` after execution.
- - MPI detection, HTML rendering, Jupyter conversion, and notebook execution
-   state are split into smaller testable units.
+ - MPI detection, HTML rendering, Jupyter conversion, archive handling, and
+   notebook execution state are split into smaller testable units.
 
 ### Fixed
 
