@@ -11,9 +11,13 @@
           not pickleable.)
     - [No reason] Lift more logic from ptpython
     - [Fixed: locals = globals] Possibly related: debug usage with joblib.Parallel
-- Stream cells (via a generator) to produce output faster
-    - [Done] Keep captured output passthrough file-like and covered by tests; a
-      deeper parser/executor generator split is no longer the next bottleneck.
+- Add parse/memory benchmarks for large notebooks
+    - Measure parse time, memory use, and time-to-first-execution for notebooks
+      with many cells, large inline PNGs, external PNG archives, checkpoints,
+      and variable caches before considering parser/executor streaming.
+    - A broad generator rewrite is not justified without benchmark evidence:
+      checkpoint discovery, main-guard expansion, external metadata handling,
+      and blank-line cell boundaries all make streaming semantics subtle.
 - Better, explicit Vim support
 - Consider bundling a true KaTeX renderer for standalone HTML. [Done]
   --standalone --katex now embeds bundled KaTeX CSS, JavaScript, and fonts only
@@ -22,6 +26,8 @@
 Done:
 
 - Write external zip archives atomically
+- Retire broad parser/executor generator streaming TODO; passthrough output and
+  external archives address the known latency and size bottlenecks for now
 - Add CLI reference documentation
 - Add workflow examples and sample notebooks
 - Add changelog entry for the hardening work
