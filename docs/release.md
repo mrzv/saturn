@@ -27,3 +27,84 @@ Release checklist:
 - Tag from the commit that passed validation.
 
 The validation script builds into a temporary directory so stale files under `dist/` cannot mask packaging problems.
+
+## PyPI Release Flow
+
+Saturn uses dynamic versions from git tags through `uv-dynamic-versioning`. The release version comes from a git tag such as `1.4.0`; do not edit `pyproject.toml` to set the version.
+
+1. Decide the version. For user-visible behavior changes, prefer a minor release such as `1.4.0` over a patch release.
+
+2. Finalize `CHANGELOG.md`. Move the current `Unreleased` contents under a dated release heading, for example:
+
+   ```md
+   ## [1.4.0] - 2026-06-09
+   ```
+
+   Leave a fresh empty `## Unreleased` section above it.
+
+3. Commit the changelog update:
+
+   ```sh
+   git add CHANGELOG.md
+   git commit -m "Prepare 1.4.0 release"
+   ```
+
+4. Run release validation:
+
+   ```sh
+   bash scripts/validate-release.sh
+   ```
+
+5. Create an annotated tag from the validated commit:
+
+   ```sh
+   git tag -a 1.4.0 -m "Release 1.4.0"
+   ```
+
+6. Build from the tagged commit:
+
+   ```sh
+   rm -rf dist
+   uv build
+   ```
+
+7. Verify the artifacts:
+
+   ```sh
+   uv run twine check dist/*
+   ```
+
+   Confirm the filenames contain the exact release version, such as `1.4.0`, and do not contain `.dev`, `.post`, or `+<hash>`.
+
+8. Optionally upload to TestPyPI first:
+
+   ```sh
+   uv run twine upload --repository testpypi dist/*
+   ```
+
+9. Upload to PyPI:
+
+   ```sh
+   uv run twine upload dist/*
+   ```
+
+   Use a PyPI API token when prompted, or set credentials in the environment:
+
+   ```sh
+   export TWINE_USERNAME=__token__
+   export TWINE_PASSWORD=pypi-...
+   ```
+
+10. Push the release commit and tag:
+
+    ```sh
+    git push origin HEAD:<branch>
+    git push origin 1.4.0
+    ```
+
+Important cautions:
+
+- PyPI files are immutable. If a bad `1.4.0` is uploaded, another file with the same version cannot replace it.
+- Build only from a clean tagged commit.
+- If the built filename contains `.dev`, `.post`, or `+<hash>`, stop and fix the tag/version state before uploading.
+- If working from a detached `HEAD`, attach or push the release commit to the intended branch before treating it as an official release.
