@@ -29,6 +29,9 @@ Done:
 - Add Saturn external archive manifests and refuse unknown archive overwrites
 - Add --force-external for intentional archive replacement
 - Add KaTeX license and provenance notices for bundled assets
+- Document release validation and external archive lifecycle
+- Add checked-in compatibility fixtures for inline output and main-guard notebooks
+- Add subprocess coverage for clean, image, rehash, and standalone KaTeX conversion
 - Resolve explicit relative external archives beside output notebooks
 - Add subprocess coverage for extract/embed archive round-trips
 - Add semantic compatibility tests for legacy inline checkpoint and variable caches

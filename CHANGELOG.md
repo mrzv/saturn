@@ -13,7 +13,7 @@
  - Top-level `if __name__ == '__main__':` bodies can be used as notebook content,
    so files can remain directly runnable as Python scripts.
  - Added documentation for CLI behavior, notebook file format, execution error
-   policy, and common workflows.
+   policy, external archive lifecycle, release validation, and common workflows.
  - Added pytest, Ruff, mypy, CI, release validation, and subprocess coverage for
    stable CLI workflows, cache reuse, extract/embed, and archive handling.
 

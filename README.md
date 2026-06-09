@@ -246,6 +246,8 @@ REPL supports the following keyboard shortcuts:
 - [Saturn notebook format](docs/format.md)
 - [Execution error policy](docs/error-policy.md)
 - [CLI reference](docs/cli.md)
+- [External archive lifecycle](docs/archive-lifecycle.md)
+- [Release validation](docs/release.md)
 - [Workflow examples](docs/examples.md)
 - [Third-party notices](docs/third-party.md)
 
