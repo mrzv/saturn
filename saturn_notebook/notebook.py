@@ -1,4 +1,5 @@
 import  hashlib
+import  json
 import  os
 import  zipfile
 from    contextlib import nullcontext
@@ -11,6 +12,49 @@ from    . import cells as c, utils, evaluate, image, mpl
 
 from    .traceback import Traceback
 from    .theme     import theme
+
+
+ARCHIVE_MANIFEST = '.saturn-archive.json'
+ARCHIVE_MANIFEST_KIND = 'saturn-notebook-external-archive'
+
+
+def archive_manifest(fn):
+    return {
+        'kind': ARCHIVE_MANIFEST_KIND,
+        'version': 1,
+        'notebook': os.path.basename(fn),
+    }
+
+
+def read_archive_manifest(external):
+    try:
+        with zipfile.ZipFile(external) as zf:
+            return json.loads(zf.read(ARCHIVE_MANIFEST).decode('utf-8'))
+    except (KeyError, OSError, ValueError, zipfile.BadZipFile):
+        return None
+
+
+def validate_existing_archive(fn, external):
+    if not external or not os.path.exists(external):
+        return
+
+    manifest = read_archive_manifest(external)
+    if not manifest:
+        raise ValueError(
+            f"Refusing to overwrite external archive without Saturn manifest: {external}. "
+            "Use --force-external to replace it."
+        )
+    if manifest.get('kind') != ARCHIVE_MANIFEST_KIND:
+        raise ValueError(
+            f"Refusing to overwrite external archive with unrecognized Saturn manifest: {external}. "
+            "Use --force-external to replace it."
+        )
+    notebook_name = manifest.get('notebook')
+    if notebook_name and notebook_name != os.path.basename(fn):
+        raise ValueError(
+            f"Refusing to overwrite external archive for {notebook_name}: {external}. "
+            "Use --force-external to replace it."
+        )
 
 class Hasher:
     def __init__(self):
@@ -268,7 +312,7 @@ class Notebook:
                 return os.path.basename(external)
         return external
 
-    def save(self, fn, external, *, inline = False):
+    def save(self, fn, external, *, inline = False, force_external = False):
         if self.dry_run:
             return
 
@@ -286,6 +330,8 @@ class Notebook:
         external_metadata = self.external_metadata_name(fn, external) if external else ''
 
         if external:
+            if not force_external:
+                validate_existing_archive(fn, external)
             for cell in self.cells:
                 if type(cell) is c.SaturnCell:
                     cell.external_fn = external_metadata
@@ -300,6 +346,8 @@ class Notebook:
                 external_target = external_file if external else external
                 external_context = zipfile.ZipFile(external_target, 'w') if external else nullcontext()
                 with external_context as external_zip:
+                    if external:
+                        external_zip.writestr(ARCHIVE_MANIFEST, json.dumps(archive_manifest(fn), sort_keys=True) + '\n')
                     for i,cell in enumerate(self.cells):
                         if inline and type(cell) is c.SaturnCell:
                             continue

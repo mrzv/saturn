@@ -24,6 +24,8 @@ saturn run /tmp/checkpoint-cache.first.py /tmp/checkpoint-cache.second.py --no-m
 
 By default, the checkpoint payload is stored in `/tmp/checkpoint-cache.first.zip` and referenced from the notebook with portable metadata.
 
+Saturn-created archives include a manifest. If `/tmp/checkpoint-cache.first.zip` already exists and is not a matching Saturn archive, Saturn refuses to replace it unless `--force-external` is provided.
+
 ## Share A Self-Contained Notebook
 
 Use `--inline` when a single file is more convenient than a notebook plus zip archive.

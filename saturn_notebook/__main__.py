@@ -121,6 +121,7 @@ def _show(cells, html, katex, standalone, debug):
 @argh.arg('--auto-capture', help="automatically capture images")
 @argh.arg('--external', help="external zip archive with binary content")
 @argh.arg('--inline', help="embed binary content inline instead of using an external archive")
+@argh.arg('--force-external', help="replace an existing external archive even if it has no matching Saturn manifest")
 @argh.arg('--debug', help="show debugging information")
 @argh.arg('--no-mpi', help="disable MPI awareness")
 @argh.arg('-n', '--dry-run', help="don't save the processed notebook")
@@ -132,6 +133,7 @@ def run(infn,
         auto_capture = False,
         external = '',
         inline = False,
+        force_external = False,
         debug = False,
         no_mpi = False,
         dry_run = False,
@@ -205,7 +207,7 @@ def run(infn,
 
     try:
         if not nb.dry_run and root and outfn:
-            nb.save(outfn, save_external_name(outfn, external, inline), inline=inline)
+            nb.save(outfn, save_external_name(outfn, external, inline), inline=inline, force_external=force_external)
 
         if caught:
             _, exc, tb = caught
@@ -392,6 +394,7 @@ def version():
 @argh.arg('--version', help="notebook version")
 @argh.arg('--external', help="external zip archive with binary content")
 @argh.arg('--inline', help="embed binary content inline instead of using an external archive")
+@argh.arg('--force-external', help="replace an existing external archive even if it has no matching Saturn manifest")
 @argh.arg('--html', help="save HTML to a file")
 @argh.arg('--katex', help="include KaTeX in HTML output")
 @argh.arg('--standalone', help="inline CSS instead of linking CDN assets in HTML output")
@@ -402,6 +405,7 @@ def convert(infn,
             version = 4,
             external = '',
             inline = False,
+            force_external = False,
             html = '',
             katex = False,
             standalone = False,
@@ -421,17 +425,19 @@ def convert(infn,
         nb = notebook.Notebook(name = outfn)
         nb.add(cells)
         nb.move_all_incoming()
-        nb.save(outfn, save_external_name(outfn, external, inline), inline=inline)
+        nb.save(outfn, save_external_name(outfn, external, inline), inline=inline, force_external=force_external)
 
 
 @argh.arg('infn', help="input notebook")
 @argh.arg('outfn', nargs='?', help="output notebook (if empty, input modified in place)")
 @argh.arg('--external', help="external zip archive with binary content")
 @argh.arg('--inline', help="embed binary content inline instead of using an external archive")
+@argh.arg('--force-external', help="replace an existing external archive even if it has no matching Saturn manifest")
 def rehash(infn,
            outfn,
            external = '',
-           inline = False):
+           inline = False,
+           force_external = False):
     """Rehash all the code cells, updating the hashes stored with checkpoints and variable cells. (advanced)"""
     if not outfn:
         outfn = infn
@@ -443,14 +449,16 @@ def rehash(infn,
     nb.add(cells)
     nb.rehash()
 
-    nb.save(outfn, save_external_name(outfn, external, inline), inline=inline)
+    nb.save(outfn, save_external_name(outfn, external, inline), inline=inline, force_external=force_external)
 
 @argh.arg('infn', help="input notebook")
 @argh.arg('external', help="external zip archive with binary content")
 @argh.arg('outfn', nargs='?', help="output notebook (if empty, input modified in place)")
+@argh.arg('--force-external', help="replace an existing external archive even if it has no matching Saturn manifest")
 def extract(infn,
             external,
-            outfn):
+            outfn,
+            force_external = False):
     """Extract embedded binary content into external zip archive."""
     if not outfn:
         outfn = infn
@@ -462,7 +470,7 @@ def extract(infn,
     nb.add(cells)
     nb.move_all_incoming()
 
-    nb.save(outfn, save_external_name(outfn, external, inline=False))
+    nb.save(outfn, save_external_name(outfn, external, inline=False), force_external=force_external)
 
 @argh.arg('infn', help="input notebook")
 @argh.arg('external', help="external zip archive with binary content")
@@ -487,6 +495,7 @@ def embed(infn,
 @argh.arg('--auto-capture', help="automatically capture images")
 @argh.arg('--external', help="external zip archive with binary content")
 @argh.arg('--inline', help="embed binary content inline instead of using an external archive")
+@argh.arg('--force-external', help="replace an existing external archive even if it has no matching Saturn manifest")
 @argh.arg('--debug', help="show debugging information")
 @argh.arg('--no-mpi', help="disable MPI awareness")
 @argh.arg('-n', '--dry-run', help="don't save the processed notebook")
@@ -495,12 +504,13 @@ def _run(clean = False,
         auto_capture = False,
         external = '',
         inline = False,
+        force_external = False,
         debug = False,
         no_mpi = False,
         dry_run = False,
         only_root_output = False):
     """Launch Saturn REPL."""
-    run('', '', clean, auto_capture, external, inline, debug, no_mpi, dry_run, only_root_output, True)
+    run('', '', clean, auto_capture, external, inline, force_external, debug, no_mpi, dry_run, only_root_output, True)
 
 def main():
     global argv

@@ -36,6 +36,10 @@ def run_saturn_command(args):
     )
 
 
+def payload_names(zf):
+    return [name for name in zf.namelist() if name != notebook.ARCHIVE_MANIFEST]
+
+
 def assert_fixture_matches(fixture_name, tmp_path, *, exact_notebook=True):
     fixture = ROOT / "tests" / fixture_name
     result, output = run_saturn(fixture, tmp_path)
@@ -137,7 +141,7 @@ def test_cli_extract_and_embed_round_trip_external_archive(tmp_path):
     assert embed_result.returncode == 0, embed_result.stderr
     assert extracted.read_text().startswith("#saturn> external=extracted.zip\n")
     with zipfile.ZipFile(external) as zf:
-        names = zf.namelist()
+        names = payload_names(zf)
         assert len(names) == 1
         assert names[0].endswith(".png")
         assert zf.read(names[0]) == b"png-bytes"

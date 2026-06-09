@@ -69,6 +69,8 @@ pip install saturn-notebook[viewer]
   * `-e`, `--external notebook.zip`: use external zip archive `notebook.zip`
     to store binary content. If omitted, Saturn stores binary content next to
     the output notebook in `notebook.zip` by default.
+  * `--force-external`: replace an existing external archive even if it has no
+    matching Saturn manifest.
   * `--inline`: embed binary content directly in the notebook instead of using
     an external archive.
 
@@ -101,6 +103,8 @@ pip install saturn-notebook[viewer]
   delimiters.
   When writing a Saturn notebook, binary content is stored in an external zip
   archive by default; use `--inline` to embed it directly in the notebook.
+  Use `--force-external` to intentionally replace an existing archive without a
+  matching Saturn manifest.
 
   When installed with `[viewer]` extras, `-g, --gui` option will display the notebook in a GUI (using [pywebview](https://pywebview.flowrl.com/)).
 

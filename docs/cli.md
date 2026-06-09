@@ -42,6 +42,7 @@ Important options:
 - `--only-root-output`: under MPI, suppress output from non-root ranks.
 - `--external notebook.zip`: write binary output, checkpoints, and variable caches to an external archive.
 - `--inline`: embed binary content directly in the notebook instead of using an external archive.
+- `--force-external`: replace an existing external archive even if it has no matching Saturn manifest.
 
 Examples:
 
@@ -50,6 +51,7 @@ saturn run analysis.py analysis.out.py --no-mpi
 saturn run analysis.py --clean
 saturn run analysis.py -- arguments --for notebook
 saturn run analysis.py analysis.py --external analysis-assets.zip
+saturn run analysis.py analysis.py --external analysis-assets.zip --force-external
 saturn run analysis.py self-contained.py --inline
 ```
 
@@ -90,6 +92,7 @@ Convert a Jupyter notebook into Saturn format, or display it when no output note
 - `--standalone` inlines CSS for HTML output.
 - `--katex` enables TeX math rendering in markdown cells.
 - When writing a Saturn notebook, binary content is externalized by default; use `--inline` for a self-contained notebook.
+- Use `--force-external` to intentionally replace an existing archive without a matching Saturn manifest.
 
 Examples:
 
@@ -105,6 +108,7 @@ Refresh checkpoint and variable-cache hashes without executing the notebook.
 
 - Use this when notebook text has been transformed but cache payloads remain semantically valid.
 - Binary content follows the same external archive behavior as `run` and `convert`.
+- Use `--force-external` to intentionally replace an existing archive without a matching Saturn manifest.
 
 Example:
 
@@ -118,11 +122,13 @@ Move inline binary content into an external archive.
 
 - Relative archive paths are resolved beside the output notebook.
 - The saved notebook stores a portable basename in `#saturn> external=...` when the archive is next to the notebook.
+- Existing archives must contain a matching Saturn manifest unless `--force-external` is provided.
 
 Example:
 
 ```sh
 saturn extract self-contained.py self-contained.zip externalized.py
+saturn extract self-contained.py self-contained.zip externalized.py --force-external
 ```
 
 ## `saturn embed notebook.py notebook.zip [output.py]`

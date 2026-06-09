@@ -41,6 +41,8 @@ PNG output can also be stored in an external zip archive:
 
 Archive member names are generated from content hashes and must be simple filenames. Absolute paths, parent-directory paths, and nested paths are ignored when loading.
 
+Saturn-created external archives include a `.saturn-archive.json` manifest. The manifest identifies the file as a Saturn external archive and records the notebook basename that created it.
+
 ## External Archives
 
 By default, commands that save binary content write a sibling archive named after the output notebook, for example `analysis.py` and `analysis.zip`.
@@ -48,6 +50,8 @@ By default, commands that save binary content write a sibling archive named afte
 When the archive is next to the notebook, Saturn stores only the basename in `#saturn> external=...` so the notebook and zip can be moved together. Explicit archive paths outside the notebook directory are preserved as written.
 
 Use `--inline` to embed binary content directly in the notebook instead of writing an external archive.
+
+When saving to an existing external archive, Saturn refuses to overwrite archives that do not contain a matching Saturn manifest. This protects unrelated zip files that happen to have the default name, such as `analysis.zip` next to `analysis.py`. Use `--force-external` only when intentionally replacing such an archive.
 
 ## Checkpoints
 

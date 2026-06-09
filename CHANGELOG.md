@@ -19,6 +19,8 @@
 
  - Relative external archive paths are resolved beside the output notebook, and
    sibling archives are recorded with portable basename metadata.
+ - Existing external archives now require a matching Saturn manifest before they
+   are overwritten; `--force-external` intentionally replaces unknown archives.
  - Normal `saturn run` errors now save processed notebook state and then re-raise
    the original exception instead of silently succeeding.
  - In-process notebook runs restore `sys.argv` and `sys.path` after execution.

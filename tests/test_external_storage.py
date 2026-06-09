@@ -1,4 +1,5 @@
 import io
+import json
 import zipfile
 from pathlib import Path
 
@@ -6,6 +7,10 @@ import pytest
 
 from saturn_notebook import __main__ as cli
 from saturn_notebook import cells, notebook
+
+
+def payload_names(zf):
+    return [name for name in zf.namelist() if name != notebook.ARCHIVE_MANIFEST]
 
 
 def make_notebook_with_png():
@@ -29,7 +34,10 @@ def test_notebook_save_externalizes_binary_content_by_default(tmp_path):
     assert saved.startswith("#saturn> external=image.zip\n")
     assert "#o> png name=" in saved
     with zipfile.ZipFile(external) as zf:
-        names = zf.namelist()
+        manifest = json.loads(zf.read(notebook.ARCHIVE_MANIFEST))
+        names = payload_names(zf)
+        assert manifest["kind"] == notebook.ARCHIVE_MANIFEST_KIND
+        assert manifest["notebook"] == "image.py"
         assert len(names) == 1
         assert names[0].endswith(".png")
         assert zf.read(names[0]) == b"png-bytes"
@@ -119,6 +127,7 @@ def test_external_archive_write_failure_preserves_existing_files(tmp_path, monke
     external = tmp_path / "image.zip"
     outfn.write_text("old notebook\n")
     with zipfile.ZipFile(external, "w") as zf:
+        zf.writestr(notebook.ARCHIVE_MANIFEST, json.dumps(notebook.archive_manifest(str(outfn))))
         zf.writestr("old.png", b"old-png")
 
     nb = make_notebook_with_png()
@@ -135,5 +144,68 @@ def test_external_archive_write_failure_preserves_existing_files(tmp_path, monke
 
     assert outfn.read_text() == "old notebook\n"
     with zipfile.ZipFile(external) as zf:
-        assert zf.namelist() == ["old.png"]
+        assert payload_names(zf) == ["old.png"]
         assert zf.read("old.png") == b"old-png"
+
+
+def test_notebook_save_refuses_to_overwrite_unknown_external_archive(tmp_path):
+    outfn = tmp_path / "image.py"
+    external = tmp_path / "image.zip"
+    outfn.write_text("old notebook\n")
+    with zipfile.ZipFile(external, "w") as zf:
+        zf.writestr("unrelated.txt", b"do not replace")
+
+    nb = make_notebook_with_png()
+
+    with pytest.raises(ValueError, match="without Saturn manifest"):
+        nb.save(str(outfn), str(external))
+
+    assert outfn.read_text() == "old notebook\n"
+    with zipfile.ZipFile(external) as zf:
+        assert zf.namelist() == ["unrelated.txt"]
+        assert zf.read("unrelated.txt") == b"do not replace"
+
+
+def test_notebook_save_allows_matching_saturn_archive_manifest(tmp_path):
+    outfn = tmp_path / "image.py"
+    external = tmp_path / "image.zip"
+    with zipfile.ZipFile(external, "w") as zf:
+        zf.writestr(notebook.ARCHIVE_MANIFEST, json.dumps(notebook.archive_manifest(str(outfn))))
+        zf.writestr("old.png", b"old")
+
+    nb = make_notebook_with_png()
+
+    nb.save(str(outfn), str(external))
+
+    with zipfile.ZipFile(external) as zf:
+        assert notebook.ARCHIVE_MANIFEST in zf.namelist()
+        assert "old.png" not in zf.namelist()
+        assert len(payload_names(zf)) == 1
+
+
+def test_notebook_save_refuses_to_overwrite_archive_for_different_notebook(tmp_path):
+    outfn = tmp_path / "image.py"
+    external = tmp_path / "image.zip"
+    with zipfile.ZipFile(external, "w") as zf:
+        zf.writestr(notebook.ARCHIVE_MANIFEST, json.dumps(notebook.archive_manifest(str(tmp_path / "other.py"))))
+
+    nb = make_notebook_with_png()
+
+    with pytest.raises(ValueError, match="other.py"):
+        nb.save(str(outfn), str(external))
+
+
+def test_notebook_save_force_external_replaces_unknown_archive(tmp_path):
+    outfn = tmp_path / "image.py"
+    external = tmp_path / "image.zip"
+    with zipfile.ZipFile(external, "w") as zf:
+        zf.writestr("unrelated.txt", b"replace me")
+
+    nb = make_notebook_with_png()
+
+    nb.save(str(outfn), str(external), force_external=True)
+
+    with zipfile.ZipFile(external) as zf:
+        assert "unrelated.txt" not in zf.namelist()
+        assert notebook.ARCHIVE_MANIFEST in zf.namelist()
+        assert len(payload_names(zf)) == 1
