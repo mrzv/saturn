@@ -32,6 +32,15 @@ or add `[viewer]` extras for the `--gui` options below.
 ```
 pip install saturn-notebook[viewer]
 ```
+MPI support is optional and requires an MPI implementation with development
+headers available before installing `mpi4py`.
+```
+pip install saturn-notebook[mpi]
+```
+Extras can be combined when needed.
+```
+pip install saturn-notebook[viewer,mpi]
+```
 
 ## Commands and options
 

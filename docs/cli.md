@@ -2,6 +2,9 @@
 
 This page summarizes the behavior of Saturn's command-line interface. Run commands with `saturn ...` after installation, or with `uv run python saturn.py ...` from a source checkout.
 
+MPI support is optional. Install `saturn-notebook[mpi]` only in environments that
+already provide an MPI implementation and development headers for `mpi4py`.
+
 ## `saturn show notebook.py`
 
 Display a Saturn notebook without executing code.
