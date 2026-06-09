@@ -28,8 +28,8 @@
  - In-process notebook runs restore `sys.argv` and `sys.path` after execution.
  - MPI detection, HTML rendering, Jupyter conversion, archive handling, and
     notebook execution state are split into smaller testable units.
- - Supported Python versions now start at Python 3.9 because the dynamic version
-   build backend no longer supports Python 3.8.
+ - Supported Python versions now start at Python 3.10 because several patched
+   security dependency releases no longer support Python 3.9.
 
 ### Fixed
 

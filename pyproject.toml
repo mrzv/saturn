@@ -7,18 +7,18 @@ authors = [
 ]
 license = "BSD-3-Clause-LBNL"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "argh==0.26.2",
     "atomicwrites>=1.4.0",
     "dill>=0.3.8",
     "importlib-metadata>=4.11.3",
-    "markdown>=3.3.6",
+    "markdown>=3.8.1",
     "matplotlib>=3.5.0",
     "more-itertools>=8.12.0",
     "nbformat>=5.7.0",
     "ptpython>=3.0.29",
-    "pygments>=2.18.0",
+    "pygments>=2.20.0",
     "rich>=12.3.0",
     "wurlitzer>=3.0.2",
 ]
@@ -39,7 +39,7 @@ saturn = "saturn_notebook.__main__:main"
 dev = [
     "icecream>=2.1.3",
     "mypy>=1.14.0,<1.15.0",
-    "pytest>=8.0.0",
+    "pytest>=9.0.3",
     "ruff>=0.11.0",
     "twine>=6.0.0",
 ]
@@ -63,7 +63,7 @@ select = ["E9", "F"]
 "tests/simple.py" = ["F401"]
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.10"
 files = [
     "saturn_notebook/archive.py",
     "saturn_notebook/convert.py",
