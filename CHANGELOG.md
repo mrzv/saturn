@@ -8,6 +8,8 @@
    external zip archive by default, with `--inline` for self-contained notebooks.
  - Standalone HTML export can embed bundled KaTeX CSS, JavaScript, and fonts when
    `--standalone --katex` is used and markdown cells contain math delimiters.
+ - Added KaTeX license and provenance notices for the bundled standalone HTML
+   math-rendering assets.
  - Top-level `if __name__ == '__main__':` bodies can be used as notebook content,
    so files can remain directly runnable as Python scripts.
  - Added documentation for CLI behavior, notebook file format, execution error

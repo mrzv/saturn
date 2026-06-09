@@ -28,6 +28,7 @@ Done:
 - Bundle KaTeX assets for standalone math HTML only when math is present
 - Add Saturn external archive manifests and refuse unknown archive overwrites
 - Add --force-external for intentional archive replacement
+- Add KaTeX license and provenance notices for bundled assets
 - Resolve explicit relative external archives beside output notebooks
 - Add subprocess coverage for extract/embed archive round-trips
 - Add semantic compatibility tests for legacy inline checkpoint and variable caches

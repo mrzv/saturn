@@ -247,6 +247,7 @@ REPL supports the following keyboard shortcuts:
 - [Execution error policy](docs/error-policy.md)
 - [CLI reference](docs/cli.md)
 - [Workflow examples](docs/examples.md)
+- [Third-party notices](docs/third-party.md)
 
 ## Development
 
