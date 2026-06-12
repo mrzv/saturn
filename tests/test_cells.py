@@ -49,9 +49,12 @@ def test_parse_expands_top_level_main_guard_body_as_cells():
         "    #chk>\n"
     )
 
-    assert [type(cell) for cell in parsed] == [cells.CodeCell, cells.MarkdownCell, cells.CheckpointCell]
-    assert parsed[0].code() == "print('main')"
-    assert parsed[1].lines() == " heading\n"
+    assert [type(cell) for cell in parsed] == [cells.RawCell, cells.CodeCell, cells.MarkdownCell, cells.CheckpointCell]
+    assert parsed[0].lines() == "if __name__ == '__main__':\n"
+    assert parsed[1].code() == "print('main')"
+    assert parsed[1].save_indent == "    "
+    assert parsed[2].lines() == " heading\n"
+    assert parsed[2].save_indent == "    "
 
 
 def test_parse_main_guard_skips_else_branch():
@@ -63,9 +66,12 @@ def test_parse_main_guard_skips_else_branch():
         "print('after')\n"
     )
 
-    assert len(parsed) == 1
-    assert isinstance(parsed[0], cells.CodeCell)
-    assert parsed[0].code() == "print('main')\nprint('after')"
+    assert [type(cell) for cell in parsed] == [cells.RawCell, cells.CodeCell, cells.RawCell, cells.CodeCell]
+    assert parsed[0].lines() == "if __name__ == '__main__':\n"
+    assert parsed[1].code() == "print('main')"
+    assert parsed[1].save_indent == "    "
+    assert parsed[2].lines() == "else:\n    print('imported')\n"
+    assert parsed[3].code() == "print('after')"
 
 
 def test_external_zip_is_closed_after_parse(tmp_path, monkeypatch):

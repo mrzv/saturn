@@ -41,6 +41,7 @@ def external_has_name(external, name):
 class Cell:
     def __init__(self):
         self.lines_ = []
+        self.save_indent = ''
 
     def append(self, line):
         prefix = self.__class__._prefix
@@ -49,7 +50,7 @@ class Cell:
 
     def save(self, external):
         prefix = self.__class__._prefix
-        return [prefix + line for line in self.lines_]
+        return [self.save_indent + prefix + line for line in self.lines_]
 
     def parse(self, external, info):            # called after all the lines have been read
         pass
@@ -190,16 +191,16 @@ class OutputCell(Cell):
         for x in self.composite_:
             if isinstance(x, io.StringIO):
                 x.seek(0)
-                lines_ += [self._prefix + line for line in utils.collapse_carriage_return(x)]
+                lines_ += [self.save_indent + self._prefix + line for line in utils.collapse_carriage_return(x)]
             else:
                 if external:
                     fn = f"{hash_bytes(x)}.png"
                     with external.open(fn, 'w') as f:
                         f.write(x)
-                    lines_ += [self._prefix + f'png {_zip_fn_prefix}{fn}\n']
+                    lines_ += [self.save_indent + self._prefix + f'png {_zip_fn_prefix}{fn}\n']
                 else:   # inline
                     content = base64.b64encode(x).decode('ascii')
-                    lines_ += [self._prefix + 'png' + line + '\n' for line in chunk(content, 80, markers = True)]
+                    lines_ += [self.save_indent + self._prefix + 'png' + line + '\n' for line in chunk(content, 80, markers = True)]
         return lines_
 
     def empty(self):
@@ -243,6 +244,20 @@ class BreakCell(Cell):
 
 class REPLCell(Cell):
     _prefix = '#-REPL-#'
+
+    @classmethod
+    def display(cls):
+        return False
+
+
+class RawCell(Cell):
+    _prefix = ''
+
+    @staticmethod
+    def create(lines):
+        cell = RawCell()
+        cell.lines_ = lines
+        return cell
 
     @classmethod
     def display(cls):
@@ -405,7 +420,7 @@ class VariableCell(CheckpointCell):
 
     def save(self, external):
         lines_ = super().save(external)
-        return [self.header()] + lines_
+        return [self.save_indent + self.header()] + lines_
 
     def repl_history(self):
         return [self.header()]
@@ -471,37 +486,49 @@ def dedent_line(line, amount):
     return line[amount:] if indentation(line) >= amount else line.lstrip(' ')
 
 
+class ParsedLine:
+    def __init__(self, line, save_indent = ''):
+        self.line = line
+        self.save_indent = save_indent
+
+
 def expand_main_blocks(lines):
     expanded = []
     i = 0
     while i < len(lines):
         line = lines[i]
         if not is_main_guard(line):
-            expanded.append(line)
+            expanded.append(ParsedLine(line))
             i += 1
             continue
 
+        expanded.append(RawCell.create([line]))
         i += 1
         while i < len(lines) and not lines[i].strip():
-            expanded.append(lines[i])
+            expanded.append(ParsedLine(lines[i]))
             i += 1
         if i == len(lines):
             break
 
         body_indent = indentation(lines[i])
         while i < len(lines) and (not lines[i].strip() or indentation(lines[i]) >= body_indent):
-            expanded.append(dedent_line(lines[i], body_indent))
+            expanded.append(ParsedLine(dedent_line(lines[i], body_indent), ' ' * body_indent))
             i += 1
 
         while i < len(lines) and lines[i] == lines[i].lstrip() and lines[i].lstrip().startswith(('elif ', 'else:')):
+            branch_lines = [lines[i]]
             i += 1
             while i < len(lines) and not lines[i].strip():
+                branch_lines.append(lines[i])
                 i += 1
             if i == len(lines):
+                expanded.append(RawCell.create(branch_lines))
                 break
             branch_indent = indentation(lines[i])
             while i < len(lines) and (not lines[i].strip() or indentation(lines[i]) >= branch_indent):
+                branch_lines.append(lines[i])
                 i += 1
+            expanded.append(RawCell.create(branch_lines))
     return expanded
 
 def open_external(external_fn, show_only, info, external_base = ''):
@@ -539,15 +566,21 @@ def parse(f, external_fn, *, show_only = False, info = lambda *args, **kwargs: N
 
     try:
         p = peekable(expand_main_blocks(list(f)))
-        for line in p:
+        for parsed in p:
+            if isinstance(parsed, Cell):
+                cells_append(parsed)
+                continue
+
+            line = parsed.line
             # agglomerate empty lines into Blanks and either store as such or return to the CodeCell, if in the middle of one
             if not line.strip():
                 blank = Blanks()
                 blank.append(line)
-                while p and not p.peek().strip():
-                    blank.append(next(p))
+                blank.save_indent = parsed.save_indent
+                while p and not isinstance(p.peek(), Cell) and not p.peek().line.strip():
+                    blank.append(next(p).line)
 
-                if p and len(cells) > 0 and type(cells[-1]) is CodeCell and identify(p.peek()) is CodeCell:
+                if p and not isinstance(p.peek(), Cell) and len(cells) > 0 and type(cells[-1]) is CodeCell and identify(p.peek().line) is CodeCell:
                     for line in blank.lines_:
                         cells[-1].append(line)
                 else:
@@ -557,8 +590,9 @@ def parse(f, external_fn, *, show_only = False, info = lambda *args, **kwargs: N
 
             Type = identify(line)
 
-            if len(cells) == 0 or type(cells[-1]) is not Type:
+            if len(cells) == 0 or type(cells[-1]) is not Type or getattr(cells[-1], 'save_indent', '') != parsed.save_indent:
                 cells_append(Type())
+                cells[-1].save_indent = parsed.save_indent
             cells[-1].append(line)
 
         if len(cells) > 0:

@@ -290,3 +290,8 @@ def test_cli_runs_cells_inside_main_guard(tmp_path):
     assert second_result.returncode == 0, second_result.stderr
     assert marker.read_text() == "x"
     assert "Skipping to checkpoint" in second_result.stdout
+    first_text = first.read_text()
+    assert "if __name__ == '__main__':\n" in first_text
+    assert "    #chk> name=" in first_text
+    assert "    #o> 42" in first_text
+    assert "else:\n    print('imported')" in first_text

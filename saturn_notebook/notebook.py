@@ -179,7 +179,9 @@ class Notebook:
         # skip the next output cell
         self.skip_next_output()
 
-        self.append(c.OutputCell(out), lambda cell: None)
+        output_cell = c.OutputCell(out)
+        output_cell.save_indent = getattr(cell, 'save_indent', '')
+        self.append(output_cell, lambda cell: None)
         print()
 
     def skip_next_output(self):
@@ -216,7 +218,9 @@ class Notebook:
                     console_tb.print(tb)
 
                     self.skip_next_output()
-                    self.append(c.OutputCell.from_string(console_tb.export_text()))
+                    output_cell = c.OutputCell.from_string(console_tb.export_text())
+                    output_cell.save_indent = getattr(cell, 'save_indent', '')
+                    self.append(output_cell)
 
                     if not force:
                         raise
