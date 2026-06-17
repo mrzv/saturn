@@ -57,6 +57,21 @@ def test_parse_expands_top_level_main_guard_body_as_cells():
     assert parsed[2].save_indent == "    "
 
 
+def test_parse_expands_tab_indented_main_guard_body_as_cells():
+    parsed = parse_text(
+        "if __name__ == '__main__':\n"
+        "\tprint('main')\n"
+        "\t#m> heading\n"
+        "\t#chk>\n"
+    )
+
+    assert [type(cell) for cell in parsed] == [cells.RawCell, cells.CodeCell, cells.MarkdownCell, cells.CheckpointCell]
+    assert parsed[1].code() == "print('main')"
+    assert parsed[1].save_indent == "\t"
+    assert parsed[2].lines() == " heading\n"
+    assert parsed[2].save_indent == "\t"
+
+
 def test_parse_main_guard_skips_else_branch():
     parsed = parse_text(
         "if __name__ == '__main__':\n"

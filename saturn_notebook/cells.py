@@ -482,13 +482,17 @@ def is_main_guard(line):
 
 
 def indentation(line):
-    return len(line) - len(line.lstrip(' '))
+    return len(leading_indent(line))
+
+
+def leading_indent(line):
+    return line[:len(line) - len(line.lstrip(' \t'))]
 
 
 def dedent_line(line, amount):
     if not line.strip():
         return line
-    return line[amount:] if indentation(line) >= amount else line.lstrip(' ')
+    return line[amount:] if indentation(line) >= amount else line.lstrip(' \t')
 
 
 class ParsedLine:
@@ -515,9 +519,10 @@ def expand_main_blocks(lines):
         if i == len(lines):
             break
 
-        body_indent = indentation(lines[i])
+        body_prefix = leading_indent(lines[i])
+        body_indent = len(body_prefix)
         while i < len(lines) and (not lines[i].strip() or indentation(lines[i]) >= body_indent):
-            expanded.append(ParsedLine(dedent_line(lines[i], body_indent), ' ' * body_indent))
+            expanded.append(ParsedLine(dedent_line(lines[i], body_indent), body_prefix))
             i += 1
 
         while i < len(lines) and lines[i] == lines[i].lstrip() and lines[i].lstrip().startswith(('elif ', 'else:')):

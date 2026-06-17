@@ -325,3 +325,31 @@ def test_cli_runs_cells_inside_main_guard(tmp_path):
     assert "    #chk> name=" in first_text
     assert "    #o> 42" in first_text
     assert "else:\n    print('imported')" in first_text
+
+
+def test_cli_runs_tab_indented_cells_inside_main_guard(tmp_path):
+    marker = tmp_path / "tab-main.marker"
+    source = tmp_path / "tab_main_guard.py"
+    first = tmp_path / "tab_main_guard.first.py"
+    second = tmp_path / "tab_main_guard.second.py"
+    source.write_text(
+        "from pathlib import Path\n"
+        "\n"
+        "if __name__ == '__main__':\n"
+        f"\tPath({str(marker)!r}).write_text(Path({str(marker)!r}).read_text() + 'x' if Path({str(marker)!r}).exists() else 'x')\n"
+        "\tvalue = 40\n"
+        "\t#chk>\n"
+        "\n"
+        "\tprint(value + 2)\n"
+    )
+
+    first_result, _ = run_saturn(source, tmp_path, first)
+    second_result, _ = run_saturn(first, tmp_path, second)
+
+    assert first_result.returncode == 0, first_result.stderr
+    assert second_result.returncode == 0, second_result.stderr
+    assert marker.read_text() == "x"
+    assert "Skipping to checkpoint" in second_result.stdout
+    first_text = first.read_text()
+    assert "\t#chk> name=" in first_text
+    assert "\t#o> 42" in first_text
