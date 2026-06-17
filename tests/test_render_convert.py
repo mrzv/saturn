@@ -39,6 +39,17 @@ def test_html_render_handles_output_warning_renderables():
     assert rendered.endswith("</html>\n")
 
 
+def test_html_render_handles_invalid_inline_image_content():
+    parsed = cells.parse(io.StringIO("#o> png{{{\n#o> pngnot-base64!\n#o> png}}}\n"), "")
+    output = io.StringIO()
+
+    html.render(parsed, output)
+
+    rendered = output.getvalue()
+    assert "invalid inline image content" in rendered
+    assert rendered.endswith("</html>\n")
+
+
 def test_html_render_escapes_raw_markdown_html():
     cell = cells.MarkdownCell()
     cell.lines_ = [" <script>alert('x')</script>\n"]

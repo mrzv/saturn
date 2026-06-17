@@ -41,6 +41,13 @@ def test_empty_variable_cell_is_safe_to_parse():
     assert parsed[0].expected_hash() is None
 
 
+def test_invalid_inline_checkpoint_is_safe_to_parse():
+    parsed = parse_text("#chk>{{{\n#chk>not-base64!\n#chk>}}}\n")
+
+    assert isinstance(parsed[0], cells.CheckpointCell)
+    assert parsed[0].expected_hash() is None
+
+
 def test_parse_expands_top_level_main_guard_body_as_cells():
     parsed = parse_text(
         "if __name__ == '__main__':\n"

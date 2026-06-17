@@ -14,6 +14,7 @@ import re
 from  more_itertools    import peekable
 
 import html
+import binascii
 from pygments import highlight
 from pygments.lexers import PythonLexer
 from pygments.formatters import HtmlFormatter
@@ -39,6 +40,15 @@ def safe_archive_name(name):
 
 def external_has_name(external, name):
     return name in external.namelist()
+
+
+def decode_folded_base64(content):
+    lines = content.splitlines()
+    if lines and lines[0].strip() == '{{{':
+        lines = lines[1:]
+    if lines and lines[-1].strip() == '}}}':
+        lines = lines[:-1]
+    return base64.b64decode(''.join(lines), validate=True)
 
 class Cell:
     def __init__(self):
@@ -199,10 +209,20 @@ class OutputCell(Cell):
                         self.composite_.append_rich(Rule(f"[warn]image hash found, but no external file given ([cyan]{fn}[/cyan])[/warn]"))
                 else:
                     png_content = [line[3:]]
-                    while pl and pl.peek().startswith('png') and not pl.peek().startswith('png{{{'):
-                        png_content.append(next(pl)[3:])
+                    if line.startswith('png{{{'):
+                        while pl and pl.peek().startswith('png'):
+                            next_png = next(pl)
+                            png_content.append(next_png[3:])
+                            if next_png.startswith('png}}}'):
+                                break
+                    else:
+                        while pl and pl.peek().startswith('png') and not pl.peek().startswith('png{{{'):
+                            png_content.append(next(pl)[3:])
                     png_content = ''.join(png_content)
-                    self.composite_.append_png(base64.b64decode(png_content))
+                    try:
+                        self.composite_.append_png(decode_folded_base64(png_content))
+                    except (binascii.Error, ValueError):
+                        self.composite_.append_rich(Rule("[warn]invalid inline image content ignored[/warn]"))
         self.lines_.clear()
 
     def save(self, external):
@@ -364,8 +384,13 @@ class CheckpointCell(Cell):
                 self._expected = None
         else:
             content = self.lines()
-            content = base64.b64decode(content)
-            self._content = io.BytesIO(content)
+            try:
+                content = decode_folded_base64(content)
+            except (binascii.Error, ValueError):
+                self._warning = Rule(f"[warn]invalid inline {self._warning_name} content ignored[/warn]")
+                self._expected = None
+            else:
+                self._content = io.BytesIO(content)
 
     def load(self):
         h = self.expected_hash()    # just to make sure it's been parsed
