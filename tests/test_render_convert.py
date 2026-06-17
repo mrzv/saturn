@@ -19,6 +19,26 @@ def test_html_render_writes_document_with_displayed_cells():
     assert rendered.endswith("</html>\n")
 
 
+def test_html_render_handles_empty_markdown_cell():
+    parsed = cells.parse(io.StringIO("#m>"), "")
+    output = io.StringIO()
+
+    html.render(parsed, output)
+
+    assert output.getvalue().endswith("</html>\n")
+
+
+def test_html_render_handles_output_warning_renderables():
+    parsed = cells.parse(io.StringIO("#o> png name=../escape.png\n"), "")
+    output = io.StringIO()
+
+    html.render(parsed, output)
+
+    rendered = output.getvalue()
+    assert "unsafe image archive name" in rendered
+    assert rendered.endswith("</html>\n")
+
+
 def test_html_render_can_inline_standalone_css():
     output = io.StringIO()
 

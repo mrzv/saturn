@@ -135,7 +135,7 @@ class MarkdownCell(Cell):
         return Markdown(self.lines())
 
     def _render_html(self):
-        return "<div class='markdown'>" + markdown.markdown(''.join(line[1:] if line[0] == ' ' else line for line in self.lines_)) + "</div>"
+        return "<div class='markdown'>" + markdown.markdown(''.join(line[1:] if line.startswith(' ') else line for line in self.lines_)) + "</div>"
 
 class OutputCell(Cell):
     _prefix = '#o> '
@@ -223,8 +223,13 @@ class OutputCell(Cell):
         for x in self.composite_:
             if isinstance(x, io.StringIO):
                 result += f"<div class='output'><pre>{html.escape(x.getvalue())}</pre>\n"
-            else:
+            elif isinstance(x, bytes):
                 result += f'<img src="data:image/png;base64,{base64.b64encode(x).decode("ascii")}"/>\n'
+            elif isinstance(x, RichRenderable):
+                title = getattr(x, 'title', x)
+                result += f"<div class='muted'><pre>{html.escape(str(title))}</pre></div>\n"
+            else:
+                result += f"<div class='muted'><pre>{html.escape(str(x))}</pre></div>\n"
         result += "</div>"
         return result
 
