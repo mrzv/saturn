@@ -51,6 +51,19 @@ def test_html_render_escapes_raw_markdown_html():
     assert "&lt;script&gt;" in rendered
 
 
+def test_html_render_sanitizes_markdown_link_urls():
+    cell = cells.MarkdownCell()
+    cell.lines_ = [" [unsafe](javascript:alert(1)) [safe](https://example.com)\n"]
+    output = io.StringIO()
+
+    html.render([cell], output)
+
+    rendered = output.getvalue()
+    assert 'href="javascript:alert(1)"' not in rendered
+    assert 'href="#"' in rendered
+    assert 'href="https://example.com"' in rendered
+
+
 def test_html_render_can_inline_standalone_css():
     output = io.StringIO()
 

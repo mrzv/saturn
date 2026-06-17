@@ -10,6 +10,7 @@ import io
 import dill
 import hashlib
 import ast
+import re
 from  more_itertools    import peekable
 
 import html
@@ -18,6 +19,7 @@ from pygments.lexers import PythonLexer
 from pygments.formatters import HtmlFormatter
 
 import markdown
+from urllib.parse import urlsplit
 
 from . import utils
 from . import image
@@ -136,7 +138,23 @@ class MarkdownCell(Cell):
 
     def _render_html(self):
         content = ''.join(line[1:] if line.startswith(' ') else line for line in self.lines_)
-        return "<div class='markdown'>" + markdown.markdown(html.escape(content)) + "</div>"
+        return "<div class='markdown'>" + sanitize_markdown_html(markdown.markdown(html.escape(content))) + "</div>"
+
+
+_safe_url_schemes = {'', 'http', 'https', 'mailto'}
+
+
+def sanitize_markdown_html(rendered):
+    def sanitize_url_attr(match):
+        attr = match.group(1)
+        quote = match.group(2)
+        value = html.unescape(match.group(3)).strip()
+        scheme = urlsplit(value).scheme.lower()
+        if scheme not in _safe_url_schemes:
+            return f'{attr}={quote}#{quote}'
+        return match.group(0)
+
+    return re.sub(r"\b(href|src)=(['\"])(.*?)\2", sanitize_url_attr, rendered, flags=re.IGNORECASE)
 
 class OutputCell(Cell):
     _prefix = '#o> '
