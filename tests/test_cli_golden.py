@@ -201,6 +201,17 @@ def test_cli_image_extracts_png_to_file(tmp_path):
     assert image_out.read_bytes() == b"png-bytes"
 
 
+def test_cli_image_skips_missing_external_image_warnings(tmp_path):
+    source = tmp_path / "missing.py"
+    image_out = tmp_path / "missing.png"
+    source.write_text("#o> png name=missing.png\n")
+
+    image_result = run_saturn_command(["image", str(source), "0", str(image_out)])
+
+    assert image_result.returncode == 0, image_result.stderr
+    assert not image_out.exists()
+
+
 def test_cli_show_gui_requires_viewer_extra(tmp_path, monkeypatch):
     source = tmp_path / "notebook.py"
     source.write_text("x = 1\n")

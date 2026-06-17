@@ -369,7 +369,7 @@ def image(infn, i, out,
         if not isinstance(cell, c.OutputCell): continue
 
         for x in cell.composite_:
-            if isinstance(x, io.StringIO): continue
+            if not isinstance(x, bytes): continue
 
             if i is None:
                 print(f"{count}:")
