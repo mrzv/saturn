@@ -40,6 +40,14 @@ def from_jupyter(jnb: Any, info: Callable[..., None]) -> List[c.Cell]:
                         cells.append(output_cell)
                     else:
                         info('Unrecognized data type', style="magenta")
+                elif out['output_type'] == 'error':
+                    traceback = out.get('traceback')
+                    if traceback:
+                        text = '\n'.join(traceback) + '\n'
+                    else:
+                        text = f"{out.get('ename', 'Error')}: {out.get('evalue', '')}\n"
+                    output_cell = c.OutputCell.from_string(text)
+                    cells.append(output_cell)
                 else:
                     info('Unrecognized output type', style="magenta")
         else:

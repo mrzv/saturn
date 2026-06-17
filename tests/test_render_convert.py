@@ -103,3 +103,27 @@ def test_convert_from_jupyter_preserves_markdown_code_and_outputs():
     assert isinstance(converted[0], cells.CodeCell)
     assert any(isinstance(cell, cells.MarkdownCell) for cell in converted)
     assert any(isinstance(cell, cells.OutputCell) for cell in converted)
+
+
+def test_convert_from_jupyter_preserves_error_outputs():
+    jnb = nbformat.v4.new_notebook(
+        cells=[
+            nbformat.v4.new_code_cell(
+                "1 / 0",
+                outputs=[
+                    nbformat.v4.new_output(
+                        "error",
+                        ename="ZeroDivisionError",
+                        evalue="division by zero",
+                        traceback=["Traceback line", "ZeroDivisionError: division by zero"],
+                    )
+                ],
+            ),
+        ]
+    )
+
+    converted = convert.from_jupyter(jnb, info=lambda *args, **kwargs: None)
+
+    outputs = [cell for cell in converted if isinstance(cell, cells.OutputCell)]
+    assert len(outputs) == 1
+    assert "ZeroDivisionError: division by zero" in outputs[0].composite_.outer[0].getvalue()
