@@ -24,6 +24,11 @@ try:
 except ImportError:
     has_viewer = False
 
+
+def require_viewer():
+    if not has_viewer:
+        raise RuntimeError("GUI support requires the viewer extra; install saturn-notebook[viewer]")
+
 # workaround for a bug in OpenMPI (or anything else that screws up the terminal size);
 # see https://github.com/willmcgugan/rich/issues/127
 import  shutil
@@ -101,6 +106,7 @@ def show(fn,
         cells = c.parse(f, external, show_only = True, info=info, external_base=os.path.dirname(fn))
 
     if gui:
+        require_viewer()
         html = io.StringIO()
     _show(cells, html, katex, standalone, debug)
     if gui:
@@ -417,6 +423,7 @@ def convert(infn,
 
     if not outfn:
         if gui:
+            require_viewer()
             html = io.StringIO()
         _show(cells, html, katex, standalone, debug)
         if gui:

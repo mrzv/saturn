@@ -5,6 +5,9 @@ import sys
 import zipfile
 from pathlib import Path
 
+import pytest
+
+from saturn_notebook import __main__ as cli
 from saturn_notebook import cells, notebook
 
 
@@ -196,6 +199,33 @@ def test_cli_image_extracts_png_to_file(tmp_path):
 
     assert image_result.returncode == 0, image_result.stderr
     assert image_out.read_bytes() == b"png-bytes"
+
+
+def test_cli_show_gui_requires_viewer_extra(tmp_path, monkeypatch):
+    source = tmp_path / "notebook.py"
+    source.write_text("x = 1\n")
+    monkeypatch.setattr(cli, "has_viewer", False)
+
+    with pytest.raises(RuntimeError, match="viewer extra"):
+        cli.show(str(source), gui=True)
+
+
+def test_cli_convert_gui_requires_viewer_extra(tmp_path, monkeypatch):
+    source = tmp_path / "notebook.ipynb"
+    source.write_text(
+        json.dumps(
+            {
+                "cells": [],
+                "metadata": {},
+                "nbformat": 4,
+                "nbformat_minor": 5,
+            }
+        )
+    )
+    monkeypatch.setattr(cli, "has_viewer", False)
+
+    with pytest.raises(RuntimeError, match="viewer extra"):
+        cli.convert(str(source), outfn=None, gui=True)
 
 
 def test_cli_rehash_preserves_external_cache_archive(tmp_path):
