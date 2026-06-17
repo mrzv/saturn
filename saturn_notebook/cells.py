@@ -135,7 +135,8 @@ class MarkdownCell(Cell):
         return Markdown(self.lines())
 
     def _render_html(self):
-        return "<div class='markdown'>" + markdown.markdown(''.join(line[1:] if line.startswith(' ') else line for line in self.lines_)) + "</div>"
+        content = ''.join(line[1:] if line.startswith(' ') else line for line in self.lines_)
+        return "<div class='markdown'>" + markdown.markdown(html.escape(content)) + "</div>"
 
 class OutputCell(Cell):
     _prefix = '#o> '

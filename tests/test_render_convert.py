@@ -39,6 +39,18 @@ def test_html_render_handles_output_warning_renderables():
     assert rendered.endswith("</html>\n")
 
 
+def test_html_render_escapes_raw_markdown_html():
+    cell = cells.MarkdownCell()
+    cell.lines_ = [" <script>alert('x')</script>\n"]
+    output = io.StringIO()
+
+    html.render([cell], output)
+
+    rendered = output.getvalue()
+    assert "<script>" not in rendered
+    assert "&lt;script&gt;" in rendered
+
+
 def test_html_render_can_inline_standalone_css():
     output = io.StringIO()
 

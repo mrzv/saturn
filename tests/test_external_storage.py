@@ -38,6 +38,7 @@ def test_notebook_save_externalizes_binary_content_by_default(tmp_path):
         names = payload_names(zf)
         assert manifest["kind"] == notebook.ARCHIVE_MANIFEST_KIND
         assert manifest["notebook"] == "image.py"
+        assert manifest["notebook_path"] == str(outfn)
         assert len(names) == 1
         assert names[0].endswith(".png")
         assert zf.read(names[0]) == b"png-bytes"
@@ -193,6 +194,21 @@ def test_notebook_save_refuses_to_overwrite_archive_for_different_notebook(tmp_p
 
     with pytest.raises(ValueError, match="other.py"):
         nb.save(str(outfn), str(external))
+
+
+def test_notebook_save_refuses_to_overwrite_archive_for_same_basename_different_path(tmp_path):
+    first = tmp_path / "first" / "image.py"
+    second = tmp_path / "second" / "image.py"
+    external = tmp_path / "shared.zip"
+    first.parent.mkdir()
+    second.parent.mkdir()
+    with zipfile.ZipFile(external, "w") as zf:
+        zf.writestr(notebook.ARCHIVE_MANIFEST, json.dumps(notebook.archive_manifest(str(first))))
+
+    nb = make_notebook_with_png()
+
+    with pytest.raises(ValueError, match=str(first)):
+        nb.save(str(second), str(external))
 
 
 def test_notebook_save_force_external_replaces_unknown_archive(tmp_path):

@@ -13,6 +13,7 @@ def archive_manifest(fn: str) -> Dict[str, Any]:
         'kind': ARCHIVE_MANIFEST_KIND,
         'version': 1,
         'notebook': os.path.basename(fn),
+        'notebook_path': os.path.abspath(fn),
     }
 
 
@@ -44,8 +45,14 @@ def validate_existing_archive(fn: str, external: str) -> None:
             f"Refusing to overwrite external archive with unrecognized Saturn manifest: {external}. "
             "Use --force-external to replace it."
         )
+    notebook_path = manifest.get('notebook_path')
+    if notebook_path and notebook_path != os.path.abspath(fn):
+        raise ValueError(
+            f"Refusing to overwrite external archive for {notebook_path}: {external}. "
+            "Use --force-external to replace it."
+        )
     notebook_name = manifest.get('notebook')
-    if notebook_name and notebook_name != os.path.basename(fn):
+    if not notebook_path and notebook_name and notebook_name != os.path.basename(fn):
         raise ValueError(
             f"Refusing to overwrite external archive for {notebook_name}: {external}. "
             "Use --force-external to replace it."
