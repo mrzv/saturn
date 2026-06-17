@@ -160,6 +160,7 @@ def test_cli_clean_strips_binary_and_optionally_output(tmp_path):
     cleaned = tmp_path / "cleaned.py"
     stripped = tmp_path / "stripped.py"
     source.write_text(
+        "#saturn> external=dirty.zip\n"
         "print('hello')\n"
         "#o> hello\n"
         "#o> png{{{\n"
@@ -180,6 +181,7 @@ def test_cli_clean_strips_binary_and_optionally_output(tmp_path):
     cleaned_text = cleaned.read_text()
     assert "#o> hello" in cleaned_text
     assert "#o> png" not in cleaned_text
+    assert "#saturn> external=" not in cleaned_text
     assert "#chk>\n" in cleaned_text
     assert "#chk> name=old.chk" not in cleaned_text
     assert cleaned_text.count("#var>") == 1

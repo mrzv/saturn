@@ -336,6 +336,8 @@ def clean(infn,
             with open(infn) as f:
                 pf = peekable(f)
                 for line in pf:
+                    if line.startswith('#saturn>') and c.SaturnCell._external_prefix in line:
+                        continue
                     if strip_output and line.startswith('#o>'): continue
                     if line.startswith('#o> png'): continue
                     if line.startswith('#chk>') and line.strip() != '#chk>':
