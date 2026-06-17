@@ -21,3 +21,7 @@ def test_composite_io_passthrough_writes_immediately():
     finally:
         os.close(read_fd)
         os.close(write_fd)
+
+
+def test_collapse_carriage_return_ignores_extra_cursor_up():
+    assert utils.collapse_carriage_return(["\x1b[A\x1b[Aoops\n"]) == ["oops\n"]

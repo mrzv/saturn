@@ -58,8 +58,9 @@ def collapse_carriage_return(lines):
             cr = line.find('\r')
 
             if up != -1:
-                result.pop()
-                line = line[up+1:]
+                if result:
+                    result.pop()
+                line = line[up+len('\x1b[A'):]
             elif cr != -1:
                 line = line[cr+1:]
             else:
