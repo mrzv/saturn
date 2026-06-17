@@ -261,7 +261,7 @@ class OutputCell(Cell):
         result = ""
         for x in self.composite_:
             if isinstance(x, io.StringIO):
-                result += f"<div class='output'><pre>{html.escape(x.getvalue())}</pre>\n"
+                result += f"<div class='output'><pre>{html.escape(x.getvalue())}</pre>\n</div>\n"
             elif isinstance(x, bytes):
                 result += f'<img src="data:image/png;base64,{base64.b64encode(x).decode("ascii")}"/>\n'
             elif isinstance(x, RichRenderable):
@@ -269,7 +269,6 @@ class OutputCell(Cell):
                 result += f"<div class='muted'><pre>{html.escape(str(title))}</pre></div>\n"
             else:
                 result += f"<div class='muted'><pre>{html.escape(str(x))}</pre></div>\n"
-        result += "</div>"
         return result
 
 class BreakCell(Cell):

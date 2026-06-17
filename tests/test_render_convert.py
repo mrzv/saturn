@@ -50,6 +50,20 @@ def test_html_render_handles_invalid_inline_image_content():
     assert rendered.endswith("</html>\n")
 
 
+def test_html_render_balances_mixed_output_chunks():
+    cell = cells.OutputCell()
+    cell.composite_.write("before")
+    cell.composite_.append_png(b"png-bytes")
+    cell.composite_.write("after")
+    output = io.StringIO()
+
+    html.render([cell], output)
+
+    rendered = output.getvalue()
+    assert "<div class='output'><pre>before</pre>\n</div>\n<img" in rendered
+    assert "<div class='output'><pre>after</pre>\n</div>" in rendered
+
+
 def test_html_render_escapes_raw_markdown_html():
     cell = cells.MarkdownCell()
     cell.lines_ = [" <script>alert('x')</script>\n"]
