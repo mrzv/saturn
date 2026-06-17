@@ -336,18 +336,19 @@ def clean(infn,
             with open(infn) as f:
                 pf = peekable(f)
                 for line in pf:
-                    if line.startswith('#saturn>') and c.SaturnCell._external_prefix in line:
+                    marker_line = line.lstrip(' \t')
+                    if marker_line.startswith('#saturn>') and c.SaturnCell._external_prefix in marker_line:
                         continue
-                    if strip_output and line.startswith('#o>'): continue
-                    if line.startswith('#o> png'): continue
-                    if line.startswith('#chk>') and line.strip() != '#chk>':
-                        of.write('#chk>\n')
-                        while pf and pf.peek().startswith('#chk>'):
+                    if strip_output and marker_line.startswith('#o>'): continue
+                    if marker_line.startswith('#o> png'): continue
+                    if marker_line.startswith('#chk>') and marker_line.strip() != '#chk>':
+                        of.write(line[:len(line) - len(marker_line)] + '#chk>\n')
+                        while pf and pf.peek().lstrip(' \t').startswith('#chk>'):
                             next(pf)
                         continue
-                    if line.startswith('#var>'):
+                    if marker_line.startswith('#var>'):
                         # Keep the first line, but skip all subsequent lines
-                        while pf and pf.peek().startswith('#var>'):
+                        while pf and pf.peek().lstrip(' \t').startswith('#var>'):
                             next(pf)
                     of.write(line)
 

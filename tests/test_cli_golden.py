@@ -192,6 +192,35 @@ def test_cli_clean_strips_binary_and_optionally_output(tmp_path):
     assert "print('done')" in stripped_text
 
 
+def test_cli_clean_strips_indented_notebook_markers(tmp_path):
+    source = tmp_path / "dirty_main.py"
+    cleaned = tmp_path / "cleaned_main.py"
+    source.write_text(
+        "if __name__ == '__main__':\n"
+        "    #saturn> external=dirty.zip\n"
+        "    print('hello')\n"
+        "    #o> hello\n"
+        "    #o> png{{{\n"
+        "    #o> cG5nLWJ5dGVz\n"
+        "    #o> }}}\n"
+        "    #chk> name=old.chk\n"
+        "    #var> value\n"
+        "    #var> cached\n"
+        "    print('done')\n"
+    )
+
+    clean_result = run_saturn_command(["clean", str(source), str(cleaned)])
+
+    assert clean_result.returncode == 0, clean_result.stderr
+    cleaned_text = cleaned.read_text()
+    assert "    #o> hello" in cleaned_text
+    assert "    #o> png" not in cleaned_text
+    assert "#saturn> external=" not in cleaned_text
+    assert "    #chk>\n" in cleaned_text
+    assert "    #chk> name=old.chk" not in cleaned_text
+    assert cleaned_text.count("    #var>") == 1
+
+
 def test_cli_image_extracts_png_to_file(tmp_path):
     source = tmp_path / "image.py"
     image_out = tmp_path / "image.png"
