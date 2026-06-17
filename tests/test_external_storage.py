@@ -59,6 +59,20 @@ def test_notebook_save_does_not_create_external_archive_for_plain_text(tmp_path)
     assert not (tmp_path / "plain.zip").exists()
 
 
+def test_notebook_save_drops_stale_external_metadata_without_external_content(tmp_path):
+    outfn = tmp_path / "plain.py"
+    saturn = cells.SaturnCell.create("plain.zip")
+    code = cells.CodeCell()
+    code.append("x = 1\n")
+    nb = notebook.Notebook(name="plain.py")
+    nb.add([saturn, code])
+    nb.move_all_incoming()
+
+    nb.save(str(outfn), "")
+
+    assert outfn.read_text() == "x = 1\n"
+
+
 def test_notebook_save_inline_embeds_binary_content(tmp_path):
     outfn = tmp_path / "image.py"
     nb = make_notebook_with_png()

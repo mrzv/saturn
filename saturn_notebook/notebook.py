@@ -306,6 +306,11 @@ class Notebook:
                     break
             else:
                 self.cells.insert(0, c.SaturnCell.create(external_metadata))
+        elif not inline:
+            for cell in self.cells:
+                if type(cell) is c.SaturnCell:
+                    cell.external_fn = ''
+                    cell.lines_ = []
 
         external_writer = atomic_write(external, mode='wb', overwrite=True) if external else nullcontext()
 
