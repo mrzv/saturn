@@ -569,7 +569,11 @@ def open_external(external_fn, show_only, info, external_base = ''):
                 info(f"External zip archive [error]{external_fn}[/error] not found.", style='warn')
             return None
 
-        return zipfile.ZipFile(external_fn, 'r')
+        try:
+            return zipfile.ZipFile(external_fn, 'r')
+        except zipfile.BadZipFile:
+            info(f"External zip archive [error]{external_fn}[/error] is not a valid zip file.", style='warn')
+            return None
     else:
         return None
 

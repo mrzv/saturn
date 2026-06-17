@@ -98,6 +98,19 @@ def test_parse_resolves_relative_external_archive_next_to_notebook(tmp_path):
     assert any(item == b"png-bytes" for item in outputs[0].composite_)
 
 
+def test_parse_malformed_external_archive_reports_warning(tmp_path):
+    external = tmp_path / "not-a-zip.zip"
+    external.write_text("not a zip")
+    source = io.StringIO("#o> png name=missing.png\n")
+    messages = []
+
+    parsed = cells.parse(source, str(external), show_only=True, info=lambda *args, **kwargs: messages.append(args[0]))
+
+    output = next(cell for cell in parsed if isinstance(cell, cells.OutputCell))
+    assert any("not a valid zip" in message for message in messages)
+    assert not any(item == b"png-bytes" for item in output.composite_)
+
+
 def test_unsafe_archive_member_names_are_not_loaded(tmp_path):
     external = tmp_path / "unsafe.zip"
     with zipfile.ZipFile(external, "w") as zf:
