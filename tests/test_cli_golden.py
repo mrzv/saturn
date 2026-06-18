@@ -12,6 +12,12 @@ from saturn_notebook import cells, notebook
 
 
 ROOT = Path(__file__).resolve().parents[1]
+LEGACY_GOLDEN_FIXTURES = sorted(path.name.removesuffix(".expected") for path in (ROOT / "tests").glob("*.py.expected"))
+LEGACY_OPTIONAL_DEPS = {
+    "joblib-parallel.py": "joblib",
+    "test-dionysus.py": "dionysus",
+    "test-tqdm.py": "tqdm",
+}
 
 
 def normalize_terminal_output(text):
@@ -68,6 +74,19 @@ def test_cli_preserves_system_exit_fixture(tmp_path):
     assert "#o> Hello" in output
     assert "sys.exit(0)" in output
     assert 'print("Past the end")' in output
+
+
+@pytest.mark.parametrize("fixture_name", LEGACY_GOLDEN_FIXTURES)
+def test_cli_runs_legacy_golden_fixture(fixture_name, tmp_path):
+    optional_dep = LEGACY_OPTIONAL_DEPS.get(fixture_name)
+    if optional_dep:
+        pytest.importorskip(optional_dep)
+
+    fixture = ROOT / "tests" / fixture_name
+    result, output = run_saturn(fixture, tmp_path)
+
+    assert result.returncode == 0, result.stderr
+    assert output.exists()
 
 
 def test_cli_fails_for_missing_input_notebook(tmp_path):
