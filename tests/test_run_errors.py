@@ -113,3 +113,61 @@ def test_auto_capture_runs_when_cell_result_is_none(monkeypatch):
 
     output_cells = [cell for cell in nb.cells if isinstance(cell, cells.OutputCell)]
     assert any(item == b"png" for cell in output_cells for item in cell.composite_)
+
+
+def test_traceback_falls_back_when_source_file_is_missing():
+    failing = cells.CodeCell()
+    failing.append("exec(compile(\"raise RuntimeError('boom')\", \"missing-source.py\", \"exec\"))\n")
+    nb = notebook.Notebook(name="forced.py")
+    nb.add([failing])
+
+    nb.process_all(lambda cell: None, force=True)
+
+    output_cells = [cell for cell in nb.cells if isinstance(cell, cells.OutputCell)]
+    rendered = "".join(
+        item.getvalue()
+        for cell in output_cells
+        for item in cell.composite_
+        if hasattr(item, "getvalue")
+    )
+    assert "missing-source.py" in rendered
+    assert "RuntimeError: boom" in rendered
+
+
+def test_traceback_source_file_fallback_reraises_original_exception():
+    failing = cells.CodeCell()
+    failing.append("exec(compile(\"raise RuntimeError('boom')\", \"missing-source.py\", \"exec\"))\n")
+    nb = notebook.Notebook(name="forced.py")
+    nb.add([failing])
+
+    with pytest.raises(RuntimeError, match="boom"):
+        nb.process_all(lambda cell: None)
+
+
+def test_traceback_falls_back_when_cell_id_is_invalid():
+    failing = cells.CodeCell()
+    failing.append("exec(compile(\"raise RuntimeError('boom')\", \"forced.py:999:1\", \"exec\"))\n")
+    nb = notebook.Notebook(name="forced.py")
+    nb.add([failing])
+
+    nb.process_all(lambda cell: None, force=True)
+
+    output_cells = [cell for cell in nb.cells if isinstance(cell, cells.OutputCell)]
+    rendered = "".join(
+        item.getvalue()
+        for cell in output_cells
+        for item in cell.composite_
+        if hasattr(item, "getvalue")
+    )
+    assert "forced.py" in rendered
+    assert "RuntimeError: boom" in rendered
+
+
+def test_traceback_invalid_cell_id_fallback_reraises_original_exception():
+    failing = cells.CodeCell()
+    failing.append("exec(compile(\"raise RuntimeError('boom')\", \"forced.py:999:1\", \"exec\"))\n")
+    nb = notebook.Notebook(name="forced.py")
+    nb.add([failing])
+
+    with pytest.raises(RuntimeError, match="boom"):
+        nb.process_all(lambda cell: None)

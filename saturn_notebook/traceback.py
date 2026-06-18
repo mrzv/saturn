@@ -63,6 +63,8 @@ class Traceback(RichTraceback):
                 continue
             try:
                 if cell_id != -1:
+                    if cell_id < 0 or cell_id >= len(self.nb.cells):
+                        continue
                     syntax = Syntax(
                         self.nb.cells[cell_id].code(),
                         'python',
@@ -88,6 +90,5 @@ class Traceback(RichTraceback):
                         word_wrap=self.word_wrap,
                     )
             except Exception:
-                raise
-            else:
-                yield Padding.indent(syntax, 2)
+                continue
+            yield Padding.indent(syntax, 2)
