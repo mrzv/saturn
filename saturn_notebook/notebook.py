@@ -341,7 +341,7 @@ class Notebook:
                     if external:
                         external_zip.writestr(
                             archive.ARCHIVE_MANIFEST,
-                            archive.archive_manifest_json(fn),
+                            archive.archive_manifest_json(fn, external),
                         )
                     for i,cell in enumerate(self.cells):
                         if inline and type(cell) is c.SaturnCell:

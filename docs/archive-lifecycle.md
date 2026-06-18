@@ -30,7 +30,7 @@ When the archive is next to the notebook, Saturn writes only the archive basenam
 
 This lets the notebook and archive move together as a pair. If the archive is outside the notebook directory, Saturn preserves the explicit path in the metadata.
 
-Every Saturn-created archive contains `.saturn-archive.json`, which identifies the zip as a Saturn external archive and records the notebook basename that created it.
+Every Saturn-created archive contains `.saturn-archive.json`, which identifies the zip as a Saturn external archive and records the notebook basename that created it. Archives outside the notebook directory also record the original absolute notebook path for stricter overwrite protection; sibling archives omit that path so the notebook and archive can move together.
 
 ## Overwrite Safety
 
@@ -66,4 +66,4 @@ saturn embed analysis.py analysis.zip analysis.inline.py
 
 ## Compatibility
 
-Older inline notebooks remain readable. External archive member names must be simple filenames; unsafe names such as absolute paths or `..` paths are ignored when loading.
+Older inline notebooks remain readable. External archive member names must be simple filenames; unsafe names such as absolute paths or `..` paths are ignored when loading. External members larger than 100 MiB are ignored to avoid decompressing unexpectedly large archive payloads.

@@ -27,10 +27,12 @@ from . import utils
 from . import image
 from . import evaluate
 
-import  zipfile, os
+import  zipfile, os, zlib
 
 # Prefix for the filename inside an external zipfile
 _zip_fn_prefix = 'name='
+MAX_EXTERNAL_MEMBER_BYTES = 100 * 1024 * 1024
+EXTERNAL_READ_ERRORS = (KeyError, ValueError, RuntimeError, OSError, zipfile.BadZipFile, zlib.error)
 
 def hash_bytes(content):
     return hashlib.sha256(content).hexdigest()[:16]
@@ -41,6 +43,13 @@ def safe_archive_name(name):
 
 def external_has_name(external, name):
     return name in external.namelist()
+
+
+def read_external_member(external, name):
+    info = external.getinfo(name)
+    if info.file_size > MAX_EXTERNAL_MEMBER_BYTES:
+        raise ValueError(f"archive member is too large ({info.file_size} bytes)")
+    return external.read(info)
 
 
 def decode_folded_base64(content):
@@ -229,8 +238,12 @@ class OutputCell(Cell):
                         self.composite_.append_rich(Rule(f"[warn]unsafe image archive name [cyan]{fn}[/cyan] ignored[/warn]"))
                     elif external:
                         if external_has_name(external, fn):
-                            png_content = external.read(fn)
-                            self.composite_.append_png(png_content)
+                            try:
+                                png_content = read_external_member(external, fn)
+                            except EXTERNAL_READ_ERRORS as e:
+                                self.composite_.append_rich(Rule(f"[warn]image hash [cyan]{fn}[/cyan] could not be read from the external archive [cyan]{external.filename}[/cyan]: {e}[/warn]"))
+                            else:
+                                self.composite_.append_png(png_content)
                         else:
                             # here and below, we use
                             # self.composite_.append_rich, instead of info, so
@@ -406,7 +419,11 @@ class CheckpointCell(Cell):
                 self._expected = None
             elif external:
                 if external_has_name(external, fn):
-                    self._content = io.BytesIO(external.read(fn))
+                    try:
+                        self._content = io.BytesIO(read_external_member(external, fn))
+                    except EXTERNAL_READ_ERRORS as e:
+                        self._warning = Rule(f"[warn]{self._warning_name} hash [cyan]{fn}[/cyan] could not be read from the external archive [cyan]{external.filename}[/cyan]: {e}[/warn]")
+                        self._expected = None
                 else:
                     self._warning = Rule(f"[warn]{self._warning_name} hash [cyan]{fn}[/cyan] not found in the external archive [cyan]{external.filename}[/cyan][/warn]")
                     self._expected = None

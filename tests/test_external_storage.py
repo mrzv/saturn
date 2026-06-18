@@ -38,7 +38,7 @@ def test_notebook_save_externalizes_binary_content_by_default(tmp_path):
         names = payload_names(zf)
         assert manifest["kind"] == notebook.ARCHIVE_MANIFEST_KIND
         assert manifest["notebook"] == "image.py"
-        assert manifest["notebook_path"] == str(outfn)
+        assert "notebook_path" not in manifest
         assert len(names) == 1
         assert names[0].endswith(".png")
         assert zf.read(names[0]) == b"png-bytes"
@@ -148,6 +148,9 @@ def test_explicit_absolute_external_path_is_preserved_in_metadata(tmp_path):
 
     assert outfn.read_text().startswith(f"#saturn> external={external}\n")
     assert Path(external).exists()
+    with zipfile.ZipFile(external) as zf:
+        manifest = json.loads(zf.read(notebook.ARCHIVE_MANIFEST))
+        assert manifest["notebook_path"] == str(outfn)
 
 
 def test_external_archive_write_failure_preserves_existing_files(tmp_path, monkeypatch):
@@ -211,6 +214,34 @@ def test_notebook_save_allows_matching_saturn_archive_manifest(tmp_path):
         assert len(payload_names(zf)) == 1
 
 
+def test_notebook_save_allows_moved_sibling_archive_with_old_absolute_path(tmp_path):
+    original = tmp_path / "original" / "image.py"
+    moved = tmp_path / "moved" / "image.py"
+    external = tmp_path / "moved" / "image.zip"
+    external.parent.mkdir()
+    with zipfile.ZipFile(external, "w") as zf:
+        zf.writestr(
+            notebook.ARCHIVE_MANIFEST,
+            json.dumps(
+                {
+                    "kind": notebook.ARCHIVE_MANIFEST_KIND,
+                    "version": 1,
+                    "notebook": "image.py",
+                    "notebook_path": str(original),
+                }
+            ),
+        )
+        zf.writestr("old.png", b"old")
+
+    nb = make_notebook_with_png()
+
+    nb.save(str(moved), str(external))
+
+    with zipfile.ZipFile(external) as zf:
+        assert "old.png" not in zf.namelist()
+        assert len(payload_names(zf)) == 1
+
+
 def test_notebook_save_refuses_to_overwrite_archive_for_different_notebook(tmp_path):
     outfn = tmp_path / "image.py"
     external = tmp_path / "image.zip"
@@ -238,6 +269,18 @@ def test_notebook_save_refuses_to_overwrite_archive_for_same_basename_different_
         nb.save(str(second), str(external))
 
 
+def test_notebook_save_refuses_incomplete_saturn_archive_manifest(tmp_path):
+    outfn = tmp_path / "image.py"
+    external = tmp_path / "image.zip"
+    with zipfile.ZipFile(external, "w") as zf:
+        zf.writestr(notebook.ARCHIVE_MANIFEST, json.dumps({"kind": notebook.ARCHIVE_MANIFEST_KIND}))
+
+    nb = make_notebook_with_png()
+
+    with pytest.raises(ValueError, match="incomplete Saturn manifest"):
+        nb.save(str(outfn), str(external))
+
+
 def test_notebook_save_force_external_replaces_unknown_archive(tmp_path):
     outfn = tmp_path / "image.py"
     external = tmp_path / "image.zip"
@@ -252,3 +295,28 @@ def test_notebook_save_force_external_replaces_unknown_archive(tmp_path):
         assert "unrelated.txt" not in zf.namelist()
         assert notebook.ARCHIVE_MANIFEST in zf.namelist()
         assert len(payload_names(zf)) == 1
+
+
+def test_oversized_external_image_member_is_not_loaded(tmp_path, monkeypatch):
+    external = tmp_path / "image.zip"
+    with zipfile.ZipFile(external, "w") as zf:
+        zf.writestr("image.png", b"png-bytes")
+    monkeypatch.setattr(cells, "MAX_EXTERNAL_MEMBER_BYTES", 3)
+
+    parsed = cells.parse(io.StringIO("#o> png name=image.png\n"), str(external))
+
+    output = next(cell for cell in parsed if isinstance(cell, cells.OutputCell))
+    assert not any(isinstance(item, bytes) for item in output.composite_)
+    assert "too large" in output._render_html()
+
+
+def test_oversized_external_checkpoint_member_is_not_loaded(tmp_path, monkeypatch):
+    external = tmp_path / "checkpoint.zip"
+    with zipfile.ZipFile(external, "w") as zf:
+        zf.writestr("state.chk", b"checkpoint-bytes")
+    monkeypatch.setattr(cells, "MAX_EXTERNAL_MEMBER_BYTES", 3)
+
+    parsed = cells.parse(io.StringIO("#chk> name=state.chk\n"), str(external))
+
+    checkpoint = next(cell for cell in parsed if isinstance(cell, cells.CheckpointCell))
+    assert checkpoint.expected_hash() is None
