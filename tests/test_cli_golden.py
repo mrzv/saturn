@@ -490,3 +490,30 @@ def test_cli_runs_tab_indented_cells_inside_main_guard(tmp_path):
     first_text = first.read_text()
     assert "\t#chk> name=" in first_text
     assert "\t#o> 42" in first_text
+
+
+def test_cli_runs_main_guard_with_column_zero_multiline_string(tmp_path):
+    source = tmp_path / "main_guard_multiline.py"
+    output = tmp_path / "main_guard_multiline.out.py"
+    source.write_text(
+        "if __name__ == '__main__':\n"
+        "    text = \"\"\"first\n"
+        "column zero\n"
+        "\"\"\"\n"
+        "    print(text.splitlines()[1])\n"
+    )
+
+    python_result = subprocess.run(
+        [sys.executable, str(source)],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    saturn_result, _ = run_saturn(source, tmp_path, output)
+
+    assert python_result.returncode == 0, python_result.stderr
+    assert saturn_result.returncode == 0, saturn_result.stderr
+    assert normalize_terminal_output(python_result.stdout) == "column zero"
+    assert "column zero" in saturn_result.stdout
+    assert "column zero\n" in output.read_text()

@@ -90,15 +90,21 @@ def first_pickle_end(content):
 class Cell:
     def __init__(self):
         self.lines_ = []
+        self.line_save_indents = []
         self.save_indent = ''
 
     def append(self, line):
         prefix = self.__class__._prefix
         line = line[len(prefix):]       # eat the prefix
         self.lines_.append(line)
+        self.line_save_indents.append(getattr(self, '_pending_save_indent', self.save_indent))
+        if hasattr(self, '_pending_save_indent'):
+            del self._pending_save_indent
 
     def save(self, external):
         prefix = self.__class__._prefix
+        if len(self.line_save_indents) == len(self.lines_):
+            return [save_indent + prefix + line for save_indent,line in zip(self.line_save_indents, self.lines_)]
         return [self.save_indent + prefix + line for line in self.lines_]
 
     def parse(self, external, info):            # called after all the lines have been read
@@ -174,7 +180,7 @@ class CodeCell(Cell):
         return f"<div class='code'>{highlight(self.code(), PythonLexer(), HtmlFormatter())}</div>"
 
     def repl_history(self):
-        return self.save(None)
+        return self.lines_[:]
 
 class MarkdownCell(Cell):
     _prefix = '#m>'
@@ -601,6 +607,17 @@ def chunk(content, width, markers = False):
     return chunking
 
 
+def is_main_guard_test(test):
+    if not isinstance(test, ast.Compare) or len(test.ops) != 1 or len(test.comparators) != 1:
+        return False
+    if not isinstance(test.ops[0], ast.Eq):
+        return False
+    if not isinstance(test.left, ast.Name) or test.left.id != '__name__':
+        return False
+    comparator = test.comparators[0]
+    return isinstance(comparator, ast.Constant) and comparator.value == '__main__'
+
+
 def is_main_guard(line):
     if line != line.lstrip():
         return False
@@ -610,15 +627,21 @@ def is_main_guard(line):
         return False
     if len(tree.body) != 1 or not isinstance(tree.body[0], ast.If):
         return False
-    test = tree.body[0].test
-    if not isinstance(test, ast.Compare) or len(test.ops) != 1 or len(test.comparators) != 1:
-        return False
-    if not isinstance(test.ops[0], ast.Eq):
-        return False
-    if not isinstance(test.left, ast.Name) or test.left.id != '__name__':
-        return False
-    comparator = test.comparators[0]
-    return isinstance(comparator, ast.Constant) and comparator.value == '__main__'
+    return is_main_guard_test(tree.body[0].test)
+
+
+def main_guard_spans(lines):
+    try:
+        tree = ast.parse(''.join(lines))
+    except SyntaxError:
+        return {}
+
+    spans = {}
+    for node in tree.body:
+        if not isinstance(node, ast.If) or not is_main_guard_test(node.test) or not node.body:
+            continue
+        spans[node.lineno - 1] = node
+    return spans
 
 
 def indentation(line):
@@ -636,12 +659,55 @@ def dedent_line(line, amount):
 
 
 class ParsedLine:
-    def __init__(self, line, save_indent = ''):
+    def __init__(self, line, save_indent = '', line_save_indent = None):
         self.line = line
         self.save_indent = save_indent
+        self.line_save_indent = save_indent if line_save_indent is None else line_save_indent
+
+
+def append_main_body_line(expanded, line, body_indent, body_prefix):
+    if line.strip() and indentation(line) >= body_indent:
+        expanded.append(ParsedLine(dedent_line(line, body_indent), body_prefix, body_prefix))
+    else:
+        expanded.append(ParsedLine(line, body_prefix, ''))
+
+
+def expand_main_block_heuristic(lines, start, expanded):
+    i = start
+    line = lines[i]
+    expanded.append(RawCell.create([line]))
+    i += 1
+    while i < len(lines) and not lines[i].strip():
+        expanded.append(ParsedLine(lines[i]))
+        i += 1
+    if i == len(lines):
+        return i
+
+    body_prefix = leading_indent(lines[i])
+    body_indent = len(body_prefix)
+    while i < len(lines) and (not lines[i].strip() or indentation(lines[i]) >= body_indent):
+        expanded.append(ParsedLine(dedent_line(lines[i], body_indent), body_prefix))
+        i += 1
+
+    while i < len(lines) and lines[i] == lines[i].lstrip() and lines[i].lstrip().startswith(('elif ', 'else:')):
+        branch_lines = [lines[i]]
+        i += 1
+        while i < len(lines) and not lines[i].strip():
+            branch_lines.append(lines[i])
+            i += 1
+        if i == len(lines):
+            expanded.append(RawCell.create(branch_lines))
+            break
+        branch_indent = indentation(lines[i])
+        while i < len(lines) and (not lines[i].strip() or indentation(lines[i]) >= branch_indent):
+            branch_lines.append(lines[i])
+            i += 1
+        expanded.append(RawCell.create(branch_lines))
+    return i
 
 
 def expand_main_blocks(lines):
+    spans = main_guard_spans(lines)
     expanded = []
     i = 0
     while i < len(lines):
@@ -651,34 +717,37 @@ def expand_main_blocks(lines):
             i += 1
             continue
 
+        node = spans.get(i)
+        if not node:
+            i = expand_main_block_heuristic(lines, i, expanded)
+            continue
+
         expanded.append(RawCell.create([line]))
+        body_start = node.body[0].lineno - 1
+        body_end = max(getattr(child, 'end_lineno', child.lineno) for child in node.body) - 1
+        body_prefix = leading_indent(lines[body_start])
+        body_indent = len(body_prefix)
+
         i += 1
-        while i < len(lines) and not lines[i].strip():
+        while i < body_start:
             expanded.append(ParsedLine(lines[i]))
             i += 1
-        if i == len(lines):
-            break
 
-        body_prefix = leading_indent(lines[i])
-        body_indent = len(body_prefix)
-        while i < len(lines) and (not lines[i].strip() or indentation(lines[i]) >= body_indent):
-            expanded.append(ParsedLine(dedent_line(lines[i], body_indent), body_prefix))
-            i += 1
-
-        while i < len(lines) and lines[i] == lines[i].lstrip() and lines[i].lstrip().startswith(('elif ', 'else:')):
-            branch_lines = [lines[i]]
-            i += 1
-            while i < len(lines) and not lines[i].strip():
-                branch_lines.append(lines[i])
-                i += 1
-            if i == len(lines):
-                expanded.append(RawCell.create(branch_lines))
+        while body_end + 1 < len(lines):
+            next_line = lines[body_end + 1]
+            if next_line.strip() and indentation(next_line) < body_indent:
                 break
-            branch_indent = indentation(lines[i])
-            while i < len(lines) and (not lines[i].strip() or indentation(lines[i]) >= branch_indent):
-                branch_lines.append(lines[i])
-                i += 1
-            expanded.append(RawCell.create(branch_lines))
+            body_end += 1
+
+        while i <= body_end:
+            append_main_body_line(expanded, lines[i], body_indent, body_prefix)
+            i += 1
+
+        if node.orelse:
+            branch_end = getattr(node, 'end_lineno', i) or i
+            if i < branch_end:
+                expanded.append(RawCell.create(lines[i:branch_end]))
+                i = branch_end
     return expanded
 
 def open_external(external_fn, show_only, info, external_base = ''):
@@ -729,13 +798,17 @@ def parse(f, external_fn, *, show_only = False, info = lambda *args, **kwargs: N
             # agglomerate empty lines into Blanks and either store as such or return to the CodeCell, if in the middle of one
             if not line.strip():
                 blank = Blanks()
-                blank.append(line)
                 blank.save_indent = parsed.save_indent
+                blank._pending_save_indent = parsed.line_save_indent
+                blank.append(line)
                 while p and not isinstance(p.peek(), Cell) and not p.peek().line.strip():
-                    blank.append(next(p).line)
+                    parsed_blank = next(p)
+                    blank._pending_save_indent = parsed_blank.line_save_indent
+                    blank.append(parsed_blank.line)
 
                 if p and not isinstance(p.peek(), Cell) and len(cells) > 0 and type(cells[-1]) is CodeCell and identify(p.peek().line) is CodeCell:
-                    for line in blank.lines_:
+                    for line,save_indent in zip(blank.lines_, blank.line_save_indents):
+                        cells[-1]._pending_save_indent = save_indent
                         cells[-1].append(line)
                 else:
                     cells_append(blank)
@@ -747,6 +820,7 @@ def parse(f, external_fn, *, show_only = False, info = lambda *args, **kwargs: N
             if len(cells) == 0 or type(cells[-1]) is not Type or getattr(cells[-1], 'save_indent', '') != parsed.save_indent:
                 cells_append(Type())
                 cells[-1].save_indent = parsed.save_indent
+            cells[-1]._pending_save_indent = parsed.line_save_indent
             cells[-1].append(line)
 
         if len(cells) > 0:

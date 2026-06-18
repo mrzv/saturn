@@ -104,6 +104,38 @@ def test_parse_main_guard_skips_else_branch():
     assert parsed[3].code() == "print('after')"
 
 
+def test_parse_main_guard_keeps_multiline_string_body_together():
+    parsed = parse_text(
+        "if __name__ == '__main__':\n"
+        "    text = \"\"\"first\n"
+        "column zero\n"
+        "\"\"\"\n"
+        "    print(text)\n"
+        "print('after')\n"
+    )
+
+    assert [type(cell) for cell in parsed] == [cells.RawCell, cells.CodeCell, cells.CodeCell]
+    assert parsed[1].code() == "text = \"\"\"first\ncolumn zero\n\"\"\"\nprint(text)"
+    assert parsed[1].save(None) == [
+        "    text = \"\"\"first\n",
+        "column zero\n",
+        "\"\"\"\n",
+        "    print(text)\n",
+    ]
+    assert parsed[2].code() == "print('after')"
+
+
+def test_main_guard_code_repl_history_is_not_reindented():
+    parsed = parse_text(
+        "if __name__ == '__main__':\n"
+        "    x = 1\n"
+    )
+
+    code = next(cell for cell in parsed if isinstance(cell, cells.CodeCell))
+    assert code.save(None) == ["    x = 1\n"]
+    assert code.repl_history() == ["x = 1\n"]
+
+
 def test_external_zip_is_closed_after_parse(tmp_path, monkeypatch):
     external = tmp_path / "notebook.zip"
     external.touch()
