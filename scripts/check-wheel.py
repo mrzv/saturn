@@ -18,6 +18,11 @@ REQUIRED_WHEEL_FILES = [
     "saturn_notebook/assets/katex/fonts/KaTeX_Main-Regular.woff2",
 ]
 
+REQUIRED_LICENSE_FILES = [
+    "LEGAL.txt",
+    "LICENSE.txt",
+]
+
 
 def run(command, **kwargs):
     subprocess.run(command, check=True, **kwargs)
@@ -28,8 +33,15 @@ def assert_wheel_contents(wheel):
         names = set(zf.namelist())
         dist_info = [name for name in names if name.endswith(".dist-info/entry_points.txt")]
         missing = [name for name in REQUIRED_WHEEL_FILES if name not in names]
+        missing_licenses = [
+            license_file
+            for license_file in REQUIRED_LICENSE_FILES
+            if not any(name.endswith(f".dist-info/licenses/{license_file}") for name in names)
+        ]
         if missing:
             raise SystemExit(f"Wheel is missing required files: {', '.join(missing)}")
+        if missing_licenses:
+            raise SystemExit(f"Wheel is missing required license files: {', '.join(missing_licenses)}")
         if not dist_info:
             raise SystemExit("Wheel is missing entry_points.txt")
         entry_points = zf.read(dist_info[0]).decode("utf-8")

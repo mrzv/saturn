@@ -6,6 +6,7 @@ authors = [
     { name = "Dmitriy Morozov", email = "dmitriy@mrzv.org" },
 ]
 license = "BSD-3-Clause-LBNL"
+license-files = ["LICENSE.txt", "LEGAL.txt"]
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -96,3 +97,4 @@ source = "uv-dynamic-versioning"
 enable = true
 vcs = "git"
 pattern  = "default-unprefixed"
+fallback-version = "0.0.0"
