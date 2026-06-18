@@ -60,6 +60,8 @@ class Notebook:
         self.cells = []
 
         self.state = ExecutionState()
+        if name:
+            self.state.globals['__file__'] = name
 
     @property
     def g(self):

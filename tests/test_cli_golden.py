@@ -80,6 +80,16 @@ def test_cli_fails_for_missing_input_notebook(tmp_path):
     assert str(missing) in result.stderr
 
 
+def test_cli_sets_file_global_for_notebook(tmp_path):
+    source = tmp_path / "file_global.py"
+    source.write_text("print(__file__)\n")
+
+    result, _ = run_saturn(source, tmp_path)
+
+    assert result.returncode == 0, result.stderr
+    assert str(source) in result.stdout
+
+
 def test_cli_checkpoint_cache_skips_work_on_second_run(tmp_path):
     marker = tmp_path / "checkpoint.marker"
     source = tmp_path / "checkpoint.py"
