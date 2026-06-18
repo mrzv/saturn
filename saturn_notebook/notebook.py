@@ -3,6 +3,7 @@ import  os
 import  zipfile
 from    contextlib import nullcontext
 from    dataclasses import dataclass, field
+from    typing import Any
 from    atomicwrites import atomic_write
 
 from    rich.console import Console
@@ -42,8 +43,8 @@ def default_globals():
 
 @dataclass
 class ExecutionState:
-    globals: dict = field(default_factory=default_globals)
-    locals: dict = None
+    globals: dict[str, Any] = field(default_factory=default_globals)
+    locals: dict[str, Any] | None = None
     hasher: Hasher = field(default_factory=Hasher)
 
     def __post_init__(self):

@@ -3,6 +3,7 @@ from matplotlib.backend_bases import FigureManagerBase
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 import io
+from typing import Any, cast
 
 figures = None
 
@@ -13,7 +14,7 @@ class SaturnFigureManager(FigureManagerBase):
             figures.append_png(buf.getvalue())
 
 class SaturnCanvas(FigureCanvasAgg):
-    manager_class = SaturnFigureManager
+    manager_class = cast(Any, SaturnFigureManager)
 
 FigureCanvas  = SaturnCanvas
 FigureManager = SaturnFigureManager

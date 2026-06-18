@@ -37,7 +37,7 @@ width = None if shutil.get_terminal_size().columns != 0 else 80
 from    .theme      import theme
 console = Console(width = width, theme = theme)
 
-argv = []
+argv: list[str] = []
 
 
 def default_external_name(fn):
