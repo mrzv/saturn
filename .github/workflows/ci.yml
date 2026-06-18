@@ -27,4 +27,8 @@ jobs:
       - name: Run type checks
         run: uv run mypy
       - name: Build distributions
-        run: uv build
+        run: uv build --out-dir dist-ci
+      - name: Check distributions
+        run: uv run twine check dist-ci/*
+      - name: Smoke test wheel
+        run: uv run python scripts/check-wheel.py dist-ci/*.whl
