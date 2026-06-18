@@ -1,8 +1,12 @@
+import base64
 import contextlib
+import dill
 import io
 import zipfile
+from pathlib import Path
 
 from saturn_notebook import __main__ as cli
+from saturn_notebook import cells
 
 
 def run_notebook(infn, outfn, *, inline=False):
@@ -10,6 +14,18 @@ def run_notebook(infn, outfn, *, inline=False):
     with contextlib.redirect_stdout(stdout):
         cli.run(str(infn), str(outfn), no_mpi=True, inline=inline)
     return stdout.getvalue()
+
+
+def write_marker(path):
+    Path(path).write_text("pwned")
+
+
+class WriteMarkerOnLoad:
+    def __init__(self, path):
+        self.path = path
+
+    def __reduce__(self):
+        return write_marker, (self.path,)
 
 
 def test_variable_cell_round_trips_semantically_with_external_archive(tmp_path):
@@ -135,3 +151,23 @@ def test_inline_checkpoint_cache_remains_compatible(tmp_path):
     assert "42" in second_stdout
     assert "Skipping to checkpoint" in second_stdout
     assert marker.read_text() == "x"
+
+
+def test_rehash_rewrites_checkpoint_hash_without_deserializing_payload(tmp_path):
+    marker = tmp_path / "rehash.marker"
+    source = tmp_path / "malicious.py"
+    output = tmp_path / "rehashed.py"
+    payload = io.BytesIO()
+    dill.dump(WriteMarkerOnLoad(str(marker)), payload)
+    dill.dump({"value": 42}, payload)
+    encoded = base64.b64encode(payload.getvalue()).decode("ascii")
+    source.write_text(
+        "value = 42\n"
+        + "".join(f"#chk>{line}\n" for line in cells.chunk(encoded, 80, markers=True))
+        + "\nprint(value)\n"
+    )
+
+    cli.rehash(str(source), str(output), inline=True)
+
+    assert output.exists()
+    assert not marker.exists()

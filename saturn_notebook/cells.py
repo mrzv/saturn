@@ -11,6 +11,7 @@ import dill
 import hashlib
 import ast
 import re
+import pickletools
 from  more_itertools    import peekable
 
 import html
@@ -49,6 +50,13 @@ def decode_folded_base64(content):
     if lines and lines[-1].strip() == '}}}':
         lines = lines[:-1]
     return base64.b64decode(''.join(lines), validate=True)
+
+
+def first_pickle_end(content):
+    for opcode, _, position in pickletools.genops(content):
+        if opcode.name == 'STOP':
+            return position + 1
+    raise ValueError("pickle stream has no STOP opcode")
 
 class Cell:
     def __init__(self):
@@ -425,11 +433,18 @@ class CheckpointCell(Cell):
         return super().save(external)
 
     def replace_hash(self, running):
-        if self.expected_hash() == None: return
+        if not hasattr(self, '_content') or not self._content:
+            return
+        original = self._content.getvalue()
+        try:
+            payload_start = first_pickle_end(original)
+        except ValueError:
+            return
         content = io.BytesIO()
         dill.dump(running, content)
-        content.write(self._content.read())
+        content.write(original[payload_start:])
         self._content = content
+        self._expected = running
 
     def header(self):
         return self.__class__._prefix
