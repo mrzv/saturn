@@ -159,11 +159,10 @@ def run(infn,
     if infn and os.path.exists(infn):
         with open(infn) as f:
             cells = c.parse(f, external, info=info, external_base=os.path.dirname(infn))
+    elif infn:
+        raise FileNotFoundError(infn)
     else:
         cells = []
-        if outfn and not dry_run:
-            warn(f"Input file [error]{infn}[/error] doesn't exist, but given an output file [cyan]{outfn}[/cyan]; forcing [affirm]--dry-run[/affirm]")
-            dry_run = True
 
     if not infn:
         interactive = True

@@ -70,6 +70,16 @@ def test_cli_preserves_system_exit_fixture(tmp_path):
     assert 'print("Past the end")' in output
 
 
+def test_cli_fails_for_missing_input_notebook(tmp_path):
+    missing = tmp_path / "missing.py"
+
+    result = run_saturn_command(["run", str(missing), "--no-mpi"])
+
+    assert result.returncode != 0
+    assert not missing.exists()
+    assert str(missing) in result.stderr
+
+
 def test_cli_checkpoint_cache_skips_work_on_second_run(tmp_path):
     marker = tmp_path / "checkpoint.marker"
     source = tmp_path / "checkpoint.py"
