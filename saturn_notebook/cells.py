@@ -32,6 +32,7 @@ import  zipfile, os, zlib
 # Prefix for the filename inside an external zipfile
 _zip_fn_prefix = 'name='
 MAX_EXTERNAL_MEMBER_BYTES = 100 * 1024 * 1024
+MAX_INLINE_PAYLOAD_BYTES = MAX_EXTERNAL_MEMBER_BYTES
 EXTERNAL_READ_ERRORS = (KeyError, ValueError, RuntimeError, OSError, zipfile.BadZipFile, zlib.error)
 
 def hash_bytes(content):
@@ -52,13 +53,25 @@ def read_external_member(external, name):
     return external.read(info)
 
 
-def decode_folded_base64(content):
+def max_base64_encoded_size(decoded_size):
+    return ((decoded_size + 2) // 3) * 4
+
+
+def decode_folded_base64(content, max_decoded_bytes = None):
+    if max_decoded_bytes is None:
+        max_decoded_bytes = MAX_INLINE_PAYLOAD_BYTES
     lines = content.splitlines()
     if lines and lines[0].strip() == '{{{':
         lines = lines[1:]
     if lines and lines[-1].strip() == '}}}':
         lines = lines[:-1]
-    return base64.b64decode(''.join(lines), validate=True)
+    encoded = ''.join(lines)
+    if len(encoded) > max_base64_encoded_size(max_decoded_bytes):
+        raise ValueError(f"inline payload is too large (limit is {max_decoded_bytes} bytes)")
+    decoded = base64.b64decode(encoded, validate=True)
+    if len(decoded) > max_decoded_bytes:
+        raise ValueError(f"inline payload is too large (limit is {max_decoded_bytes} bytes)")
+    return decoded
 
 
 _base64_re = re.compile(r"[A-Za-z0-9+/=]+")

@@ -48,6 +48,24 @@ def test_invalid_inline_checkpoint_is_safe_to_parse():
     assert parsed[0].expected_hash() is None
 
 
+def test_oversized_inline_checkpoint_is_safe_to_parse():
+    encoded = "{{{\n" + cells.base64.b64encode(b"too large").decode("ascii") + "\n}}}\n"
+
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        monkeypatch.setattr(cells, "MAX_INLINE_PAYLOAD_BYTES", 4)
+        parsed = parse_text("".join(f"#chk>{line}\n" for line in encoded.splitlines()))
+
+    assert isinstance(parsed[0], cells.CheckpointCell)
+    assert parsed[0].expected_hash() is None
+
+
+def test_decode_folded_base64_rejects_oversized_payload():
+    encoded = cells.base64.b64encode(b"12345").decode("ascii")
+
+    with pytest.raises(ValueError, match="inline payload is too large"):
+        cells.decode_folded_base64(encoded, max_decoded_bytes=4)
+
+
 def test_output_text_starting_with_png_is_preserved():
     parsed = parse_text("#o> png hello\n")
 
