@@ -20,8 +20,7 @@ IRed='\033[0;91m'         # Red
 # fix the output width
 export COLUMNS=80
 
-function run_test
-{
+run_test() {
     fn=$1
     echo "Testing" $fn
 
