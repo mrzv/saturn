@@ -730,7 +730,7 @@ def expand_main_blocks(lines):
 
         i += 1
         while i < body_start:
-            expanded.append(ParsedLine(lines[i]))
+            append_main_body_line(expanded, lines[i], body_indent, body_prefix)
             i += 1
 
         while body_end + 1 < len(lines):
