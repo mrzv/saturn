@@ -45,6 +45,10 @@ def default_external_name(fn):
     return base + '.zip'
 
 
+def same_output_path(first, second):
+    return os.path.abspath(first) == os.path.abspath(second)
+
+
 def save_external_name(outfn, external, inline):
     if external and inline:
         raise ValueError("--external and --inline cannot be used together")
@@ -52,12 +56,19 @@ def save_external_name(outfn, external, inline):
         return ''
     if external:
         if os.path.isabs(external):
-            return external
-        outdir = os.path.dirname(outfn)
-        if outdir:
-            return os.path.join(outdir, external)
-        return external
-    return default_external_name(outfn)
+            external_fn = external
+        else:
+            outdir = os.path.dirname(outfn)
+            if outdir:
+                external_fn = os.path.join(outdir, external)
+            else:
+                external_fn = external
+    else:
+        external_fn = default_external_name(outfn)
+
+    if same_output_path(outfn, external_fn):
+        raise ValueError("output notebook and external archive must be different paths")
+    return external_fn
 
 def info(*args, block = False, **kw):
     if root:
@@ -101,6 +112,8 @@ def show(fn,
     if not os.path.exists(fn):
         console.print(f"No such file: [error]{fn}[/error]")
         return
+    if gui and html:
+        raise ValueError("--gui and --html cannot be used together")
 
     with open(fn) as f:
         cells = c.parse(f, external, show_only = True, info=info, external_base=os.path.dirname(fn))
@@ -424,6 +437,10 @@ def convert(infn,
     import nbformat
     jnb = nbformat.read(infn, as_version=version)
     cells = jupyter_convert.from_jupyter(jnb, info)
+    if outfn and (gui or html):
+        raise ValueError("output notebook cannot be combined with --gui or --html")
+    if gui and html:
+        raise ValueError("--gui and --html cannot be used together")
 
     if not outfn:
         if gui:

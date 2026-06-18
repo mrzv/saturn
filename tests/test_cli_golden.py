@@ -86,6 +86,27 @@ def run_saturn_command(args, cwd=ROOT):
     )
 
 
+def test_cli_show_rejects_gui_html_combo(tmp_path):
+    notebook = tmp_path / "notebook.py"
+    notebook.write_text("x = 1\n")
+
+    result = run_saturn_command(["show", "--gui", "--html", str(tmp_path / "out.html"), str(notebook)])
+
+    assert result.returncode != 0
+    assert "--gui and --html cannot be used together" in result.stderr
+
+
+def test_cli_convert_rejects_notebook_and_html_outputs(tmp_path):
+    source = tmp_path / "notebook.ipynb"
+    output = tmp_path / "notebook.py"
+    source.write_text('{"cells": [], "metadata": {}, "nbformat": 4, "nbformat_minor": 5}')
+
+    result = run_saturn_command(["convert", str(source), str(output), "--html", str(tmp_path / "out.html")])
+
+    assert result.returncode != 0
+    assert "output notebook cannot be combined with --gui or --html" in result.stderr
+
+
 def payload_names(zf):
     return [name for name in zf.namelist() if name != notebook.ARCHIVE_MANIFEST]
 

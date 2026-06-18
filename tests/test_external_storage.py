@@ -90,6 +90,16 @@ def test_external_and_inline_flags_conflict(tmp_path):
         cli.save_external_name(str(tmp_path / "image.py"), external="image.zip", inline=True)
 
 
+def test_external_archive_must_not_match_output_notebook_path(tmp_path):
+    outfn = tmp_path / "image.zip"
+
+    with pytest.raises(ValueError, match="must be different paths"):
+        cli.save_external_name(str(outfn), external="", inline=False)
+
+    with pytest.raises(ValueError, match="must be different paths"):
+        cli.save_external_name(str(outfn), external=str(outfn), inline=False)
+
+
 def test_explicit_relative_external_path_resolves_next_to_output_notebook(tmp_path):
     outfn = tmp_path / "nested" / "image.py"
 
