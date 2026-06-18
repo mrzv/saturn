@@ -60,8 +60,18 @@ class Notebook:
         self.cells = []
 
         self.state = ExecutionState()
-        if name:
-            self.state.globals['__file__'] = name
+        self.set_file_global()
+
+    def set_file_global(self):
+        if self.name:
+            self.state.globals['__file__'] = self.name
+
+    def checkpoint_locals(self):
+        if self.name and self.l.get('__file__') == self.name:
+            locals_ = self.l.copy()
+            del locals_['__file__']
+            return locals_
+        return self.l
 
     @property
     def g(self):
@@ -108,6 +118,7 @@ class Notebook:
             raise ValueError("Checkpoint skip target is not a checkpoint cell")
         self.g = cell.load()
         self.l = self.g
+        self.set_file_global()
         self.append(cell, output)
         self.current += 1
 
@@ -237,7 +248,7 @@ class Notebook:
                     info("[affirm]continuing[/affirm]")
             elif type(cell) is c.CheckpointCell:
                 try:
-                    cell.dump(self.m.digest(), self.l)
+                    cell.dump(self.m.digest(), self.checkpoint_locals())
                 except Exception:
                     info("[error]Failed[/error] to save state in checkpoint cell, [affirm]skipping[/affirm]")
                     tb = Traceback(self, self.debug)
