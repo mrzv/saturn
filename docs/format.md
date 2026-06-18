@@ -28,8 +28,8 @@ PNG output can be stored inline:
 
 ```python
 #o> png{{{
-#o> BASE64_DATA
-#o> }}}
+#o> pngBASE64_DATA
+#o> png}}}
 ```
 
 PNG output can also be stored in an external zip archive:

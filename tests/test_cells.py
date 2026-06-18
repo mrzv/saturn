@@ -48,6 +48,14 @@ def test_invalid_inline_checkpoint_is_safe_to_parse():
     assert parsed[0].expected_hash() is None
 
 
+def test_output_text_starting_with_png_is_preserved():
+    parsed = parse_text("#o> png hello\n")
+
+    assert isinstance(parsed[0], cells.OutputCell)
+    assert parsed[0].composite_.outer[0].getvalue() == "png hello\n"
+    assert parsed[0].save(None) == ["#o> png hello\n"]
+
+
 def test_parse_expands_top_level_main_guard_body_as_cells():
     parsed = parse_text(
         "if __name__ == '__main__':\n"

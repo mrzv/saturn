@@ -52,6 +52,26 @@ def decode_folded_base64(content):
     return base64.b64decode(''.join(lines), validate=True)
 
 
+_base64_re = re.compile(r"[A-Za-z0-9+/=]+")
+
+
+def external_png_line(line):
+    return line.startswith(f'png {_zip_fn_prefix}')
+
+
+def inline_png_line(line):
+    if line.startswith('png{{{'):
+        return True
+    if not line.startswith('png') or line.startswith('png ') or line.strip() == 'png':
+        return False
+    content = ''.join(line[3:].split())
+    return bool(content) and len(content) % 4 == 0 and _base64_re.fullmatch(content) is not None
+
+
+def png_output_line(line):
+    return external_png_line(line) or inline_png_line(line)
+
+
 def first_pickle_end(content):
     for opcode, _, position in pickletools.genops(content):
         if opcode.name == 'STOP':
@@ -199,10 +219,10 @@ class OutputCell(Cell):
         super().parse(external, info)
         pl = peekable(self.lines_)
         for line in pl:
-            if not line.startswith('png'):
+            if not png_output_line(line):
                 self.composite_.write(line)
             else:
-                if _zip_fn_prefix in line:
+                if external_png_line(line):
                     # take everything from name= to the end (-1 to not include \n)
                     fn = line[line.index(_zip_fn_prefix) + len(_zip_fn_prefix):-1]
                     if not safe_archive_name(fn):
@@ -228,7 +248,7 @@ class OutputCell(Cell):
                             if next_png.startswith('png}}}'):
                                 break
                     else:
-                        while pl and pl.peek().startswith('png') and not pl.peek().startswith('png{{{'):
+                        while pl and inline_png_line(pl.peek()) and not pl.peek().startswith('png{{{'):
                             png_content.append(next(pl)[3:])
                     png_content = ''.join(png_content)
                     try:
