@@ -160,6 +160,8 @@ class MarkdownCell(Cell):
 
 
 _safe_url_schemes = {'', 'http', 'https', 'mailto'}
+_url_attr_re = re.compile(r"\b(href|src)=(['\"])(.*?)\2", re.IGNORECASE | re.DOTALL)
+_url_ignored_chars_re = re.compile(r"[\x00-\x20\x7f]")
 
 
 def sanitize_markdown_html(rendered):
@@ -167,12 +169,14 @@ def sanitize_markdown_html(rendered):
         attr = match.group(1)
         quote = match.group(2)
         value = html.unescape(match.group(3)).strip()
-        scheme = urlsplit(value).scheme.lower()
-        if scheme not in _safe_url_schemes:
+        normalized = _url_ignored_chars_re.sub('', value)
+        scheme = urlsplit(normalized).scheme.lower()
+        raw_scheme = value[:value.find(':')] if scheme else ''
+        if scheme not in _safe_url_schemes or _url_ignored_chars_re.search(raw_scheme):
             return f'{attr}={quote}#{quote}'
         return match.group(0)
 
-    return re.sub(r"\b(href|src)=(['\"])(.*?)\2", sanitize_url_attr, rendered, flags=re.IGNORECASE)
+    return _url_attr_re.sub(sanitize_url_attr, rendered)
 
 class OutputCell(Cell):
     _prefix = '#o> '

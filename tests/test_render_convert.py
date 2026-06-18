@@ -89,6 +89,19 @@ def test_html_render_sanitizes_markdown_link_urls():
     assert 'href="https://example.com"' in rendered
 
 
+def test_html_render_sanitizes_newline_split_markdown_urls():
+    cell = cells.MarkdownCell()
+    cell.lines_ = [" [unsafe](java\nscript:alert(1)) ![bad](java\nscript:alert(2))\n"]
+    output = io.StringIO()
+
+    html.render([cell], output)
+
+    rendered = output.getvalue()
+    assert "java\nscript" not in rendered
+    assert rendered.count('href="#"') == 1
+    assert rendered.count('src="#"') == 1
+
+
 def test_html_render_can_inline_standalone_css():
     output = io.StringIO()
 
