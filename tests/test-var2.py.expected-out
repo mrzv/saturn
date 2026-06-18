@@ -1,4 +1,3 @@
-────────────────────────── Skipping to checkpoint 12 ───────────────────────────
 >>> import time                                                                 
 
 >>> print("Evaluating")                                                         
@@ -10,11 +9,7 @@ Evaluating
 Got a= 5
 
 >>> print(a)                                                                    
-
 5
 
-─────────────────────────────────── Resuming ───────────────────────────────────
 >>> print(a + 5)                                                                
-
 10
-

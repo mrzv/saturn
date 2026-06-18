@@ -64,12 +64,14 @@ Remove generated outputs, binary payloads, checkpoints, and variable caches.
 
 - Use this before committing a notebook when generated output should not be versioned.
 - If `output.py` is omitted, Saturn writes back to `notebook.py`.
+- Use `--strip-output` to remove text output lines in addition to binary payloads and caches.
 
 Examples:
 
 ```sh
 saturn clean analysis.py
 saturn clean analysis.py analysis.clean.py
+saturn clean analysis.py --strip-output
 ```
 
 ## `saturn image notebook.py [index output.png]`

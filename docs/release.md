@@ -1,9 +1,15 @@
 # Release Validation
 
-Use the release validation script before tagging or publishing a Saturn build:
+Use the release validation script before publishing a Saturn build:
 
 ```sh
 bash scripts/validate-release.sh
+```
+
+For a release, pass the artifact directory and upload those same validated files:
+
+```sh
+bash scripts/validate-release.sh dist
 ```
 
 The script runs the same checks that should protect a release artifact:
@@ -12,8 +18,8 @@ The script runs the same checks that should protect a release artifact:
 - `uv run ruff check .`
 - `uv run mypy`
 - `uv run python -m compileall -q saturn_notebook`
-- `uv build --out-dir <temporary directory>`
-- `uv run twine check <temporary artifacts>`
+- `uv build --out-dir <artifact directory>`
+- `uv run twine check <artifacts>`
 - `uv run python scripts/check-wheel.py <built wheel>`
 
 The wheel check verifies required package data, including bundled KaTeX assets and notices, and then installs the wheel into a temporary `uv` virtual environment. The installed `saturn` command is smoke-tested with `--help`, `version`, standalone KaTeX HTML export, and a basic notebook run.
@@ -22,11 +28,11 @@ Release checklist:
 
 - Start from a clean worktree except for intentionally ignored local files.
 - Update `CHANGELOG.md` under `Unreleased` before cutting a release.
-- Run `bash scripts/validate-release.sh` locally.
-- Inspect the built wheel and sdist names in the validation output.
-- Tag from the commit that passed validation.
+- Optionally run `bash scripts/validate-release.sh` before tagging for confidence.
+- Tag the release commit, then run `bash scripts/validate-release.sh dist`.
+- Inspect the validated wheel and sdist names in `dist/`, and upload those same files.
 
-The validation script builds into a temporary directory so stale files under `dist/` cannot mask packaging problems.
+Without an argument, the validation script builds into a temporary directory so stale files under `dist/` cannot mask packaging problems. With an artifact directory argument, the directory must not already exist; this prevents uploading stale files alongside the validated build.
 
 ## PyPI Release Flow
 
@@ -49,29 +55,29 @@ Saturn uses dynamic versions from git tags through `uv-dynamic-versioning`. The 
    git commit -m "Prepare 1.4.0 release"
    ```
 
-4. Run release validation:
+4. Optionally run release validation before tagging for confidence:
 
    ```sh
    bash scripts/validate-release.sh
    ```
 
-5. Create an annotated tag from the validated commit:
+5. Create an annotated tag from the release commit:
 
    ```sh
    git tag -a 1.4.0 -m "Release 1.4.0"
    ```
 
-6. Build from the tagged commit:
+6. Build and validate the tagged artifacts:
 
    ```sh
    rm -rf dist
-   uv build
+   bash scripts/validate-release.sh dist
    ```
 
-7. Verify the artifacts:
+7. Verify the artifact version in the validated `dist/` files:
 
    ```sh
-   uv run twine check dist/*
+   ls dist
    ```
 
    Confirm the filenames contain the exact release version, such as `1.4.0`, and do not contain `.dev`, `.post`, or `+<hash>`.

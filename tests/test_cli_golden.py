@@ -24,6 +24,46 @@ def normalize_terminal_output(text):
     return "\n".join(line.rstrip() for line in text.splitlines() if line.strip()).strip()
 
 
+def normalize_inline_payloads(text):
+    normalized = []
+    image_shape_outputs = []
+    lines = text.splitlines()
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        stripped = line.lstrip(" \t")
+        indent = line[: len(line) - len(stripped)]
+        parts = stripped.split()
+        if (
+            len(parts) == 4
+            and parts[0] == "#o>"
+            and parts[1].isdigit()
+            and parts[2] == "(30,"
+            and parts[3] == "30)"
+        ):
+            image_shape_outputs.append(stripped)
+        elif stripped in {"#chk>{{{", "#var>{{{", "#o> png{{{"}:
+            if stripped.startswith("#o> png"):
+                end = "#o> png}}}"
+                payload = "#o> png<PAYLOAD>"
+            else:
+                end = stripped[:5] + "}}}"
+                payload = f"{stripped[:5]}<PAYLOAD>"
+            normalized.append(line)
+            normalized.append(f"{indent}{payload}")
+            while i + 1 < len(lines):
+                i += 1
+                if lines[i].lstrip(" \t") == end:
+                    normalized.append(lines[i])
+                    break
+        else:
+            normalized.append(line)
+        i += 1
+    if image_shape_outputs:
+        normalized.extend(image_shape_outputs)
+    return "\n".join(normalized) + ("\n" if text.endswith("\n") else "")
+
+
 def run_saturn(fixture, tmp_path, output=None):
     if output is None:
         output = tmp_path / f"{fixture.name}.out.py"
@@ -83,10 +123,16 @@ def test_cli_runs_legacy_golden_fixture(fixture_name, tmp_path):
         pytest.importorskip(optional_dep)
 
     fixture = ROOT / "tests" / fixture_name
-    result, output = run_saturn(fixture, tmp_path)
+    output = tmp_path / f"{fixture.name}.out.py"
+    result = run_saturn_command(["run", str(fixture), str(output), "--no-mpi", "--inline"])
 
     assert result.returncode == 0, result.stderr
-    assert output.exists()
+    assert normalize_inline_payloads(output.read_text()) == normalize_inline_payloads(
+        fixture.with_suffix(fixture.suffix + ".expected").read_text()
+    )
+    assert normalize_terminal_output(result.stdout) == normalize_terminal_output(
+        fixture.with_suffix(fixture.suffix + ".expected-out").read_text()
+    )
 
 
 def test_cli_fails_for_missing_input_notebook(tmp_path):

@@ -1,6 +1,4 @@
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                            Sample Saturn Notebook                            ║
-╚══════════════════════════════════════════════════════════════════════════════╝
+                             Sample Saturn Notebook                             
 
 Some test markup:                                                               
 
@@ -26,11 +24,9 @@ Set up the matrix a on which we operate.
 We can examine a's shape:                                                       
 
 >>> print(a.shape)                                                              
-
 (10, 20)
 
 >>> a.shape                                                                     
-
 (10, 20)
 
 >>> ## Is this the best demarkation of the evaluated expression?                
@@ -39,7 +35,6 @@ We can examine a's shape:
 
 
 >>> print(b)                                                                    
-
 5
 
 >>> import matplotlib.pyplot as plt                                             
@@ -48,5 +43,4 @@ We can examine a's shape:
 
 
 >>> # vim: ft=python foldmethod=marker foldlevel=0                              
-
 

@@ -14,6 +14,7 @@ for i in range(3):
     print(i, a.shape)
     plt.matshow(a)
     plt.show()
+#o> 0 (30, 30)
 #o> png{{{
 #o> pngiVBORw0KGgoAAAANSUhEUgAAAeAAAAHgCAYAAAB91L6VAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAP
 #o> pngYQAAD2EBqD+naQAAADh0RVh0U29mdHdhcmUAbWF0cGxvdGxpYiB2ZXJzaW9uMy4yLjIsIGh0dHA6Ly9t
@@ -651,6 +652,5 @@ for i in range(3):
 #o> pngAQBwgAIGAMABChgAAAcoYAAAHKCAAQBwgAIGAMABChgAAAcoYAAAHPj/GnyACWlKD1kAAAAASUVORK5C
 #o> pngYII=
 #o> png}}}
-#o> 0 (30, 30)
 #o> 1 (30, 30)
 #o> 2 (30, 30)

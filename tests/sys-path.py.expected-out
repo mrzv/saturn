@@ -1,21 +1,19 @@
-────────────────────────── Skipping to checkpoint 10 ───────────────────────────
->>> import sys                                                                  
-... sys.path.append('abcd')                                                     
-... #no-skip#                                                                   
+>>> import sys
+... sys.path.append('abcd')
+... #no-skip#
 
 
->>> sys.path.append('def')                                                      
+>>> sys.path.append('def')
 
->>> a = 5                                                                       
 
-─────────────────────────────────── Resuming ───────────────────────────────────
->>> print(a)                                                                    
+>>> a = 5
 
+
+>>> print(a)
 5
 
->>> print('abcd' in sys.path)                                                   
-... print('def' in sys.path)                                                    
 
+>>> print('abcd' in sys.path)
+... print('def' in sys.path)
 True
-False
-
+True

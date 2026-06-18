@@ -22,28 +22,8 @@ export COLUMNS=80
 
 run_test() {
     fn=$1
-    echo "Testing" $fn
-
-    if $DIR/../saturn.py run $fn $fn.tmp > $fn.tmp-out; then
-        if diff $fn.tmp $fn.expected > /dev/null; then
-            echo $Green "   Expected transformation" $Color_Off
-            rm $fn.tmp
-        else
-            echo $Red "   Failed transformation" $Color_Off
-            res=1
-        fi
-
-        if diff $fn.tmp-out $fn.expected-out > /dev/null; then
-            echo $Green "   Expected output" $Color_Off
-            rm $fn.tmp-out
-        else
-            echo $Red "   Failed output" $Color_Off
-            res=1
-        fi
-    else
-        echo $IRed "   Failed execution!" $Color_Off
-        res=1
-    fi
+    fixture=$(basename "$fn")
+    uv run pytest "$DIR/test_cli_golden.py::test_cli_runs_legacy_golden_fixture[$fixture]" || res=1
 }
 
 trap "echo; exit" INT
@@ -56,14 +36,12 @@ case $1 in
         ;;
     generate)
         fn=$2
-        $DIR/../saturn.py run $fn $fn.expected > $fn.expected-out
+        $DIR/../saturn.py run $fn $fn.expected --inline > $fn.expected-out
         res=$?
         ;;
     "") # run all notebook fixtures with golden files
-        for expected in "$DIR"/*.py.expected; do
-            fn=${expected%.expected}
-            run_test $fn
-        done
+        uv run pytest "$DIR/test_cli_golden.py::test_cli_runs_legacy_golden_fixture"
+        res=$?
         ;;
     *)  # run specific
         run_test $1

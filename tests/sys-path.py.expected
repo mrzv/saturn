@@ -22,4 +22,4 @@ print(a)
 print('abcd' in sys.path)
 print('def' in sys.path)
 #o> True
-#o> False
+#o> True

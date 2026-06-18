@@ -89,8 +89,9 @@ pip install saturn-notebook[viewer,mpi]
 
 * `saturn clean notebook.py [output.py]`
 
-  Remove all binary data from the notebook. Useful for getting rid of large
-  checkpoints.
+  Remove generated binary data, checkpoints, variable caches, and external
+  archive metadata from the notebook. Use `--strip-output` to remove text output
+  lines as well.
 
 * `saturn image notebook.py [i out.png]`
 
@@ -116,6 +117,15 @@ pip install saturn-notebook[viewer,mpi]
   matching Saturn manifest.
 
   When installed with `[viewer]` extras, `-g, --gui` option will display the notebook in a GUI (using [pywebview](https://pywebview.flowrl.com/)).
+
+* `saturn rehash notebook.py [output.py]`
+
+  Refresh checkpoint and variable-cache hashes without executing the notebook.
+  This is useful after mechanical notebook text transformations when the cached
+  payloads are still semantically valid. Binary content follows the same
+  external archive behavior as `run` and `convert`; use `--inline` for a
+  self-contained notebook or `--force-external` to intentionally replace an
+  existing archive without a matching Saturn manifest.
 
 * `saturn extract notebook.py notebook.zip`
 
@@ -270,7 +280,8 @@ uv run pytest
 uv run ruff check .
 ```
 
-The legacy golden-file notebook regression suite is still available:
+`uv run pytest` includes the legacy golden-file notebook regression coverage.
+The legacy shell entry point delegates to the same pytest coverage:
 
 ```
 ./tests/run.sh
