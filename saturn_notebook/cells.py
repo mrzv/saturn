@@ -456,6 +456,7 @@ class VariableCell(CheckpointCell):
     _prefix = '#var>'
     _extension = '.var'
     _warning_name = "variable"
+    _metadata_kind = "saturn-variable-cache"
 
     def parse(self, external, info):
         if not self.lines_:
@@ -467,16 +468,56 @@ class VariableCell(CheckpointCell):
 
         super().parse(external, info)
 
+    def cache_metadata(self, running):
+        return {
+            'kind': self._metadata_kind,
+            'hash': running,
+            'variables': self.variables.strip(),
+        }
+
+    def metadata(self):
+        metadata = CheckpointCell.expected_hash(self)
+        return metadata if isinstance(metadata, dict) else None
+
+    def expected_hash(self):
+        metadata = self.metadata()
+        if metadata and metadata.get('kind') == self._metadata_kind:
+            return metadata.get('hash')
+        return CheckpointCell.expected_hash(self)
+
+    def expected(self, h):
+        metadata = self.metadata()
+        if not metadata or metadata.get('kind') != self._metadata_kind:
+            return False
+        return metadata.get('hash') == h and metadata.get('variables') == self.variables.strip()
+
     def load(self, locals_):
-        locals_['_var_cell_load'] = dill.load(self._content)
+        self.expected_hash()
+        if not hasattr(self, '_value'):
+            self._value = dill.load(self._content)
+        locals_['_var_cell_load'] = self._value
         evaluate.exec_eval(self.variables.strip() + ' = _var_cell_load', locals_, locals_)
         del locals_['_var_cell_load']
 
     def dump(self, running, locals_):
         content = io.BytesIO()
-        dill.dump(running, content)
+        dill.dump(self.cache_metadata(running), content)
         dill.dump(evaluate.exec_eval(self.variables.strip(), locals_, locals_), content)
         self._content = content
+
+    def replace_hash(self, running):
+        if not hasattr(self, '_content') or not self._content:
+            return
+        original = self._content.getvalue()
+        try:
+            payload_start = first_pickle_end(original)
+        except ValueError:
+            return
+        content = io.BytesIO()
+        dill.dump(self.cache_metadata(running), content)
+        content.write(original[payload_start:])
+        self._content = content
+        self._expected = self.cache_metadata(running)
 
     def header(self):
         return self.__class__._prefix + self.variables

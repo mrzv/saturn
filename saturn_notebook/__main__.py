@@ -178,7 +178,7 @@ def run(infn,
         if root or (not only_root_output and isinstance(cell, c.OutputCell)):
             show_console(cell, rule = debug, verbose = debug)
 
-    nb = notebook.Notebook(name = infn, auto_capture = auto_capture, dry_run = dry_run)
+    nb = notebook.Notebook(name = infn, auto_capture = auto_capture, dry_run = dry_run, use_variable_cache = not clean)
     nb.add(cells)
 
     if not clean:

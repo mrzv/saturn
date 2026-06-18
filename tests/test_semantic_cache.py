@@ -9,10 +9,10 @@ from saturn_notebook import __main__ as cli
 from saturn_notebook import cells
 
 
-def run_notebook(infn, outfn, *, inline=False):
+def run_notebook(infn, outfn, *, inline=False, clean=False):
     stdout = io.StringIO()
     with contextlib.redirect_stdout(stdout):
-        cli.run(str(infn), str(outfn), no_mpi=True, inline=inline)
+        cli.run(str(infn), str(outfn), clean=clean, no_mpi=True, inline=inline)
     return stdout.getvalue()
 
 
@@ -151,6 +151,67 @@ def test_inline_checkpoint_cache_remains_compatible(tmp_path):
     assert "42" in second_stdout
     assert "Skipping to checkpoint" in second_stdout
     assert marker.read_text() == "x"
+
+
+def test_clean_run_ignores_variable_cache(tmp_path):
+    source = tmp_path / "variables.py"
+    first = tmp_path / "variables.first.py"
+    second = tmp_path / "variables.second.py"
+    marker = tmp_path / "variables.marker"
+    source.write_text(
+        f"from pathlib import Path\n"
+        f"Path({str(marker)!r}).write_text(Path({str(marker)!r}).read_text() + 'x' if Path({str(marker)!r}).exists() else 'x')\n"
+        "value = 41\n"
+        "#var> value\n"
+        "\n"
+        "print(value + 1)\n"
+    )
+
+    run_notebook(source, first)
+    second_stdout = run_notebook(first, second, clean=True)
+
+    assert "loading" not in second_stdout
+    assert "42" in second_stdout
+    assert marker.read_text() == "xx"
+
+
+def test_variable_cache_includes_target_expression(tmp_path):
+    source = tmp_path / "variables.py"
+    first = tmp_path / "variables.first.py"
+    second = tmp_path / "variables.second.py"
+    marker = tmp_path / "variables.marker"
+    source.write_text(
+        f"from pathlib import Path\n"
+        f"Path({str(marker)!r}).write_text(Path({str(marker)!r}).read_text() + 'x' if Path({str(marker)!r}).exists() else 'x')\n"
+        "value = 41\n"
+        "other = 99\n"
+        "#var> value\n"
+        "\n"
+        "print(value + 1)\n"
+    )
+
+    run_notebook(source, first)
+    first.write_text(first.read_text().replace("#var> value\n", "#var> other\n").replace("print(value + 1)", "print(other)"))
+    second_stdout = run_notebook(first, second)
+
+    assert "loading" not in second_stdout
+    assert "99" in second_stdout
+    assert marker.read_text() == "xx"
+
+
+def test_code_hash_includes_cell_boundaries(tmp_path):
+    source = tmp_path / "checkpoint.py"
+    first = tmp_path / "checkpoint.first.py"
+    second = tmp_path / "checkpoint.second.py"
+    source.write_text("x = 1\n#---#\n0\n#chk>\n\nprint(x)\n")
+
+    run_notebook(source, first)
+    cached_checkpoint = first.read_text()[first.read_text().index("#chk>"):]
+    first.write_text("x = 10\n" + cached_checkpoint)
+    second_stdout = run_notebook(first, second)
+
+    assert "Skipping to checkpoint" not in second_stdout
+    assert "10" in second_stdout
 
 
 def test_rehash_rewrites_checkpoint_hash_without_deserializing_payload(tmp_path):

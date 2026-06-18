@@ -27,7 +27,10 @@ class Hasher:
     def update(self, cell):
         if not cell.hashable: return
         code = cell.code()
-        self.m.update(bytes(code, 'utf-8'))
+        content = bytes(code, 'utf-8')
+        self.m.update(b'code-cell\0')
+        self.m.update(len(content).to_bytes(8, 'big'))
+        self.m.update(content)
 
     def digest(self):
         return self.m.digest()
@@ -48,11 +51,12 @@ class ExecutionState:
             self.locals = self.globals
 
 class Notebook:
-    def __init__(self, *, name = '', auto_capture = False, debug = False, dry_run = False):
+    def __init__(self, *, name = '', auto_capture = False, debug = False, dry_run = False, use_variable_cache = True):
         self.name = name
         self.auto_capture = auto_capture
         self.debug = debug
         self.dry_run = dry_run
+        self.use_variable_cache = use_variable_cache
 
         self.incoming = []
         self.current  = 0
@@ -159,7 +163,7 @@ class Notebook:
 
         self.m.update(cell)
 
-        if type(self.next_cell()) is c.VariableCell:
+        if self.use_variable_cache and type(self.next_cell()) is c.VariableCell:
             if self.next_cell().expected(self.m.digest()):
                 info(f"Previous code cell not evaluated, [affirm]loading[/affirm] [variables]{self.next_cell().variables.strip()}[/variables] instead")
                 self.next_cell().load(self.l)
