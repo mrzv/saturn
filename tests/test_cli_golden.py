@@ -278,6 +278,36 @@ def test_cli_show_gui_requires_viewer_extra(tmp_path, monkeypatch):
         cli.show(str(source), gui=True)
 
 
+def test_cli_accepts_documented_short_options(tmp_path):
+    source = tmp_path / "notebook.py"
+    output = tmp_path / "notebook.out.py"
+    jupyter = tmp_path / "notebook.ipynb"
+    html = tmp_path / "notebook.html"
+    source.write_text("x = 1\n")
+    jupyter.write_text(
+        json.dumps(
+            {
+                "cells": [{"cell_type": "markdown", "metadata": {}, "source": ["Euler: $x$"]}],
+                "metadata": {},
+                "nbformat": 4,
+                "nbformat_minor": 5,
+            }
+        )
+    )
+
+    show_result = run_saturn_command(["show", "-k", str(source)])
+    run_result = run_saturn_command(["run", "-c", "-a", "-e", "cache.zip", str(source), str(output), "--no-mpi"])
+    convert_result = run_saturn_command(["convert", "-k", str(jupyter), "--html", str(html)])
+    show_help = run_saturn_command(["show", "--help"])
+    convert_help = run_saturn_command(["convert", "--help"])
+
+    assert show_result.returncode == 0, show_result.stderr
+    assert run_result.returncode == 0, run_result.stderr
+    assert convert_result.returncode == 0, convert_result.stderr
+    assert "-g" in show_help.stdout
+    assert "-g" in convert_help.stdout
+
+
 def test_cli_convert_gui_requires_viewer_extra(tmp_path, monkeypatch):
     source = tmp_path / "notebook.ipynb"
     source.write_text(

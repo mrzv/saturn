@@ -83,10 +83,10 @@ def show_console(cell, rule = False, verbose = False, no_show = False):
 
 @argh.arg('fn', help="input notebook")
 @argh.arg('--html', help="save HTML to a file")
-@argh.arg('--katex', help="include KaTeX in HTML output")
+@argh.arg('-k', '--katex', help="include KaTeX in HTML output")
 @argh.arg('--standalone', help="inline CSS instead of linking CDN assets in HTML output")
 @argh.arg('--external', help="external zip archive with binary content")
-@argh.arg('--gui', help="view notebook in GUI")
+@argh.arg('-g', '--gui', help="view notebook in GUI")
 @argh.arg('--debug', help="show debugging information")
 def show(fn,
          html = '',
@@ -123,9 +123,9 @@ def _show(cells, html, katex, standalone, debug):
 
 @argh.arg('infn', nargs='?', help="input notebook")
 @argh.arg('outfn', nargs='?', help="output notebook (if empty, input modified in place)")
-@argh.arg('--clean', help="run from scratch, ignoring checkpoints")
-@argh.arg('--auto-capture', help="automatically capture images")
-@argh.arg('--external', help="external zip archive with binary content")
+@argh.arg('-c', '--clean', help="run from scratch, ignoring checkpoints")
+@argh.arg('-a', '--auto-capture', help="automatically capture images")
+@argh.arg('-e', '--external', help="external zip archive with binary content")
 @argh.arg('--inline', help="embed binary content inline instead of using an external archive")
 @argh.arg('--force-external', help="replace an existing external archive even if it has no matching Saturn manifest")
 @argh.arg('--debug', help="show debugging information")
@@ -399,13 +399,13 @@ def version():
 
 @argh.arg('infn', help="Jupyter notebook")
 @argh.arg('outfn', nargs='?', help="output notebook (if empty, show the cells instead)")
-@argh.arg('--gui', help="view notebook in GUI")
+@argh.arg('-g', '--gui', help="view notebook in GUI")
 @argh.arg('--version', help="notebook version")
 @argh.arg('--external', help="external zip archive with binary content")
 @argh.arg('--inline', help="embed binary content inline instead of using an external archive")
 @argh.arg('--force-external', help="replace an existing external archive even if it has no matching Saturn manifest")
 @argh.arg('--html', help="save HTML to a file")
-@argh.arg('--katex', help="include KaTeX in HTML output")
+@argh.arg('-k', '--katex', help="include KaTeX in HTML output")
 @argh.arg('--standalone', help="inline CSS instead of linking CDN assets in HTML output")
 @argh.arg('--debug', help="show debugging information")
 def convert(infn,
@@ -501,9 +501,9 @@ def embed(infn,
 
     nb.save(outfn, '', inline=True)      # write without external
 
-@argh.arg('--clean', help="run from scratch, ignoring checkpoints")
-@argh.arg('--auto-capture', help="automatically capture images")
-@argh.arg('--external', help="external zip archive with binary content")
+@argh.arg('-c', '--clean', help="run from scratch, ignoring checkpoints")
+@argh.arg('-a', '--auto-capture', help="automatically capture images")
+@argh.arg('-e', '--external', help="external zip archive with binary content")
 @argh.arg('--inline', help="embed binary content inline instead of using an external archive")
 @argh.arg('--force-external', help="replace an existing external archive even if it has no matching Saturn manifest")
 @argh.arg('--debug', help="show debugging information")
