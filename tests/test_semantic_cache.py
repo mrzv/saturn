@@ -214,6 +214,35 @@ def test_code_hash_includes_cell_boundaries(tmp_path):
     assert "10" in second_stdout
 
 
+def test_checkpoint_scan_skips_empty_checkpoint_before_later_valid_checkpoint(tmp_path):
+    source = tmp_path / "checkpoint.py"
+    first = tmp_path / "checkpoint.first.py"
+    second = tmp_path / "checkpoint.second.py"
+    marker = tmp_path / "checkpoint.marker"
+    source.write_text(
+        f"from pathlib import Path\n"
+        f"Path({str(marker)!r}).write_text(Path({str(marker)!r}).read_text() + 'x' if Path({str(marker)!r}).exists() else 'x')\n"
+        "value = 40\n"
+        "#chk>\n"
+        "value += 2\n"
+        "#chk>\n"
+        "print(value)\n"
+    )
+
+    run_notebook(source, first)
+    lines = first.read_text().splitlines(keepends=True)
+    for i, line in enumerate(lines):
+        if line.startswith("#chk> name="):
+            lines[i] = "#chk>\n"
+            break
+    first.write_text("".join(lines))
+    second_stdout = run_notebook(first, second)
+
+    assert "Skipping to checkpoint" in second_stdout
+    assert "42" in second_stdout
+    assert marker.read_text() == "x"
+
+
 def test_rehash_rewrites_checkpoint_hash_without_deserializing_payload(tmp_path):
     marker = tmp_path / "rehash.marker"
     source = tmp_path / "malicious.py"

@@ -359,7 +359,10 @@ class Notebook:
             if type(cell) is c.CodeCell:
                 m.update(cell)
             elif type(cell) is c.CheckpointCell:
-                if cell.expected(m.digest()):
+                expected = cell.expected_hash()
+                if expected is None:
+                    continue
+                if expected == m.digest():
                     last = i
                 else:
                     break
