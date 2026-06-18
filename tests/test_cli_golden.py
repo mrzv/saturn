@@ -24,14 +24,14 @@ def run_saturn(fixture, tmp_path, output=None):
     return run_saturn_command(["run", str(fixture), str(output), "--no-mpi"]), output
 
 
-def run_saturn_command(args):
+def run_saturn_command(args, cwd=ROOT):
     env = os.environ.copy()
     env["COLUMNS"] = "80"
     env.setdefault("TERM", "xterm-256color")
 
     return subprocess.run(
-        [sys.executable, "saturn.py", *args],
-        cwd=ROOT,
+        [sys.executable, str(ROOT / "saturn.py"), *args],
+        cwd=cwd,
         env=env,
         text=True,
         stdout=subprocess.PIPE,
@@ -94,6 +94,32 @@ def test_cli_checkpoint_cache_skips_work_on_second_run(tmp_path):
     assert first.read_text().startswith("#saturn> external=checkpoint.first.zip\n")
     with zipfile.ZipFile(tmp_path / "checkpoint.first.zip") as zf:
         assert any(name.endswith(".chk") for name in zf.namelist())
+
+
+def test_cli_checkpoint_cache_uses_relative_external_next_to_nested_notebook(tmp_path):
+    marker = tmp_path / "nested.marker"
+    nested = tmp_path / "sub"
+    nested.mkdir()
+    source = nested / "checkpoint.py"
+    second = nested / "checkpoint.second.py"
+    source.write_text(
+        "from pathlib import Path\n"
+        f"Path({str(marker)!r}).write_text(Path({str(marker)!r}).read_text() + 'x' if Path({str(marker)!r}).exists() else 'x')\n"
+        "value = 40\n"
+        "#chk>\n"
+        "\n"
+        "print(value + 2)\n"
+    )
+
+    first_result = run_saturn_command(["run", "sub/checkpoint.py", "--no-mpi"], cwd=tmp_path)
+    second_result = run_saturn_command(["run", "sub/checkpoint.py", "sub/checkpoint.second.py", "--no-mpi"], cwd=tmp_path)
+
+    assert first_result.returncode == 0, first_result.stderr
+    assert second_result.returncode == 0, second_result.stderr
+    assert marker.read_text() == "x"
+    assert "Skipping to checkpoint" in second_result.stdout
+    assert source.read_text().startswith("#saturn> external=checkpoint.zip\n")
+    assert second.read_text().startswith("#saturn> external=checkpoint.second.zip\n")
 
 
 def test_cli_variable_cache_skips_work_on_second_run(tmp_path):

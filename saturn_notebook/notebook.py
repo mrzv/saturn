@@ -273,11 +273,13 @@ class Notebook:
         return False
 
     def external_metadata_name(self, fn, external):
-        if os.path.isabs(external):
-            notebook_dir = os.path.abspath(os.path.dirname(fn) or '.')
-            external_dir = os.path.abspath(os.path.dirname(external) or '.')
-            if notebook_dir == external_dir:
-                return os.path.basename(external)
+        notebook_dir = os.path.abspath(os.path.dirname(fn) or '.')
+        if not os.path.isabs(external):
+            return os.path.relpath(os.path.abspath(external), notebook_dir)
+
+        external_dir = os.path.abspath(os.path.dirname(external) or '.')
+        if notebook_dir == external_dir:
+            return os.path.basename(external)
         return external
 
     def save(self, fn, external, *, inline = False, force_external = False):
