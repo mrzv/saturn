@@ -78,3 +78,38 @@ def test_forced_execution_records_traceback_and_continues():
     output_cells = [cell for cell in nb.cells if isinstance(cell, cells.OutputCell)]
     assert any("RuntimeError" in item.getvalue() for cell in output_cells for item in cell.composite_ if hasattr(item, "getvalue"))
     assert nb.l["result"] == 42
+
+
+def test_forced_execution_preserves_output_before_exception():
+    failing = cells.CodeCell()
+    failing.append("print('before boom')\nraise RuntimeError('boom')\n")
+
+    nb = notebook.Notebook(name="forced.py")
+    nb.add([failing])
+
+    nb.process_all(lambda cell: None, force=True)
+
+    output_cells = [cell for cell in nb.cells if isinstance(cell, cells.OutputCell)]
+    rendered = "".join(
+        item.getvalue()
+        for cell in output_cells
+        for item in cell.composite_
+        if hasattr(item, "getvalue")
+    )
+    assert "before boom" in rendered
+    assert "RuntimeError" in rendered
+
+
+def test_auto_capture_runs_when_cell_result_is_none(monkeypatch):
+    cell = cells.CodeCell()
+    cell.append("x = 1\n")
+    nb = notebook.Notebook(name="capture.py", auto_capture=True)
+    nb.add([cell])
+
+    monkeypatch.setattr(notebook.image, "is_new_mpl_available", lambda: True)
+    monkeypatch.setattr(notebook.image, "save_mpl_png", lambda: b"png")
+
+    nb.process_all(lambda cell: None, passthrough=False, output_spacing=False)
+
+    output_cells = [cell for cell in nb.cells if isinstance(cell, cells.OutputCell)]
+    assert any(item == b"png" for cell in output_cells for item in cell.composite_)

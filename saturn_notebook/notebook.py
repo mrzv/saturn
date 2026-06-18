@@ -62,6 +62,7 @@ class Notebook:
         self.current  = 0
 
         self.cells = []
+        self.failed_output = None
 
         self.state = ExecutionState()
         self.set_file_global()
@@ -138,7 +139,7 @@ class Notebook:
         else:
             return None
 
-    def execute(self, cell, output, info = lambda *args: None, repl = False):
+    def execute(self, cell, output, info = lambda *args: None, repl = False, passthrough = True, output_spacing = True):
         cell_id = len(self.cells) - 1
         cell_id_display = len([x for x in self.cells if type(x) is c.CodeCell]) # human-readable display only counts code cells
 
@@ -171,16 +172,23 @@ class Notebook:
                 self.current += 1
                 return
 
-        with utils.captured_passthrough() as out:
-            mpl.figures = out
+        out = None
+        try:
+            with utils.captured_passthrough(passthrough) as out:
+                mpl.figures = out
 
-            result = evaluate.exec_eval(cell.code(), self.g, self.l, name = f"{self.name}:{cell_id}:{cell_id_display}")
-            if result is not None:
-                out.write(repr(result) + '\n')
+                result = evaluate.exec_eval(cell.code(), self.g, self.l, name = f"{self.name}:{cell_id}:{cell_id_display}")
+                if result is not None:
+                    out.write(repr(result) + '\n')
+                    if repl:
+                        self.g['_'] = result
                 if self.auto_capture and image.is_new_mpl_available():
                     out.append_png(image.save_mpl_png())
-                if repl:
-                    self.g['_'] = result
+        except Exception:
+            self.failed_output = out
+            raise
+        finally:
+            mpl.figures = None
 
         if type(self.next_cell()) is c.VariableCell:
             try:
@@ -199,7 +207,8 @@ class Notebook:
         output_cell = c.OutputCell(out)
         output_cell.save_indent = getattr(cell, 'save_indent', '')
         self.append(output_cell, lambda cell: None)
-        print()
+        if output_spacing:
+            print()
 
     def skip_next_output(self):
         if type(self.next_cell()) is c.VariableCell:
@@ -214,7 +223,7 @@ class Notebook:
         while self.current < len(self.incoming):
             self.process_to(len(self.incoming), output, **kwargs)
 
-    def process_to(self, to, output, *, run_repl = lambda: None, force = False, debug = False, info = lambda *args, **kwargs: None, repl = False):
+    def process_to(self, to, output, *, run_repl = lambda: None, force = False, debug = False, info = lambda *args, **kwargs: None, repl = False, passthrough = True, output_spacing = True):
         while self.current < to:
             cell = self.incoming[self.current]
             self.current += 1
@@ -223,7 +232,8 @@ class Notebook:
 
             if type(cell) is c.CodeCell:
                 try:
-                    self.execute(cell, output, info, repl = repl)
+                    self.failed_output = None
+                    self.execute(cell, output, info, repl = repl, passthrough = passthrough, output_spacing = output_spacing)
                 except SystemExit:
                     info("Caught SystemExit")
                     raise       # SystemExit quits regardless of force
@@ -235,6 +245,10 @@ class Notebook:
                     console_tb.print(tb)
 
                     self.skip_next_output()
+                    if self.failed_output is not None and not self.failed_output.empty():
+                        partial_output = c.OutputCell(self.failed_output)
+                        partial_output.save_indent = getattr(cell, 'save_indent', '')
+                        self.append(partial_output, lambda cell: None)
                     output_cell = c.OutputCell.from_string(console_tb.export_text())
                     output_cell.save_indent = getattr(cell, 'save_indent', '')
                     self.append(output_cell)

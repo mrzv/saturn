@@ -193,10 +193,12 @@ def run(infn,
         if infn:
             inserted_path = os.path.dirname(infn)
             sys.path.insert(0, inserted_path)
+        show_live_output = root or not only_root_output
         nb.process_all(output,
                        run_repl=lambda: run_repl(nb, output, debug=debug,
-                                               prefix = [c.Blanks.create(1)], suffix = [c.Blanks.create(1), c.BreakCell.create()]),
-                       force=interactive, info=info, debug=debug)
+                                                prefix = [c.Blanks.create(1)], suffix = [c.Blanks.create(1), c.BreakCell.create()]),
+                       force=interactive, info=info, debug=debug,
+                       passthrough=show_live_output, output_spacing=show_live_output)
 
         if interactive:
             result = run_repl(nb, output, debug=debug)
