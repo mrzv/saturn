@@ -149,11 +149,20 @@ pip install saturn-notebook[viewer,mpi]
 * Output cells `#o>`
 
   There is not usually a reason to modify these by hand, they are filled by
-  Saturn with the output of code cells. If they contain PNG information, it's
-  base64-encoded and wrapped in `{{{` and `}}}` to allow automatic folding.
+  Saturn with the output of code cells. Text output is stored directly in the
+  notebook. Binary output is stored in the external archive by default and the
+  notebook keeps a compact reference to the archive member.
 
   ```
-  #o> <matplotlib.image.AxesImage object at 0x114217550>
+  #saturn> external=notebook.zip
+  #o> png name=0123456789abcdef.png
+  ```
+
+  Use `--inline` to embed PNG output directly in the notebook instead. Inline
+  PNG content is base64-encoded and wrapped in `{{{` and `}}}` markers to allow
+  automatic folding.
+
+  ```
   #o> png{{{
   #o> pngiVBORw0KGgoAAAANSUhEUgAAA8AAAAHgCAYAAABq5QSEAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAP
   ...
@@ -161,19 +170,23 @@ pip install saturn-notebook[viewer,mpi]
   #o> png}}}
   ```
 
-  In Vim with `foldmethod=marker`:
-  ```
-  #o> <matplotlib.image.AxesImage object at 0x114217550>
-  +--135 lines: o> png--------------------------------------------------
-  ```
-
 * Checkpoint cells `#chk>`
 
   These indicate locations, where the code should checkpoint. Checkpointing
-  serializes the session, which is stored base64-encoded in the same cell. The
-  cell also stores the hash of the previous code blocks, and the checkpoint is
-  valid if the prior code blocks haven't changed. By default saturn will resume
-  from the last valid checkpoint. Same folding markers (`{{{` and `}}}`) are used.
+  serializes the session and the hash of the previous code blocks. The
+  checkpoint is valid if the prior code blocks haven't changed. By default
+  Saturn stores the checkpoint payload in the external archive and keeps a
+  compact reference in the notebook. Saturn resumes from the last valid
+  checkpoint.
+
+  ```
+  #saturn> external=notebook.zip
+  #chk> name=0123456789abcdef.chk
+  ```
+
+  Use `--inline` to embed checkpoint data directly in the notebook. Inline
+  checkpoint content is base64-encoded and uses the same folding markers
+  (`{{{` and `}}}`).
 
   ```
   #chk>{{{
@@ -181,11 +194,6 @@ pip install saturn-notebook[viewer,mpi]
   ...
   #chk>wAyP55wdmz+qIkdBjBrYP3EjdHEkYnWGcSUu
   #chk>}}}
-  ```
-
-  In Vim with `foldmethod=marker`:
-  ```
-  +-- 36 lines: chk>----------------------------------------------------
   ```
 
 * Variable cells `#var> x,y,z`
@@ -233,9 +241,11 @@ pip install saturn-notebook[viewer,mpi]
 
 ## Vim support
 
-All the binary (non-human-readable) cell content is wrapped in `{{{`, `}}}`
-markers. Adding the following comment to the notebook, ensures that Vim starts
-with all the binary content folded away.
+External archives are the default, so generated notebooks usually contain only
+short `name=...` references to binary content. If you use `--inline` or open an
+older inline notebook, the binary (non-human-readable) cell content is wrapped
+in `{{{`, `}}}` markers. Adding the following comment to the notebook ensures
+that Vim starts with inline binary content folded away.
 
 ```
 # vim: foldmethod=marker foldlevel=0
@@ -299,6 +309,7 @@ Running [samples/simple.py](https://github.com/mrzv/saturn/blob/master/samples/s
 
 ![Second run](https://github.com/mrzv/saturn/raw/master/resources/screenshots/simple-second-run.png)
 
-* Vim folds the binary content.
+* Vim shows compact external archive references instead of inline binary
+  payloads by default.
 
-![Vim folding](https://github.com/mrzv/saturn/raw/master/resources/screenshots/simple-vim.png)
+![Vim external references](https://github.com/mrzv/saturn/raw/master/resources/screenshots/simple-vim.png)
