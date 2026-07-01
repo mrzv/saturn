@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changed
+
+ - Kitty graphics support now probes the terminal protocol directly before
+   falling back to environment-based detection.
+
 ## [1.4.0] - 2026-06-20
 
 ### Added
