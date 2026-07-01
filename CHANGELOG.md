@@ -7,6 +7,11 @@
  - Kitty graphics support now probes the terminal protocol directly before
    falling back to environment-based detection.
 
+### Fixed
+
+ - Updated the locked `cryptography` dependency to avoid vulnerable bundled
+   OpenSSL wheels.
+
 ## [1.4.0] - 2026-06-20
 
 ### Added
